@@ -1,0 +1,1206 @@
+{% comment %}
+  ============================================================
+  BURNLAB — CONTACT FORM PRO
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id               = 'burnlab-contact-pro-' | append: section.id
+
+  assign eyebrow                  = section.settings.eyebrow | default: 'CONTACT BURNLAB'
+  assign heading                  = section.settings.heading | default: 'Build Your Ultimate Training Setup'
+  assign subheading               = section.settings.subheading | default: 'Tell us what you need and our team will help you create the perfect home gym experience.'
+
+  assign support_title            = section.settings.support_title | default: 'Support Hours'
+  assign support_text             = section.settings.support_text | default: 'Monday — Saturday | 9 AM — 8 PM'
+
+  assign email_title              = section.settings.email_title | default: 'Email'
+  assign email_text               = section.settings.email_text | default: 'support@burnlab.com'
+
+  assign phone_title              = section.settings.phone_title | default: 'Phone'
+  assign phone_text               = section.settings.phone_text | default: '+91 98765 43210'
+
+  assign address_title            = section.settings.address_title | default: 'Location'
+  assign address_text             = section.settings.address_text | default: 'Premium Equipment Warehouse'
+
+  assign button_label             = section.settings.button_label | default: 'Send Message'
+
+  assign form_heading             = section.settings.form_heading | default: 'Start Your Fitness Journey'
+
+  assign bg_color                 = section.settings.bg_color | default: '#001a2e'
+  assign text_color               = section.settings.text_color | default: '#eaf4f5'
+  assign accent_color             = section.settings.accent_color | default: '#07d16e'
+  assign card_bg                  = section.settings.card_bg | default: '#08253f'
+
+  assign heading_size             = section.settings.heading_size | default: 64
+  assign heading_size_mobile      = section.settings.heading_size_mobile | default: 36
+  assign body_size                = section.settings.body_size | default: 16
+
+  assign form_radius              = section.settings.form_radius | default: 26
+  assign enable_glow              = section.settings.enable_glow
+  assign enable_grain             = section.settings.enable_grain
+  assign enable_parallax          = section.settings.enable_parallax
+-%}
+
+<style>
+  #{{ section_id }},
+  #{{ section_id }} *,
+  #{{ section_id }} *::before,
+  #{{ section_id }} *::after{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+  }
+
+  #{{ section_id }}{
+    --bl-section-bg: {{ bg_color }};
+    --bl-section-text: {{ text_color }};
+    --bl-section-accent: {{ accent_color }};
+    --bl-card-bg: {{ card_bg }};
+    --bl-form-radius: {{ form_radius }}px;
+
+    position:relative;
+    overflow:hidden;
+    isolation:isolate;
+    background:var(--bl-section-bg);
+    color:var(--bl-section-text);
+
+    padding-top:{{ section.settings.padding_top }}px;
+    padding-bottom:{{ section.settings.padding_bottom }}px;
+  }
+
+  #{{ section_id }} .bl-contact-noise{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:.06;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='40' cy='20' r='1'/%3E%3Ccircle cx='120' cy='90' r='1'/%3E%3Ccircle cx='90' cy='40' r='1'/%3E%3Ccircle cx='70' cy='130' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  #{{ section_id }} .bl-contact-glow{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(120px);
+    z-index:1;
+    pointer-events:none;
+    will-change:transform;
+  }
+
+  #{{ section_id }} .bl-contact-glow--one{
+    width:clamp(220px,35vw,520px);
+    height:clamp(220px,35vw,520px);
+    background:rgba(7,209,110,.16);
+    top:-10%;
+    left:-8%;
+  }
+
+  #{{ section_id }} .bl-contact-glow--two{
+    width:clamp(180px,30vw,420px);
+    height:clamp(180px,30vw,420px);
+    background:rgba(51,104,112,.25);
+    bottom:-15%;
+    right:-10%;
+  }
+
+  #{{ section_id }} .bl-contact-bg-lines{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:.07;
+    background:
+      linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image:radial-gradient(circle at center, black 30%, transparent 90%);
+  }
+
+  #{{ section_id }} .bl-contact-wrap{
+    position:relative;
+    z-index:10;
+
+    max-width:1400px;
+    margin-inline:auto;
+    padding-inline:clamp(1.6rem,5vw,8rem);
+
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:clamp(2rem,5vw,5rem);
+    align-items:center;
+  }
+
+  #{{ section_id }} .bl-contact-content{
+    display:flex;
+    flex-direction:column;
+    gap:clamp(1.4rem,2vw,2.2rem);
+    position:relative;
+  }
+
+
+  #{{ section_id }} .bl-contact-eyebrow{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(.9rem,1.1vw,1.1rem);
+    font-weight:600;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--bl-section-accent);
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-eyebrow::before{
+    content:'';
+    width:34px;
+    height:2px;
+    border-radius:999px;
+    background:var(--bl-section-accent);
+    flex-shrink:0;
+  }
+
+  #{{ section_id }} .bl-contact-heading{
+    font-family:var(--bl-font-primary);
+    font-weight:400;
+    font-size:clamp({{ heading_size_mobile }}px,6vw,{{ heading_size }}px);
+    line-height:1.02;
+    letter-spacing:-0.03em;
+    max-width:12ch;
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-subheading{
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(1.3rem,1.5vw,{{ body_size }}px);
+    line-height:1.75;
+    color:rgba(234,244,245,.72);
+    max-width:60ch;
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-info-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(1rem,2vw,1.6rem);
+    margin-top:1rem;
+  }
+
+  #{{ section_id }} .bl-contact-info-card{
+    position:relative;
+    overflow:hidden;
+
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    backdrop-filter:blur(18px);
+
+    padding:clamp(1.4rem,2vw,1.8rem);
+
+    transition:
+      transform var(--bl-t-base) var(--bl-ease-expo),
+      border-color var(--bl-t-fast) ease,
+      background var(--bl-t-fast) ease;
+
+    will-change:transform;
+  }
+
+  #{{ section_id }} .bl-contact-info-card:hover{
+    transform:translateY(-6px);
+    border-color:rgba(7,209,110,.28);
+    background:linear-gradient(180deg, rgba(7,209,110,.08), rgba(255,255,255,.02));
+  }
+
+  #{{ section_id }} .bl-contact-info-card::after{
+    content:'';
+    position:absolute;
+    inset:auto -30% -60% auto;
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:rgba(7,209,110,.1);
+    filter:blur(30px);
+  }
+
+  #{{ section_id }} .bl-contact-info-title{
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(1rem,1.2vw,1.15rem);
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--bl-section-accent);
+    margin-bottom:.6rem;
+  }
+
+  #{{ section_id }} .bl-contact-info-text{
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(1.1rem,1.4vw,1.4rem);
+    line-height:1.7;
+    color:rgba(234,244,245,.82);
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-form-shell{
+    position:relative;
+    z-index:10;
+  }
+
+  #{{ section_id }} .bl-contact-form-card{
+    position:relative;
+    overflow:hidden;
+
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+      var(--bl-card-bg);
+
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--bl-form-radius);
+
+    padding:clamp(1.8rem,3vw,3rem);
+
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.35),
+      0 0 0 1px rgba(255,255,255,.03);
+
+    backdrop-filter:blur(18px);
+  }
+
+  #{{ section_id }} .bl-contact-form-card::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at top right, rgba(7,209,110,.12), transparent 45%);
+    pointer-events:none;
+  }
+
+  #{{ section_id }} .bl-contact-form-header{
+    margin-bottom:clamp(1.6rem,2vw,2rem);
+    position:relative;
+    z-index:2;
+  }
+
+  #{{ section_id }} .bl-contact-form-title{
+    font-family:var(--bl-font-primary);
+    font-weight:400;
+    font-size:clamp(1.8rem,3vw,3rem);
+    line-height:1.05;
+    letter-spacing:-0.02em;
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-form{
+    position:relative;
+    z-index:3;
+
+    display:flex;
+    flex-direction:column;
+    gap:1.1rem;
+  }
+
+  #{{ section_id }} .bl-contact-field-row{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:1rem;
+  }
+
+  #{{ section_id }} .bl-contact-input-wrap{
+    position:relative;
+  }
+
+  #{{ section_id }} .bl-contact-input,
+  #{{ section_id }} .bl-contact-textarea{
+    width:100%;
+
+    border:none;
+    outline:none;
+
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.08);
+
+    background:rgba(255,255,255,.04);
+    color:var(--bl-section-text);
+
+    padding:1.15rem 1.2rem;
+
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(1rem,1.2vw,1.1rem);
+
+    transition:
+      border-color var(--bl-t-fast) ease,
+      transform var(--bl-t-fast) ease,
+      background var(--bl-t-fast) ease,
+      box-shadow var(--bl-t-fast) ease;
+
+    will-change:transform;
+
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+
+  #{{ section_id }} .bl-contact-textarea{
+    min-height:170px;
+    resize:vertical;
+  }
+
+  #{{ section_id }} .bl-contact-input:focus,
+  #{{ section_id }} .bl-contact-textarea:focus{
+    border-color:rgba(7,209,110,.55);
+    background:rgba(7,209,110,.06);
+    transform:translateY(-2px);
+    box-shadow:0 0 0 4px rgba(7,209,110,.08);
+  }
+
+  #{{ section_id }} .bl-contact-input::placeholder,
+  #{{ section_id }} .bl-contact-textarea::placeholder{
+    color:rgba(234,244,245,.42);
+  }
+
+  #{{ section_id }} .bl-contact-submit{
+    position:relative;
+    overflow:hidden;
+
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+
+    width:100%;
+
+    border:none;
+    outline:none;
+
+    background:var(--bl-section-accent);
+    color:var(--bl-navy);
+
+    border-radius:999px;
+
+    padding:1.1rem 1.6rem;
+
+    font-family:var(--bl-font-secondary);
+    font-size:clamp(1rem,1.2vw,1.15rem);
+    font-weight:700;
+    letter-spacing:.04em;
+
+    cursor:pointer;
+
+    transition:
+      transform var(--bl-t-base) var(--bl-ease-back),
+      box-shadow var(--bl-t-fast) ease;
+
+    will-change:transform;
+  }
+
+  #{{ section_id }} .bl-contact-submit:hover{
+    transform:translateY(-3px) scale(1.01);
+    box-shadow:0 18px 40px rgba(7,209,110,.28);
+  }
+
+  #{{ section_id }} .bl-contact-submit::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.35), transparent);
+    transform:translateX(-120%);
+  }
+
+  #{{ section_id }} .bl-contact-submit:hover::before{
+    animation:blContactButtonShine 1.1s ease;
+  }
+
+  @keyframes blContactButtonShine{
+    to{
+      transform:translateX(120%);
+    }
+  }
+
+  #{{ section_id }} .bl-contact-success,
+  #{{ section_id }} .bl-contact-errors{
+    border-radius:18px;
+    padding:1rem 1.2rem;
+
+    font-family:var(--bl-font-secondary);
+    line-height:1.6;
+  }
+
+  #{{ section_id }} .bl-contact-success{
+    background:rgba(7,209,110,.08);
+    border:1px solid rgba(7,209,110,.25);
+    color:var(--bl-section-accent);
+  }
+
+  #{{ section_id }} .bl-contact-errors{
+    background:rgba(255,77,77,.08);
+    border:1px solid rgba(255,77,77,.18);
+    color:#ffb2b2;
+  }
+
+  #{{ section_id }} .bl-reveal{
+    opacity:0;
+    transform:translateY(36px);
+    transition:
+      opacity .9s var(--bl-ease-expo),
+      transform .9s var(--bl-ease-expo);
+
+    will-change:transform;
+  }
+
+  #{{ section_id }} .bl-reveal.is-visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  #{{ section_id }}.is-visible .bl-reveal,
+  .shopify-design-mode #{{ section_id }} .bl-reveal{
+    opacity:1;
+    transform:none;
+  }
+
+  @media (max-width:1024px){
+    #{{ section_id }} .bl-contact-wrap{
+      grid-template-columns:1fr;
+    }
+
+    #{{ section_id }} .bl-contact-content{
+      order:1;
+    }
+
+    #{{ section_id }} .bl-contact-form-shell{
+      order:2;
+    }
+  }
+
+  @media (max-width:768px){
+    #{{ section_id }}{
+      padding-top:{{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom:{{ section.settings.padding_bottom_mobile }}px !important;
+    }
+
+    #{{ section_id }} .bl-contact-field-row{
+      grid-template-columns:1fr;
+    }
+
+    #{{ section_id }} .bl-contact-info-grid{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media (max-width:480px){
+    #{{ section_id }} .bl-contact-wrap{
+      padding-inline:1.6rem;
+    }
+
+    #{{ section_id }} .bl-contact-heading{
+      font-size:clamp(2rem,8vw,3rem);
+      max-width:100%;
+    }
+
+    #{{ section_id }} .bl-contact-info-grid{
+      grid-template-columns:1fr;
+    }
+
+    #{{ section_id }} .bl-contact-form-card{
+      padding:1.4rem;
+      border-radius:22px;
+    }
+
+    #{{ section_id }} .bl-contact-submit{
+      width:100%;
+    }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    #{{ section_id }} .bl-reveal,
+    #{{ section_id }} .bl-contact-submit,
+    #{{ section_id }} .bl-contact-info-card,
+    #{{ section_id }} .bl-contact-glow{
+      animation:none !important;
+      transition:none !important;
+      transform:none !important;
+    }
+  }
+
+</style>
+
+<section id="{{ section_id }}">
+
+  {% if enable_grain %}
+    <div class="bl-contact-noise"></div>
+  {% endif %}
+
+  <div class="bl-contact-bg-lines"></div>
+
+  {% if enable_glow %}
+    <div class="bl-contact-glow bl-contact-glow--one"></div>
+    <div class="bl-contact-glow bl-contact-glow--two"></div>
+  {% endif %}
+
+  <div class="bl-contact-wrap">
+
+    <div class="bl-contact-content">
+
+      {% if eyebrow != blank %}
+        <p class="bl-contact-eyebrow bl-reveal">
+          {{ eyebrow }}
+        </p>
+      {% endif %}
+
+      {% if heading != blank %}
+        <h2 class="bl-contact-heading bl-reveal">
+          {{ heading }}
+        </h2>
+      {% endif %}
+
+      {% if subheading != blank %}
+        <div class="bl-contact-subheading bl-reveal">
+          {{ subheading }}
+        </div>
+      {% endif %}
+
+      <div class="bl-contact-info-grid">
+
+        <div class="bl-contact-info-card bl-reveal">
+          <div class="bl-contact-info-title">
+            {{ support_title }}
+          </div>
+
+          <div class="bl-contact-info-text">
+            {{ support_text }}
+          </div>
+        </div>
+
+        <div class="bl-contact-info-card bl-reveal">
+          <div class="bl-contact-info-title">
+            {{ email_title }}
+          </div>
+
+          <div class="bl-contact-info-text">
+            {{ email_text }}
+          </div>
+        </div>
+
+        <div class="bl-contact-info-card bl-reveal">
+          <div class="bl-contact-info-title">
+            {{ phone_title }}
+          </div>
+
+          <div class="bl-contact-info-text">
+            {{ phone_text }}
+          </div>
+        </div>
+
+        <div class="bl-contact-info-card bl-reveal">
+          <div class="bl-contact-info-title">
+            {{ address_title }}
+          </div>
+
+          <div class="bl-contact-info-text">
+            {{ address_text }}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="bl-contact-form-shell">
+
+      <div class="bl-contact-form-card bl-reveal">
+
+        <div class="bl-contact-form-header">
+
+          <h3 class="bl-contact-form-title">
+            {{ form_heading }}
+          </h3>
+
+        </div>
+
+        {%- form 'contact', id: 'BurnlabContactForm', class: 'bl-contact-form' -%}
+
+          {% if form.posted_successfully? %}
+            <div class="bl-contact-success">
+              Thank you for contacting BurnLab. Our team will get back to you shortly.
+            </div>
+          {% endif %}
+
+          {% if form.errors %}
+            <div class="bl-contact-errors">
+              {{ form.errors | default_errors }}
+            </div>
+          {% endif %}
+
+{% for block in section.blocks %}
+
+  {% case block.type %}
+
+    {% when 'name' %}
+      <div class="bl-contact-field-row">
+
+        <div class="bl-contact-input-wrap">
+          <input
+            type="text"
+            name="contact[name]"
+            id="BurnlabContactName"
+            class="bl-contact-input"
+            placeholder="{{ block.settings.placeholder }}"
+            autocomplete="name"
+            value="{% if customer %}{{ customer.name }}{% endif %}"
+            {% if block.settings.required %}required{% endif %}
+          >
+        </div>
+
+      </div>
+
+    {% when 'email' %}
+      <div class="bl-contact-field-row">
+
+        <div class="bl-contact-input-wrap">
+          <input
+            type="email"
+            name="contact[email]"
+            id="BurnlabContactEmail"
+            class="bl-contact-input"
+            placeholder="{{ block.settings.placeholder }}"
+            autocomplete="email"
+            value="{% if customer %}{{ customer.email }}{% endif %}"
+            required
+          >
+        </div>
+
+      </div>
+
+    {% when 'phone' %}
+      <div class="bl-contact-field-row">
+
+        <div class="bl-contact-input-wrap">
+          <input
+            type="tel"
+            name="contact[phone]"
+            id="BurnlabContactPhone"
+            class="bl-contact-input"
+            placeholder="{{ block.settings.placeholder }}"
+            autocomplete="tel"
+            {% if block.settings.required %}required{% endif %}
+          >
+        </div>
+
+      </div>
+
+    {% when 'goal' %}
+      <div class="bl-contact-field-row">
+
+        <div class="bl-contact-input-wrap">
+          <input
+            type="text"
+            name="contact[goal]"
+            id="BurnlabContactGoal"
+            class="bl-contact-input"
+            placeholder="{{ block.settings.placeholder }}"
+          >
+        </div>
+
+      </div>
+
+    {% when 'message' %}
+      <div class="bl-contact-input-wrap">
+
+        <textarea
+          rows="8"
+          name="contact[body]"
+          id="BurnlabContactMessage"
+          class="bl-contact-textarea"
+          placeholder="{{ block.settings.placeholder }}"
+          {% if block.settings.required %}required{% endif %}
+        >{{ form.body }}</textarea>
+
+      </div>
+
+    {% when 'button' %}
+      <button type="submit" class="bl-contact-submit">
+
+        {{ block.settings.label }}
+
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 7H12M12 7L7 2M12 7L7 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+      </button>
+
+  {% endcase %}
+
+{% endfor %}
+
+        {% endform %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const revealItems = root.querySelectorAll('.bl-reveal');
+
+  revealItems.forEach((item, index) => {
+    item.style.transitionDelay = `${index * 0.08}s`;
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealItems.forEach(el => observer.observe(el));
+
+  {% if enable_parallax %}
+    if (!reduceMotion) {
+
+      const glows = root.querySelectorAll('.bl-contact-glow');
+
+      window.addEventListener('mousemove', (e) => {
+
+        const x = (e.clientX / window.innerWidth - 0.5) * 18;
+        const y = (e.clientY / window.innerHeight - 0.5) * 18;
+
+        glows.forEach((glow, index) => {
+          const speed = index === 0 ? 1 : -1;
+          glow.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        });
+
+      });
+
+    }
+  {% endif %}
+
+});
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Burnlab Contact Pro",
+  "tag": "section",
+  "class": "burnlab-contact-pro",
+  "settings": [
+
+  {
+    "type": "header",
+    "content": "Section Header"
+  },
+  {
+    "type": "text",
+    "id": "eyebrow",
+    "label": "Eyebrow Text",
+    "default": "CONTACT BURNLAB"
+  },
+  {
+    "type": "textarea",
+    "id": "heading",
+    "label": "Main Heading",
+    "default": "Build Your Ultimate Training Setup"
+  },
+  {
+    "type": "textarea",
+    "id": "subheading",
+    "label": "Subheading",
+    "default": "Tell us what you need and our team will help you create the perfect home gym experience."
+  },
+
+  {
+    "type": "header",
+    "content": "Form Header"
+  },
+  {
+    "type": "text",
+    "id": "form_heading",
+    "label": "Form Heading",
+    "default": "Start Your Fitness Journey"
+  },
+
+  {
+    "type": "header",
+    "content": "Support Card"
+  },
+  {
+    "type": "text",
+    "id": "support_title",
+    "label": "Support Title",
+    "default": "Support Hours"
+  },
+  {
+    "type": "textarea",
+    "id": "support_text",
+    "label": "Support Text",
+    "default": "Monday — Saturday | 9 AM — 8 PM"
+  },
+
+  {
+    "type": "header",
+    "content": "Email Card"
+  },
+  {
+    "type": "text",
+    "id": "email_title",
+    "label": "Email Title",
+    "default": "Email"
+  },
+  {
+    "type": "text",
+    "id": "email_text",
+    "label": "Email Address",
+    "default": "support@burnlab.com"
+  },
+
+  {
+    "type": "header",
+    "content": "Phone Card"
+  },
+  {
+    "type": "text",
+    "id": "phone_title",
+    "label": "Phone Title",
+    "default": "Phone"
+  },
+  {
+    "type": "text",
+    "id": "phone_text",
+    "label": "Phone Number",
+    "default": "+91 98765 43210"
+  },
+
+  {
+    "type": "header",
+    "content": "Location Card"
+  },
+  {
+    "type": "text",
+    "id": "address_title",
+    "label": "Location Title",
+    "default": "Location"
+  },
+  {
+    "type": "textarea",
+    "id": "address_text",
+    "label": "Location Text",
+    "default": "Premium Equipment Warehouse"
+  },
+
+  {
+    "type": "header",
+    "content": "Button"
+  },
+  {
+    "type": "text",
+    "id": "button_label",
+    "label": "Button Label",
+    "default": "Send Message"
+  },
+
+  {
+    "type": "header",
+    "content": "Colors"
+  },
+  {
+    "type": "color",
+    "id": "bg_color",
+    "label": "Background Color",
+    "default": "#001a2e"
+  },
+  {
+    "type": "color",
+    "id": "text_color",
+    "label": "Text Color",
+    "default": "#eaf4f5"
+  },
+  {
+    "type": "color",
+    "id": "accent_color",
+    "label": "Accent Color",
+    "default": "#07d16e"
+  },
+  {
+    "type": "color",
+    "id": "card_bg",
+    "label": "Card Background",
+    "default": "#08253f"
+  },
+
+  {
+    "type": "header",
+    "content": "Typography"
+  },
+  {
+    "type": "range",
+    "id": "heading_size",
+    "label": "Heading Size",
+    "min": 32,
+    "max": 90,
+    "step": 2,
+    "unit": "px",
+    "default": 64
+  },
+  {
+    "type": "range",
+    "id": "heading_size_mobile",
+    "label": "Heading Size Mobile",
+    "min": 24,
+    "max": 54,
+    "step": 2,
+    "unit": "px",
+    "default": 36
+  },
+  {
+    "type": "range",
+    "id": "body_size",
+    "label": "Body Text Size",
+    "min": 14,
+    "max": 24,
+    "step": 1,
+    "unit": "px",
+    "default": 16
+  },
+
+  {
+    "type": "header",
+    "content": "Layout"
+  },
+  {
+    "type": "range",
+    "id": "form_radius",
+    "label": "Form Radius",
+    "min": 0,
+    "max": 40,
+    "step": 2,
+    "unit": "px",
+    "default": 26
+  },
+
+  {
+    "type": "header",
+    "content": "Animations & Effects"
+  },
+  {
+    "type": "checkbox",
+    "id": "enable_animations",
+    "label": "Enable Animations",
+    "default": true
+  },
+  {
+    "type": "checkbox",
+    "id": "enable_glow",
+    "label": "Enable Glow Effects",
+    "default": true
+  },
+  {
+    "type": "checkbox",
+    "id": "enable_grain",
+    "label": "Enable Grain Texture",
+    "default": true
+  },
+  {
+    "type": "checkbox",
+    "id": "enable_parallax",
+    "label": "Enable Glow Parallax",
+    "default": true
+  },
+
+  {
+    "type": "header",
+    "content": "Desktop Padding"
+  },
+  {
+    "type": "range",
+    "id": "padding_top",
+    "label": "Padding Top",
+    "min": 0,
+    "max": 140,
+    "step": 4,
+    "unit": "px",
+    "default": 96
+  },
+  {
+    "type": "range",
+    "id": "padding_bottom",
+    "label": "Padding Bottom",
+    "min": 0,
+    "max": 140,
+    "step": 4,
+    "unit": "px",
+    "default": 96
+  },
+
+  {
+    "type": "header",
+    "content": "Mobile Padding"
+  },
+  {
+    "type": "range",
+    "id": "padding_top_mobile",
+    "label": "Padding Top Mobile",
+    "min": 0,
+    "max": 100,
+    "step": 4,
+    "unit": "px",
+    "default": 64
+  },
+  {
+    "type": "range",
+    "id": "padding_bottom_mobile",
+    "label": "Padding Bottom Mobile",
+    "min": 0,
+    "max": 100,
+    "step": 4,
+    "unit": "px",
+    "default": 64
+  }
+
+],
+"blocks": [
+  {
+    "type": "name",
+    "name": "Name Field",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "Placeholder",
+        "default": "Full Name"
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "Required",
+        "default": true
+      }
+    ]
+  },
+  {
+    "type": "email",
+    "name": "Email Field",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "Placeholder",
+        "default": "Email Address"
+      }
+    ]
+  },
+  {
+    "type": "phone",
+    "name": "Phone Field",
+    "settings": [
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "Placeholder",
+        "default": "Phone Number"
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "Required",
+        "default": false
+      }
+    ]
+  },
+  {
+    "type": "goal",
+    "name": "Goal Field",
+    "settings": [
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "Placeholder",
+        "default": "Fitness Goal"
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "name": "Message Field",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "Placeholder",
+        "default": "Tell us about your ideal gym setup, preferred equipment, budget, or anything else."
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "Required",
+        "default": true
+      }
+    ]
+  },
+  {
+    "type": "button",
+    "name": "Submit Button",
+    "limit": 1,
+    "settings": [
+      {
+        "type": "text",
+        "id": "label",
+        "label": "Button Label",
+        "default": "Send Message"
+      }
+    ]
+  }
+],
+"presets": [
+  {
+    "name": "Burnlab Contact Pro",
+    "blocks": [
+      {
+        "type": "name"
+      },
+      {
+        "type": "email"
+      },
+      {
+        "type": "phone"
+      },
+      {
+        "type": "goal"
+      },
+      {
+        "type": "message"
+      },
+      {
+        "type": "button"
+      }
+    ]
+  }
+]
+}
+{% endschema %}

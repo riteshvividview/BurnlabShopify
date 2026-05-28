@@ -1,0 +1,825 @@
+{% comment %}
+  ============================================================
+  BURNLAB — IMAGE BANNER PRO
+  Fully Editable Shopify OS 2.0 Section
+  Everything visible is editable from schema.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id = 'burnlab-image-banner-' | append: section.id
+-%}
+
+<style>
+  #{{ section_id }}{
+    --bl-bg:#061826;
+    --bl-text:#f3f7f8;
+    --bl-muted:rgba(243,247,248,.72);
+    --bl-accent:{{ section.settings.accent_color }};
+    --bl-overlay:{{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    --bl-radius:{{ section.settings.border_radius }}px;
+
+    position:relative;
+    overflow:hidden;
+    isolation:isolate;
+
+    padding-top:{{ section.settings.padding_top }}px;
+    padding-bottom:{{ section.settings.padding_bottom }}px;
+  }
+
+  #{{ section_id }} *{
+    box-sizing:border-box;
+  }
+
+  #{{ section_id }} .bl-banner-wrap{
+    position:relative;
+    width:100%;
+    min-height:{{ section.settings.desktop_height }}vh;
+    border-radius:var(--bl-radius);
+    overflow:hidden;
+    background:var(--bl-bg);
+  }
+
+  #{{ section_id }} .bl-banner-media{
+    position:absolute;
+    inset:0;
+    z-index:1;
+  }
+
+  #{{ section_id }} .bl-banner-media img,
+  #{{ section_id }} .bl-banner-media video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transform:scale(1.02);
+  }
+
+  #{{ section_id }} .bl-banner-overlay{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.45)),
+      {{ section.settings.overlay_color }};
+    opacity:var(--bl-overlay);
+  }
+
+  #{{ section_id }} .bl-banner-grid{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    opacity:.08;
+    background:
+      linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px);
+    background-size:60px 60px;
+    pointer-events:none;
+  }
+
+  #{{ section_id }} .bl-banner-noise{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='40' cy='20' r='1'/%3E%3Ccircle cx='120' cy='90' r='1'/%3E%3Ccircle cx='90' cy='40' r='1'/%3E%3Ccircle cx='70' cy='130' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  #{{ section_id }} .bl-banner-glow{
+    position:absolute;
+    width:40vw;
+    height:40vw;
+    border-radius:50%;
+    filter:blur(120px);
+    pointer-events:none;
+    z-index:2;
+    opacity:.25;
+    transition:transform .2s linear;
+  }
+
+  #{{ section_id }} .bl-banner-glow--one{
+    top:-10%;
+    left:-10%;
+    background:{{ section.settings.glow_color_1 }};
+  }
+
+  #{{ section_id }} .bl-banner-glow--two{
+    bottom:-20%;
+    right:-10%;
+    background:{{ section.settings.glow_color_2 }};
+  }
+
+  #{{ section_id }} .bl-banner-content{
+    position:relative;
+    z-index:5;
+    width:100%;
+    max-width:{{ section.settings.content_width }}px;
+
+    display:flex;
+    flex-direction:column;
+    gap:1.3rem;
+
+    text-align:{{ section.settings.text_align }};
+
+    padding:clamp(2rem,5vw,6rem);
+  }
+
+  #{{ section_id }} .bl-banner-container{
+    position:relative;
+    z-index:5;
+    min-height:{{ section.settings.desktop_height }}vh;
+
+    display:flex;
+  }
+
+  #{{ section_id }} .bl-pos-top-left{
+    justify-content:flex-start;
+    align-items:flex-start;
+  }
+
+  #{{ section_id }} .bl-pos-top-center{
+    justify-content:center;
+    align-items:flex-start;
+  }
+
+  #{{ section_id }} .bl-pos-top-right{
+    justify-content:flex-end;
+    align-items:flex-start;
+  }
+
+  #{{ section_id }} .bl-pos-middle-left{
+    justify-content:flex-start;
+    align-items:center;
+  }
+
+  #{{ section_id }} .bl-pos-middle-center{
+    justify-content:center;
+    align-items:center;
+  }
+
+  #{{ section_id }} .bl-pos-middle-right{
+    justify-content:flex-end;
+    align-items:center;
+  }
+
+  #{{ section_id }} .bl-pos-bottom-left{
+    justify-content:flex-start;
+    align-items:flex-end;
+  }
+
+  #{{ section_id }} .bl-pos-bottom-center{
+    justify-content:center;
+    align-items:flex-end;
+  }
+
+  #{{ section_id }} .bl-pos-bottom-right{
+    justify-content:flex-end;
+    align-items:flex-end;
+  }
+
+  #{{ section_id }} .bl-banner-floating{
+    position:absolute;
+    top:4%;
+    right:3%;
+    z-index:3;
+
+    font-size:clamp(5rem,14vw,14rem);
+    line-height:.8;
+    font-weight:900;
+    letter-spacing:-0.05em;
+    color:rgba(255,255,255,.05);
+
+    pointer-events:none;
+    user-select:none;
+
+    transition:transform .15s linear;
+  }
+
+  #{{ section_id }} .bl-banner-subheading{
+    font-size:{{ section.settings.subheading_size }}px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--bl-accent);
+    font-weight:700;
+  }
+
+  #{{ section_id }} .bl-banner-heading{
+    color:var(--bl-text);
+    font-size:clamp(2.8rem,7vw,{{ section.settings.heading_size }}px);
+    line-height:.92;
+    letter-spacing:-0.04em;
+    font-weight:800;
+    margin:0;
+  }
+
+  #{{ section_id }} .bl-banner-text{
+    color:var(--bl-muted);
+    font-size:{{ section.settings.description_size }}px;
+    line-height:1.8;
+    max-width:60ch;
+  }
+
+  #{{ section_id }} .bl-banner-buttons{
+    display:flex;
+    gap:1rem;
+    flex-wrap:wrap;
+    margin-top:.8rem;
+  }
+
+  #{{ section_id }} .bl-banner-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    padding:1rem 1.6rem;
+    border-radius:999px;
+
+    text-decoration:none;
+    font-weight:700;
+
+    transition:all .35s ease;
+  }
+
+  #{{ section_id }} .bl-banner-btn-primary{
+    background:var(--bl-accent);
+    color:#041019;
+  }
+
+  #{{ section_id }} .bl-banner-btn-primary:hover{
+    transform:translateY(-4px);
+    box-shadow:0 20px 40px rgba(0,0,0,.25);
+  }
+
+  #{{ section_id }} .bl-banner-btn-secondary{
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06);
+    backdrop-filter:blur(10px);
+    color:white;
+  }
+
+  #{{ section_id }} .bl-banner-btn-secondary:hover{
+    background:rgba(255,255,255,.12);
+    transform:translateY(-4px);
+  }
+
+  #{{ section_id }} .bl-reveal{
+    opacity:0;
+    transform:translateY(40px);
+    transition:
+      opacity .9s cubic-bezier(.16,1,.3,1),
+      transform .9s cubic-bezier(.16,1,.3,1);
+  }
+
+  #{{ section_id }} .bl-reveal.is-visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  @media screen and (max-width:768px){
+
+    #{{ section_id }}{
+      padding-top:{{ section.settings.padding_top_mobile }}px;
+      padding-bottom:{{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    #{{ section_id }} .bl-banner-wrap,
+    #{{ section_id }} .bl-banner-container{
+      min-height:{{ section.settings.mobile_height }}vh;
+    }
+
+    #{{ section_id }} .bl-banner-content{
+      padding:2rem;
+    }
+
+    #{{ section_id }} .bl-banner-buttons{
+      flex-direction:column;
+    }
+
+    #{{ section_id }} .bl-banner-btn{
+      width:100%;
+    }
+
+    #{{ section_id }} .bl-banner-floating{
+      font-size:5rem;
+      top:2%;
+    }
+  }
+</style>
+
+<section id="{{ section_id }}">
+
+  <div class="bl-banner-wrap">
+
+    <div class="bl-banner-media">
+
+      {% if section.settings.video != blank %}
+        {{
+          section.settings.video
+          | video_tag:
+          autoplay: true,
+          loop: true,
+          muted: true,
+          controls: false,
+          playsinline: true
+        }}
+      {% elsif section.settings.image != blank %}
+
+        {{
+          section.settings.image
+          | image_url: width: 2400
+          | image_tag:
+          loading: 'lazy',
+          sizes: '100vw',
+          widths: '600, 900, 1200, 1600, 2000, 2400'
+        }}
+
+      {% else %}
+
+        {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
+
+      {% endif %}
+
+    </div>
+
+    <div class="bl-banner-overlay"></div>
+
+    {% if section.settings.enable_grid %}
+      <div class="bl-banner-grid"></div>
+    {% endif %}
+
+    {% if section.settings.enable_noise %}
+      <div class="bl-banner-noise"></div>
+    {% endif %}
+
+    {% if section.settings.enable_glow %}
+      <div class="bl-banner-glow bl-banner-glow--one"></div>
+      <div class="bl-banner-glow bl-banner-glow--two"></div>
+    {% endif %}
+
+    {% if section.settings.show_floating_text %}
+      <div class="bl-banner-floating">
+        {{ section.settings.floating_text }}
+      </div>
+    {% endif %}
+
+    <div class="bl-banner-container bl-pos-{{ section.settings.content_position }}">
+
+      <div class="bl-banner-content">
+
+        {% for block in section.blocks %}
+
+          {% case block.type %}
+
+            {% when 'subheading' %}
+              <div class="bl-banner-subheading bl-reveal" {{ block.shopify_attributes }}>
+                {{ block.settings.text }}
+              </div>
+
+            {% when 'heading' %}
+              <h2 class="bl-banner-heading bl-reveal" {{ block.shopify_attributes }}>
+                {{ block.settings.text }}
+              </h2>
+
+            {% when 'description' %}
+              <div class="bl-banner-text bl-reveal" {{ block.shopify_attributes }}>
+                {{ block.settings.text }}
+              </div>
+
+            {% when 'buttons' %}
+              <div class="bl-banner-buttons bl-reveal" {{ block.shopify_attributes }}>
+
+                {% if block.settings.primary_label != blank %}
+                  <a
+                    href="{{ block.settings.primary_link }}"
+                    class="bl-banner-btn bl-banner-btn-primary"
+                  >
+                    {{ block.settings.primary_label }}
+                  </a>
+                {% endif %}
+
+                {% if block.settings.secondary_label != blank %}
+                  <a
+                    href="{{ block.settings.secondary_link }}"
+                    class="bl-banner-btn bl-banner-btn-secondary"
+                  >
+                    {{ block.settings.secondary_label }}
+                  </a>
+                {% endif %}
+
+              </div>
+
+          {% endcase %}
+
+        {% endfor %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+
+    const root = document.getElementById('{{ section_id }}');
+    if(!root) return;
+
+    const revealItems = root.querySelectorAll('.bl-reveal');
+
+    revealItems.forEach((item, index) => {
+      item.style.transitionDelay = `${index * 0.12}s`;
+    });
+
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach((entry)=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    revealItems.forEach((el)=> observer.observe(el));
+
+    {% if section.settings.enable_parallax %}
+
+      const floating = root.querySelector('.bl-banner-floating');
+      const glows = root.querySelectorAll('.bl-banner-glow');
+
+      window.addEventListener('mousemove', (e)=>{
+
+        const x = (e.clientX / window.innerWidth - 0.5) * 30;
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+
+        if(floating){
+          floating.style.transform = `translate(${x * .4}px, ${y * .4}px)`;
+        }
+
+        glows.forEach((glow, index)=>{
+          const speed = index === 0 ? 1 : -1;
+          glow.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        });
+
+      });
+
+    {% endif %}
+
+  });
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Burnlab Image Banner Pro",
+  "tag": "section",
+  "class": "burnlab-image-banner-pro",
+  "settings": [
+
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Banner Image"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Banner Video"
+    },
+
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "label": "Desktop Height",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "default": 85
+    },
+    {
+      "type": "range",
+      "id": "mobile_height",
+      "label": "Mobile Height",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "default": 70
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "label": "Content Width",
+      "min": 400,
+      "max": 1200,
+      "step": 20,
+      "unit": "px",
+      "default": 700
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Content Position",
+      "options": [
+        {"value":"top-left","label":"Top Left"},
+        {"value":"top-center","label":"Top Center"},
+        {"value":"top-right","label":"Top Right"},
+        {"value":"middle-left","label":"Middle Left"},
+        {"value":"middle-center","label":"Middle Center"},
+        {"value":"middle-right","label":"Middle Right"},
+        {"value":"bottom-left","label":"Bottom Left"},
+        {"value":"bottom-center","label":"Bottom Center"},
+        {"value":"bottom-right","label":"Bottom Right"}
+      ],
+      "default":"middle-left"
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "Text Alignment",
+      "options": [
+        {"value":"left","label":"Left"},
+        {"value":"center","label":"Center"},
+        {"value":"right","label":"Right"}
+      ],
+      "default":"left"
+    },
+
+    {
+      "type": "header",
+      "content": "Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable Parallax",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glow",
+      "label": "Enable Glow",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grid",
+      "label": "Enable Grid Overlay",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_noise",
+      "label": "Enable Noise Texture",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_floating_text",
+      "label": "Show Floating Text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "floating_text",
+      "label": "Floating Text",
+      "default": "TRAIN"
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 35,
+      "unit": "%"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "glow_color_1",
+      "label": "Glow Color 1",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "glow_color_2",
+      "label": "Glow Color 2",
+      "default": "#00bfff"
+    },
+
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading Size",
+      "min": 40,
+      "max": 140,
+      "step": 2,
+      "unit": "px",
+      "default": 110
+    },
+    {
+      "type": "range",
+      "id": "subheading_size",
+      "label": "Subheading Size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "label": "Description Size",
+      "min": 14,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 18
+    },
+
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border Radius",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 140,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 140,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top Mobile",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom Mobile",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    }
+  ],
+
+  "blocks": [
+
+    {
+      "type": "subheading",
+      "name": "Subheading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Subheading",
+          "default": "PREMIUM FITNESS"
+        }
+      ]
+    },
+
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Heading",
+          "default": "Build Your Ultimate Home Gym"
+        }
+      ]
+    },
+
+    {
+      "type": "description",
+      "name": "Description",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Description",
+          "default": "<p>Transform your fitness journey with premium gym equipment built for performance and aesthetics.</p>"
+        }
+      ]
+    },
+
+    {
+      "type": "buttons",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "primary_label",
+          "label": "Primary Button Label",
+          "default": "Shop Collection"
+        },
+        {
+          "type": "url",
+          "id": "primary_link",
+          "label": "Primary Button Link"
+        },
+        {
+          "type": "text",
+          "id": "secondary_label",
+          "label": "Secondary Button Label",
+          "default": "Explore More"
+        },
+        {
+          "type": "url",
+          "id": "secondary_link",
+          "label": "Secondary Button Link"
+        }
+      ]
+    }
+
+  ],
+
+  "presets": [
+    {
+      "name": "Burnlab Image Banner Pro",
+      "blocks": [
+        {"type":"subheading"},
+        {"type":"heading"},
+        {"type":"description"},
+        {"type":"buttons"}
+      ]
+    }
+  ]
+}
+{% endschema %}

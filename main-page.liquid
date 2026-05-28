@@ -1,0 +1,1337 @@
+{% comment %}
+  ============================================================
+  BURNLAB — DEFAULT PAGE (Main Page Content)
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id = 'burnlab-page-' | append: section.id
+
+  assign show_hero_image    = section.settings.show_hero_image
+  assign hero_image         = section.settings.hero_image
+  assign hero_height        = section.settings.hero_height        | default: 460
+  assign hero_height_mobile = section.settings.hero_height_mobile | default: 300
+  assign overlay_opacity    = section.settings.overlay_opacity    | default: 65
+  assign enable_parallax    = section.settings.enable_parallax
+  assign parallax_speed     = section.settings.parallax_speed     | default: 40
+
+  assign show_breadcrumb  = section.settings.show_breadcrumb
+  assign eyebrow          = section.settings.eyebrow          | default: ''
+  assign show_page_title  = section.settings.show_page_title
+  assign custom_heading   = section.settings.custom_heading   | default: ''
+  assign intro_text       = section.settings.intro_text       | default: ''
+
+  assign show_cta  = section.settings.show_cta
+  assign cta_label = section.settings.cta_label | default: 'Get Started'
+  assign cta_url   = section.settings.cta_url
+  assign cta_style = section.settings.cta_style | default: 'primary'
+
+  assign content_max_width = section.settings.content_max_width | default: 800
+  assign content_align     = section.settings.content_align     | default: 'left'
+  assign show_lead_para    = section.settings.show_lead_para
+  assign content_card      = section.settings.content_card
+
+  assign bg_color     = section.settings.bg_color     | default: '#001a2e'
+  assign text_color   = section.settings.text_color   | default: '#eaf4f5'
+  assign accent_color = section.settings.accent_color | default: '#07d16e'
+
+  assign enable_grain   = section.settings.enable_grain
+  assign enable_glows   = section.settings.enable_glows
+  assign show_bg_text   = section.settings.show_bg_text
+  assign bg_text_value  = section.settings.bg_text_value | default: 'BURNLAB'
+
+  assign heading_size = section.settings.heading_size | default: 64
+  assign intro_size   = section.settings.intro_size   | default: 18
+  assign body_size    = section.settings.body_size    | default: 16
+
+  assign enable_anim = section.settings.enable_animations
+
+  assign overlay_dec = overlay_opacity | divided_by: 100.0
+
+  if custom_heading != blank
+    assign display_title = custom_heading
+  else
+    assign display_title = page.title
+  endif
+-%}
+
+<style>
+  /* ── CSS VARIABLES ──────────────────────────────────────── */
+  #{{ section_id }} {
+    --bl-green:          {{ accent_color }};
+    --bl-navy:           #001a2e;
+    --bl-pale:           #eaf4f5;
+    --bl-teal:           #336870;
+    --font-primary:      'Archivo Black', sans-serif;
+    --font-secondary:    'DM Sans', sans-serif;
+    --ease-expo:         cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-back:         cubic-bezier(0.34, 1.56, 0.64, 1);
+    --section-bg:        {{ bg_color }};
+    --section-text:      {{ text_color }};
+    --section-accent:    {{ accent_color }};
+    --hero-h:            {{ hero_height }}px;
+    --hero-h-mob:        {{ hero_height_mobile }}px;
+    --content-max-w:     {{ content_max_width }}px;
+    --overlay-opacity:   {{ overlay_dec }};
+    --body-size:         {{ body_size }}px;
+    --parallax-speed:    {{ parallax_speed }}px;
+  }
+
+  /* ── RESET ──────────────────────────────────────────────── */
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  /* ── SECTION SHELL ──────────────────────────────────────── */
+  #{{ section_id }} {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--section-bg);
+    color: var(--section-text);
+    isolation: isolate;
+  }
+
+  /* ── GRAIN ──────────────────────────────────────────────── */
+  #{{ section_id }} .pg-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 220px;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── GLOW BLOBS ─────────────────────────────────────────── */
+  #{{ section_id }} .pg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(130px);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+  }
+  #{{ section_id }} .pg-glow--a {
+    width: clamp(320px, 55vw, 760px);
+    height: clamp(320px, 55vw, 760px);
+    background: var(--section-accent);
+    opacity: 0.05;
+    top: -12%;
+    left: -8%;
+    animation: pgGlowA 20s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .pg-glow--b {
+    width: clamp(200px, 38vw, 520px);
+    height: clamp(200px, 38vw, 520px);
+    background: var(--bl-teal);
+    opacity: 0.07;
+    bottom: 25%;
+    right: -6%;
+    animation: pgGlowB 25s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .pg-glow--c {
+    width: clamp(160px, 28vw, 380px);
+    height: clamp(160px, 28vw, 380px);
+    background: var(--section-accent);
+    opacity: 0.04;
+    bottom: 8%;
+    left: 15%;
+    animation: pgGlowC 17s ease-in-out infinite alternate;
+  }
+  @keyframes pgGlowA {
+    from { transform: translate(0, 0) scale(1);    }
+    to   { transform: translate(45px, 35px) scale(1.13); }
+  }
+  @keyframes pgGlowB {
+    from { transform: translate(0, 0) scale(1);    }
+    to   { transform: translate(-35px, -45px) scale(1.09); }
+  }
+  @keyframes pgGlowC {
+    from { transform: translate(0, 0) scale(1);    }
+    to   { transform: translate(22px, -28px) scale(1.11); }
+  }
+
+  /* ── DECORATIVE BG TEXT ─────────────────────────────────── */
+  #{{ section_id }} .pg-bg-text {
+    position: absolute;
+    top: clamp(8%, 12%, 18%);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp(6rem, 18vw, 20rem);
+    letter-spacing: -0.06em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.025);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+    overflow: hidden;
+  }
+
+  /* ── HERO ───────────────────────────────────────────────── */
+  #{{ section_id }} .pg-hero {
+    position: relative;
+    z-index: 10;
+    min-height: var(--hero-h);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  #{{ section_id }} .pg-hero__img-wrap {
+    position: absolute;
+    inset: 0;
+    top: calc(-1 * var(--parallax-speed));
+    bottom: calc(-1 * var(--parallax-speed));
+    will-change: transform;
+    z-index: 0;
+  }
+  #{{ section_id }} .pg-hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  #{{ section_id }} .pg-hero__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      170deg,
+      rgba(0,26,46, calc(var(--overlay-opacity) * 0.35)) 0%,
+      rgba(0,26,46, calc(var(--overlay-opacity) * 0.7))  50%,
+      var(--section-bg) 100%
+    );
+  }
+
+  #{{ section_id }} .pg-hero__content {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin-inline: auto;
+    width: 100%;
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+    padding-top: clamp(4rem, 8vw, 9rem);
+    padding-bottom: clamp(3rem, 5vw, 6rem);
+  }
+
+  /* ── BREADCRUMB ─────────────────────────────────────────── */
+  #{{ section_id }} .pg-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: clamp(1.2rem, 2vw, 1.8rem);
+    font-family: var(--font-secondary);
+    font-size: clamp(1.1rem, 1.1vw, 1.2rem);
+    color: var(--section-text);
+    opacity: 0.5;
+  }
+  #{{ section_id }} .pg-breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+  #{{ section_id }} .pg-breadcrumb a:hover { opacity: 1; }
+  #{{ section_id }} .pg-breadcrumb__sep { opacity: 0.5; font-size: 0.8em; }
+  #{{ section_id }} .pg-breadcrumb__current {
+    color: var(--section-accent);
+    opacity: 1;
+  }
+
+  /* ── EYEBROW ────────────────────────────────────────────── */
+  #{{ section_id }} .pg-eyebrow {
+    font-family: var(--font-secondary);
+    font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--section-accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: clamp(1rem, 1.5vw, 1.5rem);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 2px;
+    background: var(--section-accent);
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  /* ── PAGE TITLE ─────────────────────────────────────────── */
+  #{{ section_id }} .pg-title {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp(2.4rem, 5.5vw, {{ heading_size }}px);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--section-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 900px;
+  }
+
+  /* Word-by-word ember rise reveal */
+  #{{ section_id }} .pg-title__word {
+    display: inline-block;
+    overflow: hidden;
+    line-height: 1.15;
+    padding-bottom: 0.08em;
+    vertical-align: bottom;
+  }
+  #{{ section_id }} .pg-title__inner {
+    display: inline-block;
+    transform: translateY(110%);
+    will-change: transform;
+    transition: transform 0.85s var(--ease-expo);
+  }
+  #{{ section_id }} .pg-title__word.is-visible .pg-title__inner {
+    transform: translateY(0);
+  }
+
+  /* ── ANIMATED RULE ──────────────────────────────────────── */
+  #{{ section_id }} .pg-rule {
+    margin-top: clamp(1.2rem, 2vw, 2rem);
+    height: 2px;
+    max-width: 520px;
+    background: linear-gradient(90deg, var(--section-accent) 0%, rgba(7,209,110,0.35) 55%, transparent 100%);
+    border-radius: 2px;
+    transform-origin: left center;
+    transform: scaleX(0);
+    will-change: transform;
+    transition: transform 1.1s var(--ease-expo) 0.35s;
+  }
+  #{{ section_id }} .pg-rule.is-visible { transform: scaleX(1); }
+
+  /* ── INTRO PARAGRAPH ────────────────────────────────────── */
+  #{{ section_id }} .pg-intro {
+    margin-top: clamp(1.4rem, 2.2vw, 2.2rem);
+    font-family: var(--font-secondary);
+    font-size: clamp(1.4rem, 1.8vw, {{ intro_size }}px);
+    font-weight: 400;
+    line-height: 1.68;
+    color: var(--section-text);
+    opacity: 0.8;
+    max-width: 680px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-intro p { margin-bottom: 0.75em; }
+  #{{ section_id }} .pg-intro p:last-child { margin-bottom: 0; }
+
+  /* ── HERO CTA ───────────────────────────────────────────── */
+  #{{ section_id }} .pg-hero__cta {
+    margin-top: clamp(1.8rem, 3vw, 2.8rem);
+  }
+
+  /* ── CONTENT WRAPPER ────────────────────────────────────── */
+  #{{ section_id }} .pg-content-wrap {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+    padding-top: clamp(2.5rem, 4.5vw, 5rem);
+    padding-bottom: clamp(3rem, 5vw, 6rem);
+  }
+
+  #{{ section_id }} .pg-content-inner {
+    max-width: var(--content-max-w);
+  }
+  #{{ section_id }} .pg-content-inner--center { margin-inline: auto; }
+
+  /* Content card style */
+  #{{ section_id }} .pg-content-inner--card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: clamp(2rem, 4vw, 4rem) clamp(2rem, 4vw, 4.5rem);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* ── RICH CONTENT TYPOGRAPHY ────────────────────────────── */
+  #{{ section_id }} .pg-content {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.3rem, 1.5vw, var(--body-size));
+    font-weight: 400;
+    line-height: 1.78;
+    color: var(--section-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  #{{ section_id }} .pg-content h1,
+  #{{ section_id }} .pg-content h2,
+  #{{ section_id }} .pg-content h3,
+  #{{ section_id }} .pg-content h4,
+  #{{ section_id }} .pg-content h5,
+  #{{ section_id }} .pg-content h6 {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--section-text);
+    margin-top: clamp(2.4rem, 4vw, 4rem);
+    margin-bottom: clamp(0.8rem, 1.3vw, 1.4rem);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    will-change: transform;
+  }
+  #{{ section_id }} .pg-content h1 { font-size: clamp(2rem, 4vw, 3.8rem); }
+  #{{ section_id }} .pg-content h2 {
+    font-size: clamp(1.8rem, 3vw, 3rem);
+    position: relative;
+    padding-left: clamp(1.4rem, 1.8vw, 1.8rem);
+  }
+  #{{ section_id }} .pg-content h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    bottom: 0.1em;
+    width: 3px;
+    background: linear-gradient(180deg, var(--section-accent), rgba(7,209,110,0.3));
+    border-radius: 3px;
+    transform: scaleY(0);
+    transform-origin: top center;
+    will-change: transform;
+    transition: transform 0.55s var(--ease-expo) 0.1s;
+  }
+  #{{ section_id }} .pg-content h2.heading-visible::before { transform: scaleY(1); }
+
+  #{{ section_id }} .pg-content h3 { font-size: clamp(1.6rem, 2.4vw, 2.4rem); }
+  #{{ section_id }} .pg-content h4 { font-size: clamp(1.4rem, 2vw, 2rem); }
+  #{{ section_id }} .pg-content h5 {
+    font-size: clamp(1.3rem, 1.6vw, 1.6rem);
+    font-family: var(--font-secondary);
+    font-weight: 700;
+  }
+  #{{ section_id }} .pg-content h6 {
+    font-size: clamp(1.1rem, 1.3vw, 1.3rem);
+    font-family: var(--font-secondary);
+    font-weight: 600;
+    color: var(--section-accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  #{{ section_id }} .pg-content p {
+    margin-bottom: clamp(1rem, 1.6vw, 1.5rem);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-content p:last-child { margin-bottom: 0; }
+
+  /* Lead paragraph styling */
+  {%- if show_lead_para -%}
+  #{{ section_id }} .pg-content > p:first-of-type {
+    font-size: clamp(1.5rem, 1.9vw, {{ intro_size }}px);
+    line-height: 1.65;
+    color: var(--section-text);
+    opacity: 0.9;
+    font-weight: 500;
+  }
+  {%- endif -%}
+
+  #{{ section_id }} .pg-content a {
+    color: var(--section-accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(7,209,110,0.38);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.22s ease, opacity 0.22s ease;
+  }
+  #{{ section_id }} .pg-content a:hover {
+    text-decoration-color: var(--section-accent);
+  }
+
+  #{{ section_id }} .pg-content strong {
+    font-weight: 700;
+    color: var(--section-text);
+  }
+
+  #{{ section_id }} .pg-content em {
+    font-style: italic;
+  }
+
+  /* Blockquote */
+  #{{ section_id }} .pg-content blockquote {
+    position: relative;
+    margin: clamp(2rem, 3.5vw, 3.5rem) 0;
+    padding: clamp(1.6rem, 2.5vw, 2.4rem) clamp(1.8rem, 2.8vw, 3rem);
+    border-left: 3px solid var(--section-accent);
+    background: rgba(7,209,110,0.05);
+    border-radius: 0 16px 16px 0;
+    font-size: clamp(1.4rem, 1.7vw, 1.9rem);
+    font-style: italic;
+    line-height: 1.62;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-content blockquote::before {
+    content: '\201C';
+    position: absolute;
+    top: -0.15em;
+    left: 0.35em;
+    font-family: var(--font-primary);
+    font-size: clamp(4rem, 6vw, 8rem);
+    color: var(--section-accent);
+    opacity: 0.2;
+    line-height: 1;
+    pointer-events: none;
+  }
+  #{{ section_id }} .pg-content blockquote p { margin-bottom: 0; font-style: inherit; }
+  #{{ section_id }} .pg-content blockquote cite {
+    display: block;
+    margin-top: 0.75em;
+    font-size: 0.82em;
+    font-style: normal;
+    color: var(--section-accent);
+    opacity: 0.75;
+    letter-spacing: 0.06em;
+  }
+
+  /* Lists */
+  #{{ section_id }} .pg-content ul,
+  #{{ section_id }} .pg-content ol {
+    padding-left: clamp(1.2rem, 2vw, 2rem);
+    margin-bottom: clamp(1rem, 1.6vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+  }
+  #{{ section_id }} .pg-content ul { list-style: none; padding-left: 0; }
+  #{{ section_id }} .pg-content ul li {
+    position: relative;
+    padding-left: 1.6em;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--section-accent);
+  }
+  #{{ section_id }} .pg-content ol {
+    list-style: decimal;
+  }
+  #{{ section_id }} .pg-content ol li {
+    padding-left: 0.4em;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .pg-content ol li::marker {
+    color: var(--section-accent);
+    font-weight: 700;
+    font-family: var(--font-secondary);
+  }
+  #{{ section_id }} .pg-content li ul,
+  #{{ section_id }} .pg-content li ol {
+    margin-top: 0.4em;
+    margin-bottom: 0;
+  }
+
+  /* Images */
+  #{{ section_id }} .pg-content img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    display: block;
+    margin: clamp(1.8rem, 3.5vw, 3rem) auto;
+    object-fit: cover;
+  }
+
+  /* Tables */
+  #{{ section_id }} .pg-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: clamp(1.8rem, 3vw, 2.8rem) 0;
+    font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #{{ section_id }} .pg-content th {
+    background: rgba(7,209,110,0.08);
+    color: var(--section-accent);
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    font-size: clamp(0.9rem, 1vw, 1.1rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: clamp(10px, 1.3vw, 14px) clamp(12px, 1.5vw, 18px);
+    text-align: left;
+    border-bottom: 2px solid rgba(7,209,110,0.22);
+    white-space: nowrap;
+  }
+  #{{ section_id }} .pg-content td {
+    padding: clamp(10px, 1.3vw, 14px) clamp(12px, 1.5vw, 18px);
+    border-bottom: 1px solid rgba(234,244,245,0.07);
+    color: var(--section-text);
+    opacity: 0.85;
+    vertical-align: top;
+    overflow-wrap: break-word;
+  }
+  #{{ section_id }} .pg-content tr:last-child td { border-bottom: none; }
+
+  /* Horizontal rule */
+  #{{ section_id }} .pg-content hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(7,209,110,0.3) 30%, rgba(7,209,110,0.3) 70%, transparent 100%);
+    margin: clamp(2rem, 4vw, 3.5rem) 0;
+  }
+
+  /* Inline code */
+  #{{ section_id }} .pg-content code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.88em;
+    background: rgba(7,209,110,0.1);
+    color: var(--section-accent);
+    padding: 0.15em 0.5em;
+    border-radius: 5px;
+    border: 1px solid rgba(7,209,110,0.18);
+  }
+  #{{ section_id }} .pg-content pre {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(7,209,110,0.15);
+    border-radius: 12px;
+    padding: clamp(1.4rem, 2vw, 2rem);
+    overflow-x: auto;
+    margin: clamp(1.8rem, 3vw, 2.8rem) 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  #{{ section_id }} .pg-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+    color: var(--section-text);
+    opacity: 0.85;
+  }
+
+  /* ── BUTTON STYLES ──────────────────────────────────────── */
+  #{{ section_id }} .pg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: clamp(12px, 1.4vw, 16px) clamp(22px, 2.5vw, 32px);
+    border-radius: 100px;
+    font-family: var(--font-secondary);
+    font-size: clamp(1.2rem, 1.1vw, 1.4rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: transform 0.28s var(--ease-back), box-shadow 0.28s ease, background 0.25s ease;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    overflow-wrap: break-word;
+    white-space: nowrap;
+  }
+  #{{ section_id }} .pg-btn:hover  { transform: translateY(-3px) scale(1.02); }
+  #{{ section_id }} .pg-btn:active { transform: translateY(0) scale(0.98); }
+  #{{ section_id }} .pg-btn--primary {
+    background: var(--section-accent);
+    color: var(--bl-navy);
+    box-shadow: 0 8px 28px rgba(7,209,110,0.28);
+  }
+  #{{ section_id }} .pg-btn--primary:hover {
+    box-shadow: 0 16px 40px rgba(7,209,110,0.40);
+  }
+  #{{ section_id }} .pg-btn--outline {
+    background: transparent;
+    color: var(--section-text);
+    border: 1.5px solid rgba(234,244,245,0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #{{ section_id }} .pg-btn--outline:hover {
+    border-color: var(--section-accent);
+    box-shadow: 0 0 0 1px var(--section-accent), 0 8px 24px rgba(7,209,110,0.12);
+  }
+  #{{ section_id }} .pg-btn--navy {
+    background: var(--bl-navy);
+    color: var(--bl-pale);
+    border: 1.5px solid rgba(234,244,245,0.15);
+  }
+  #{{ section_id }} .pg-btn--navy:hover {
+    box-shadow: 0 12px 32px rgba(0,0,0,0.30);
+  }
+  #{{ section_id }} .pg-btn--teal {
+    background: var(--bl-teal);
+    color: var(--bl-pale);
+  }
+  #{{ section_id }} .pg-btn--teal:hover {
+    box-shadow: 0 12px 32px rgba(51,104,112,0.40);
+  }
+
+  /* ── REVEAL ANIMATIONS ──────────────────────────────────── */
+  #{{ section_id }} .pg-reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    will-change: transform;
+    transition: opacity 0.75s var(--ease-expo), transform 0.75s var(--ease-expo);
+  }
+  #{{ section_id }} .pg-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Shopify editor overrides */
+  #{{ section_id }}.is-visible .pg-reveal,
+  .shopify-design-mode #{{ section_id }} .pg-reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .shopify-design-mode #{{ section_id }} .pg-title__inner {
+    transform: translateY(0) !important;
+  }
+  .shopify-design-mode #{{ section_id }} .pg-rule {
+    transform: scaleX(1);
+  }
+  .shopify-design-mode #{{ section_id }} .pg-content h2::before {
+    transform: scaleY(1);
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .pg-reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .pg-title__inner {
+      transform: translateY(0) !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .pg-rule {
+      transform: scaleX(1) !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .pg-content h2 { opacity: 1 !important; transform: none !important; transition: none !important; }
+    #{{ section_id }} .pg-content h2::before { transform: scaleY(1) !important; transition: none !important; }
+    #{{ section_id }} .pg-content h3 { opacity: 1 !important; transform: none !important; transition: none !important; }
+    #{{ section_id }} .pg-glow--a,
+    #{{ section_id }} .pg-glow--b,
+    #{{ section_id }} .pg-glow--c { animation: none; }
+    #{{ section_id }} .pg-btn { transition: none; }
+  }
+
+  /* ── RESPONSIVE: TABLET ─────────────────────────────────── */
+  @media (max-width: 1024px) {
+    #{{ section_id }} .pg-content-inner--card {
+      padding: clamp(1.8rem, 4vw, 3rem);
+    }
+  }
+
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    }
+    #{{ section_id }} .pg-hero {
+      min-height: var(--hero-h-mob);
+    }
+    #{{ section_id }} .pg-title {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+    #{{ section_id }} .pg-content h1 { font-size: clamp(1.8rem, 7vw, 2.6rem); }
+    #{{ section_id }} .pg-content h2 { font-size: clamp(1.6rem, 6.5vw, 2.2rem); }
+    #{{ section_id }} .pg-content h3 { font-size: clamp(1.4rem, 5.5vw, 1.9rem); }
+    #{{ section_id }} .pg-content h4 { font-size: clamp(1.3rem, 4.5vw, 1.7rem); }
+  }
+
+  /* ── RESPONSIVE: MOBILE ─────────────────────────────────── */
+  @media (max-width: 480px) {
+    #{{ section_id }} .pg-title {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+    #{{ section_id }} .pg-hero__cta .pg-btn {
+      width: 100%;
+      justify-content: center;
+    }
+    #{{ section_id }} .pg-bg-text { display: none; }
+    #{{ section_id }} .pg-content-inner--card {
+      padding: clamp(1.4rem, 5vw, 2rem);
+    }
+    #{{ section_id }} .pg-content blockquote {
+      padding-left: clamp(1.2rem, 4vw, 1.6rem);
+      padding-right: clamp(1rem, 3vw, 1.4rem);
+    }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-page"
+  data-section-id="{{ section.id }}"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
+
+  {%- if enable_grain -%}
+  <div class="pg-grain" aria-hidden="true"></div>
+  {%- endif -%}
+
+  {%- if enable_glows -%}
+  <div class="pg-glow pg-glow--a" aria-hidden="true"></div>
+  <div class="pg-glow pg-glow--b" aria-hidden="true"></div>
+  <div class="pg-glow pg-glow--c" aria-hidden="true"></div>
+  {%- endif -%}
+
+  {%- if show_bg_text and bg_text_value != blank -%}
+  <div class="pg-bg-text" aria-hidden="true">{{ bg_text_value }}</div>
+  {%- endif -%}
+
+  <!-- ── HERO ──────────────────────────────────────────────── -->
+  <div class="pg-hero">
+
+    {%- if show_hero_image and hero_image != blank -%}
+    <div class="pg-hero__img-wrap" aria-hidden="true">
+      {{ hero_image | image_url: width: 2400 | image_tag:
+        loading: 'eager',
+        fetchpriority: 'high',
+        alt: hero_image.alt,
+        class: 'pg-hero__img',
+        widths: '600, 900, 1200, 1600, 2000, 2400',
+        sizes: '100vw'
+      }}
+    </div>
+    <div class="pg-hero__overlay" aria-hidden="true"></div>
+    {%- endif -%}
+
+    <div class="pg-hero__content">
+
+      {%- if show_breadcrumb -%}
+      <nav class="pg-breadcrumb pg-reveal" aria-label="Breadcrumb">
+        <a href="{{ routes.root_url }}">Home</a>
+        <span class="pg-breadcrumb__sep" aria-hidden="true">&#8250;</span>
+        <span class="pg-breadcrumb__current">{{ page.title }}</span>
+      </nav>
+      {%- endif -%}
+
+      {%- if eyebrow != blank -%}
+      <p class="pg-eyebrow pg-reveal">{{ eyebrow }}</p>
+      {%- endif -%}
+
+      {%- if show_page_title and display_title != blank -%}
+      <h1 class="pg-title" aria-label="{{ display_title | escape }}">
+        {%- assign title_words = display_title | split: ' ' -%}
+        {%- for word in title_words -%}
+          <span class="pg-title__word"><span class="pg-title__inner">{{ word }}</span></span>
+          {%- unless forloop.last -%}&nbsp;{%- endunless -%}
+        {%- endfor -%}
+      </h1>
+      <div class="pg-rule" aria-hidden="true"></div>
+      {%- endif -%}
+
+      {%- if intro_text != blank -%}
+      <div class="pg-intro pg-reveal">{{ intro_text }}</div>
+      {%- endif -%}
+
+      {%- if show_cta and cta_label != blank -%}
+      <div class="pg-hero__cta pg-reveal">
+        <a href="{{ cta_url | default: '#' }}" class="pg-btn pg-btn--{{ cta_style }}">
+          {{ cta_label }}
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M1.5 6.5H11.5M11.5 6.5L7 2M11.5 6.5L7 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      {%- endif -%}
+
+    </div>
+  </div>
+
+  <!-- ── PAGE CONTENT ──────────────────────────────────────── -->
+  <div class="pg-content-wrap">
+    <div class="pg-content-inner{% if content_align == 'center' %} pg-content-inner--center{% endif %}{% if content_card %} pg-content-inner--card{% endif %} pg-reveal">
+      <div class="pg-content">
+        {{ page.content }}
+      </div>
+    </div>
+  </div>
+
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+(function () {
+  'use strict';
+
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── 1. EMBER RISE — word-by-word title reveal ──────────── */
+  var titleEl    = root.querySelector('.pg-title');
+  var titleWords = root.querySelectorAll('.pg-title__word');
+  var ruleEl     = root.querySelector('.pg-rule');
+
+  if (titleWords.length > 0 && titleEl) {
+    var titleObserver = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      if (reducedMotion) {
+        titleWords.forEach(function (w) { w.classList.add('is-visible'); });
+        if (ruleEl) ruleEl.classList.add('is-visible');
+        titleObserver.disconnect();
+        return;
+      }
+      titleWords.forEach(function (word, i) {
+        setTimeout(function () {
+          word.classList.add('is-visible');
+        }, i * 80);
+      });
+      if (ruleEl) {
+        setTimeout(function () {
+          ruleEl.classList.add('is-visible');
+        }, titleWords.length * 80 + 60);
+      }
+      titleObserver.disconnect();
+    }, { threshold: 0.15 });
+    titleObserver.observe(titleEl);
+  }
+
+  /* ── 2. GENERAL REVEAL stagger ──────────────────────────── */
+  var revealEls = root.querySelectorAll('.pg-reveal');
+  revealEls.forEach(function (el, i) {
+    if (!reducedMotion) {
+      el.style.transitionDelay = (i * 0.08) + 's';
+    }
+  });
+
+  var revealObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      entry.target.addEventListener('transitionend', function cleanup() {
+        entry.target.style.transitionDelay = '';
+        entry.target.removeEventListener('transitionend', cleanup);
+      });
+      revealObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function (el) { revealObserver.observe(el); });
+
+  /* ── 3. CONTENT HEADING SLIDE-FROM-LEFT ─────────────────── */
+  var contentEl = root.querySelector('.pg-content');
+  if (contentEl && !reducedMotion) {
+    var contentHeadings = contentEl.querySelectorAll('h2, h3');
+
+    contentHeadings.forEach(function (h) {
+      h.style.opacity    = '0';
+      h.style.transform  = 'translateX(-20px)';
+      h.style.transition = 'opacity 0.65s var(--ease-expo, cubic-bezier(0.16,1,0.3,1)), transform 0.65s var(--ease-expo, cubic-bezier(0.16,1,0.3,1))';
+      h.style.willChange = 'transform';
+    });
+
+    var headingObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.style.opacity   = '1';
+        entry.target.style.transform = 'translateX(0)';
+        /* Trigger the h2 green bar animation */
+        entry.target.classList.add('heading-visible');
+        headingObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 });
+
+    contentHeadings.forEach(function (h) { headingObserver.observe(h); });
+  } else if (contentEl && reducedMotion) {
+    /* Ensure headings are visible with no animation */
+    var staticHeadings = contentEl.querySelectorAll('h2, h3');
+    staticHeadings.forEach(function (h) {
+      h.classList.add('heading-visible');
+    });
+  }
+
+  /* ── 4. HERO IMAGE PARALLAX ─────────────────────────────── */
+  {%- if enable_parallax -%}
+  if (!reducedMotion) {
+    var heroImgWrap = root.querySelector('.pg-hero__img-wrap');
+    var heroEl      = root.querySelector('.pg-hero');
+    var SPEED       = {{ parallax_speed }};
+
+    if (heroImgWrap && heroEl) {
+      function updateParallax() {
+        var rect  = heroEl.getBoundingClientRect();
+        var viewH = window.innerHeight;
+        var prog  = (viewH - rect.top) / (viewH + rect.height);
+        prog      = Math.max(0, Math.min(1, prog));
+        var offset = (prog - 0.5) * SPEED * 2;
+        heroImgWrap.style.transform = 'translateY(' + offset + 'px)';
+      }
+      window.addEventListener('scroll', updateParallax, { passive: true });
+      updateParallax();
+    }
+  }
+  {%- endif -%}
+
+  /* ── 5. CLEANUP ─────────────────────────────────────────── */
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      revealObserver.disconnect();
+    }
+  });
+
+}());
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Page",
+  "tag": "section",
+  "class": "burnlab-page-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Hero Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hero_image",
+      "label": "Show Hero Image",
+      "default": false,
+      "info": "Displays a full-width background image behind the page title."
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero Image"
+    },
+    {
+      "type": "range",
+      "id": "hero_height",
+      "label": "Hero Height (Desktop)",
+      "min": 200,
+      "max": 800,
+      "step": 20,
+      "unit": "px",
+      "default": 460
+    },
+    {
+      "type": "range",
+      "id": "hero_height_mobile",
+      "label": "Hero Height (Mobile)",
+      "min": 160,
+      "max": 540,
+      "step": 20,
+      "unit": "px",
+      "default": 300
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Image Overlay Darkness",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 65,
+      "info": "Controls how dark the gradient overlay is over the hero image."
+    },
+
+    {
+      "type": "header",
+      "content": "Page Title"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_page_title",
+      "label": "Show Page Title",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "custom_heading",
+      "label": "Custom Heading",
+      "info": "Replaces the page title if filled. Leave empty to use the page title automatically."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow Label",
+      "info": "Uppercase accent label above the title. Leave empty to hide."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumb",
+      "label": "Show Breadcrumb",
+      "default": true
+    },
+
+    {
+      "type": "header",
+      "content": "Intro and CTA"
+    },
+    {
+      "type": "richtext",
+      "id": "intro_text",
+      "label": "Intro Paragraph",
+      "info": "Optional lead text below the title. Leave empty to hide."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "Show CTA Button",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA Button Label",
+      "default": "Get Started"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "CTA Button URL"
+    },
+    {
+      "type": "select",
+      "id": "cta_style",
+      "label": "CTA Button Style",
+      "options": [
+        { "value": "primary", "label": "Primary (Green)" },
+        { "value": "outline", "label": "Outline"         },
+        { "value": "navy",    "label": "Navy"            },
+        { "value": "teal",    "label": "Teal"            }
+      ],
+      "default": "primary"
+    },
+
+    {
+      "type": "header",
+      "content": "Content Layout"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "label": "Content Column Max Width",
+      "min": 480,
+      "max": 1200,
+      "step": 40,
+      "unit": "px",
+      "default": 800,
+      "info": "Maximum width of the page body text column."
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "label": "Content Alignment",
+      "options": [
+        { "value": "left",   "label": "Left Aligned"  },
+        { "value": "center", "label": "Centered"      }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "content_card",
+      "label": "Show Content Card Background",
+      "default": false,
+      "info": "Wraps the content in a subtle frosted card panel."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_lead_para",
+      "label": "Style First Paragraph as Lead",
+      "default": true,
+      "info": "Makes the first paragraph slightly larger and bolder as a lead sentence."
+    },
+
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grain",
+      "label": "Enable Grain Overlay",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glows",
+      "label": "Enable Ambient Glow Blobs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_bg_text",
+      "label": "Show Decorative Background Text",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "bg_text_value",
+      "label": "Decorative Background Text",
+      "default": "BURNLAB",
+      "info": "Large faint text used as a background watermark. Requires the toggle above to be enabled."
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Page Title Size",
+      "min": 32,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "intro_size",
+      "label": "Intro and Lead Text Size",
+      "min": 14,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "label": "Body Text Size",
+      "min": 12,
+      "max": 22,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable Hero Image Parallax",
+      "default": true,
+      "info": "The hero image moves at a slightly different rate while scrolling, creating depth."
+    },
+    {
+      "type": "range",
+      "id": "parallax_speed",
+      "label": "Parallax Intensity",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "default": 40,
+      "info": "Higher value means more movement. 40 is a natural, subtle effect."
+    },
+
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Page",
+      "category": "Pages"
+    }
+  ]
+}
+{% endschema %}

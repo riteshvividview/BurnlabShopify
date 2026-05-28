@@ -1,0 +1,294 @@
+{% style %}
+  .main_blog_wrapper {
+    padding-top: {{ section.settings.top_spacing }}px;
+    padding-bottom: {{ section.settings.bottom_spacing }}px;
+  }
+
+  @media screen and (max-width: 640px) {
+    .main_blog_wrapper {
+      padding-top: {{ section.settings.mob_top_spacing }}px;
+      padding-bottom: {{ section.settings.mob_bottom_spacing }}px;
+    }
+  }
+{% endstyle %}
+
+{{ 'main-blog.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  if section.settings.columns == 6
+    assign columns = 'columns_6'
+  elsif section.settings.columns == 5
+    assign columns = 'columns_5'
+  elsif section.settings.columns == 4
+    assign columns = 'columns_4'
+  elsif section.settings.columns == 3
+    assign columns = 'columns_3'
+  elsif section.settings.columns == 2
+    assign columns = 'columns_2'
+  endif
+%}
+
+<div class="main_blog_wrapper color_scheme color-{{ section.settings.color_scheme }}">
+  <div class="container">
+    <div class="main_blog_header mb_head--{{ section.settings.head_align }}">
+      <h1 class="section_heading {{ section.settings.font_size }}{% if section.settings.font_style == 'body' %} body_style{% endif %}">
+        {{ blog.title }}
+      </h1>
+    </div>
+
+    {% if blog.articles.size > 0 %}
+      {% assign limit = section.settings.limit %}
+      {% paginate blog.articles by limit %}
+        <div class="main_blog_inner {{ section.settings.content_position }}" style="--mob_columns:{{ section.settings.mob_columns }}">         
+          {% for article in blog.articles %}
+            {% assign forloop_index = forloop.index %}
+            <div class="article_card {{ columns }}">
+              {%
+                render 'article-card',
+                article: article,
+                content_position: section.settings.content_position,
+                aspect_ratio: section.settings.aspect_ratio,
+                index: forloop_index,
+                show_date: section.settings.show_date,
+                show_author: section.settings.show_author,
+                show_content: section.settings.show_content
+              %}
+            </div>
+          {% endfor %}
+        </div>
+        {% render 'pagination', paginate: paginate %}
+      {% endpaginate %}
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Blog",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font_size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Number of blogs per page",
+      "min": 2,
+      "max": 50,
+      "step": 1,
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Number of columns per row",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "info": "Works only when content position is bottom."
+    },
+    {
+      "type": "header",
+      "content": "Article cards"
+    },    
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape"
+        },
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        }
+      ],
+      "default": "square"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Content position",
+      "options": [
+        {
+          "value": "content_right",
+          "label": "Content right"
+        },
+        {
+          "value": "content_bottom",
+          "label": "Content bottom"
+        }
+      ],
+      "default": "content_bottom"
+    },    
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_content",
+      "label": "Show content",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Mobile layout"
+    },
+    {
+      "type": "select",
+      "id": "mob_columns",
+      "label": "Number of columns",
+      "options": [
+        {
+          "value": "1",
+          "label": "One"
+        },
+        {
+          "value": "2",
+          "label": "Two"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "id": "top_spacing",
+      "label": "Top spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "Bottom spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "id": "mob_top_spacing",
+      "label": "Top spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "mob_bottom_spacing",
+      "label": "Bottom spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    }
+  ]
+}
+{% endschema %}

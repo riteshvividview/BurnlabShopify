@@ -1,0 +1,233 @@
+{% style %} .main_contact_form_wrapper-{{ section.id }} { padding-top: {{ section.settings.top_spacing }}px; padding-bottom: {{ section.settings.bottom_spacing }}px; } @media screen and (max-width: 640px) { .main_contact_form_wrapper-{{ section.id }} { padding-top: {{ section.settings.mob_top_spacing }}px; padding-bottom: {{ section.settings.mob_bottom_spacing }}px; } } {% endstyle %}
+{{ 'main-contact-form.css' | asset_url | stylesheet_tag }}
+<div class="main_contact_form_wrapper-{{ section.id }} color_scheme color-{{ section.settings.color_scheme }}">
+  <div class="container">
+    {% if section.settings.head != blank or section.settings.text != blank %}
+      <div
+        class="main_contact_form_header mc_head--{{ section.settings.head_align }}"
+        style="--max-width: {{ section.settings.max_width }}px;"
+      >
+        {% if section.settings.head != blank %}
+          <h2 class="section_heading {{ section.settings.font-size }}{% if section.settings.font_style == 'body' %} body_style{% endif %}">
+            {{ section.settings.head }}
+          </h2>
+        {% endif %}
+        {% if section.settings.text != blank %}
+          <div class="main_contact_form_content_wrapper rte">
+            <p>{{ section.settings.text }}</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+    <div class="main_contact_form_form_wrapper">
+      {%- form 'contact', id: 'ContactForm', class: 'main_contact_form' -%}
+        {%- if form.posted_successfully? -%}
+          <p class="form_success_msg" tabindex="-1" autofocus>
+            {{- 'icon-success.svg' | inline_asset_content -}}
+            {{ 'templates.contact.form.post_success' | t }}
+          </p>
+        {% elsif form.errors %}
+          <div class="form_error_msg">
+            <p class="form__message" role="alert" tabindex="-1" autofocus>
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13">
+                <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/> <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"/> <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/> <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+              </svg>
+              {{ 'templates.contact.form.error_heading' | t }}
+            </p>
+          </div>
+          <div class="form_errors">
+            <ul role="list">
+              <li>
+                {{ form.errors.translated_fields.email | capitalize }}
+                {{ form.errors.messages.email }}
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'name' %}
+              <div class="input_wrapper">
+                <input
+                  class="form_input"
+                  autocomplete="name"
+                  type="text"
+                  id="ContactForm-name"
+                  {% if block.settings.label != blank %}
+                    name="contact[{{ block.settings.label }}]"
+                  {% else %}
+                    name="contact[{{ 'templates.contact.form.name' | t }}]"
+                  {% endif %}
+                  value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+                  placeholder="{{ 'templates.contact.form.name' | t }}"
+                  {% if block.settings.required %}
+                    required
+                  {% endif %}
+                >
+                <label for="ContactForm-name">
+                  {% if block.settings.label != blank %}
+                    {% if block.settings.required != blank %}
+                      {{ block.settings.label | append: '*' }}
+                    {% else %}
+                      {{ block.settings.label }}
+                    {% endif %}
+                  {% else %}
+                    {% if block.settings.required %}
+                      {{ 'templates.contact.form.name' | t | append: ' *' }}
+                    {% else %}
+                      {{ 'templates.contact.form.name' | t }}
+                    {% endif %}
+                  {% endif %}
+                </label>
+              </div>
+            {% when 'email' %}
+              <div class="input_wrapper">
+                <input
+                  autocomplete="email"
+                  type="email"
+                  id="ContactForm-email"
+                  class="form_input"
+                  name="contact[email]"
+                  spellcheck="false"
+                  autocapitalize="off"
+                  value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                  aria-required="true"
+                  {% if form.errors contains 'email' %}
+                    aria-invalid="true" aria-describedby="ContactForm-email-error"
+                  {% endif %}
+                  placeholder="{{ 'templates.contact.form.email' | t }}"
+                  required
+                >
+                <label for="ContactForm-email">
+                  {% if block.settings.label != blank %}
+                    {{ block.settings.label }}
+                  {% else %}
+                    {{- 'templates.contact.form.email' | t | append: ' *' -}}
+                  {% endif %}
+                </label>
+              </div>
+            {% when 'phone' %}
+              <div class="input_wrapper">
+                <input
+                  type="tel"
+                  id="ContactForm-phone"
+                  class="form_input"
+                  autocomplete="tel"
+                  {% if block.settings.label != blank %}
+                    name="contact[{{ block.settings.label }}]"
+                  {% else %}
+                    name="contact[{{ 'templates.contact.form.phone' | t }}]"
+                  {% endif %}
+                  pattern="[0-9\-]*"
+                  value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}"
+                  placeholder="{{ 'templates.contact.form.phone' | t }}"
+                  {% if block.settings.required %}
+                    required
+                  {% endif %}
+                >
+                <label class="" for="ContactForm-phone">
+                  {% if block.settings.label != blank %}
+                    {% if block.settings.required != blank %}
+                      {{ block.settings.label | append: '*' }}
+                    {% else %}
+                      {{ block.settings.label }}
+                    {% endif %}
+                  {% else %}
+                    {% if block.settings.required %}
+                      {{ 'templates.contact.form.phone' | t | append: '*' }}
+                    {% else %}
+                      {{ 'templates.contact.form.phone' | t }}
+                    {% endif %}
+                  {% endif %}
+                </label>
+              </div>
+            {% when 'custom-field' %}
+              <div class="input_wrapper">
+                <input
+                  class="form_input"
+                  type="text"
+                  id="ContactForm-{{ block.settings.label }}"
+                  {% if block.settings.label != blank %}
+                    name="contact[{{ block.settings.label }}]"
+                  {% else %}
+                    name="contact[{{ 'templates.contact.form.custom_field' | t }}]"
+                  {% endif %}
+                  placeholder="{{ 'templates.contact.form.custom_field' | t }}"
+                  {% if block.settings.required %}
+                    required
+                  {% endif %}
+                >
+                <label for="ContactForm-{{ block.settings.label }}">
+                  {% if block.settings.label != blank %}
+                    {% if block.settings.required != blank %}
+                      {{ block.settings.label | append: '*' }}
+                    {% else %}
+                      {{ block.settings.label }}
+                    {% endif %}
+                  {% else %}
+                    {% if block.settings.required %}
+                      {{ 'templates.contact.form.custom_field' | t | append: ' *' }}
+                    {% else %}
+                      {{ 'templates.contact.form.custom_field' | t }}
+                    {% endif %}
+                  {% endif %}
+                </label>
+              </div>
+            {% when 'message' %}
+              <div class="input_wrapper textarea">
+                <textarea
+                  rows="10"
+                  id="ContactForm-body"
+                  class="form_input textarea"
+                  {% if block.settings.label != blank %}
+                    name="contact[{{ block.settings.label }}]"
+                  {% else %}
+                    name="contact[{{ 'templates.contact.form.comment' | t }}]"
+                  {% endif %}
+                  placeholder="{{ 'templates.contact.form.comment' | t }}"
+                  {% if block.settings.required %}
+                    required
+                  {% endif %}
+                > {{- form.body -}} </textarea>
+                <label class="" for="ContactForm-body">
+                  {% if block.settings.label != blank %}
+                    {% if block.settings.required %}
+                      {{ block.settings.label | append: '*' }}
+                    {% else %}
+                      {{ block.settings.label }}
+                    {% endif %}
+                  {% else %}
+                    {% if block.settings.required != blank %}
+                      {{- 'templates.contact.form.comment' | t | append: ' *' -}}
+                    {% else %}
+                      {{- 'templates.contact.form.comment' | t -}}
+                    {% endif %}
+                  {% endif %}
+                </label>
+              </div>
+            {% when 'button' %}
+              <div class="input_wrapper button_wrapper">
+                <button type="submit" class="btn {% if settings.button_style == 'wave' %}wave-btn{% endif %}">
+                  {% if settings.button_style == 'wave' %}
+                    {% if block.settings.label != blank %}
+                      <span>{{ block.settings.label }} </span>
+                    {% else %}
+                      <span>{{ 'templates.contact.form.send' | t }}</span>
+                    {% endif %}
+                  {% else %}
+                    {% if block.settings.label != blank %}
+                      {{ block.settings.label }}
+                    {% else %}
+                      {{ 'templates.contact.form.send' | t }}
+                    {% endif %}
+                  {% endif %}
+                  {% if settings.button_style == 'wave' %}<div class="wave"></div>{% endif %}
+                </button>
+              </div>
+          {% endcase %}
+        {% endfor %}
+      {% endform %}
+    </div>
+  </div>
+</div>
+{% schema %} { "name": "Contact form", "settings": [ { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" }, { "type": "text", "id": "head", "label": "Heading", "default": "Contact form" }, { "type": "select", "id": "font_style", "label": "Font style", "options": [ { "value": "heading", "label": "Heading" }, { "value": "body", "label": "Body" } ], "default": "heading" }, { "type": "select", "id": "font-size", "label": "Font size", "options": [ { "value": "XXXL", "label": "XXX large" }, { "value": "h1", "label": "Extra large" }, { "value": "h2", "label": "Large" }, { "value": "h3", "label": "Medium" }, { "value": "h4", "label": "Small" }, { "value": "h5", "label": "Extra small" } ], "default": "h2" }, { "type": "select", "id": "head_align", "label": "Heading alignment", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ], "default": "center" }, { "type": "inline_richtext", "id": "text", "label": "Text", "default": "Write a short description about the contact form and what is does." }, { "type": "range", "id": "max_width", "label": "Content max. width", "min": 600, "max": 1900, "step": 100, "default": 1200, "unit": "px" }, { "type": "header", "content": "Desktop spacing" }, { "type": "range", "label": "Top spacing", "id": "top_spacing", "min": 0, "max": 100, "default": 40, "unit": "px" }, { "type": "range", "label": "Bottom spacing", "id": "bottom_spacing", "min": 0, "max": 100, "default": 40, "unit": "px" }, { "type": "header", "content": "Mobile spacing" }, { "type": "range", "id": "mob_top_spacing", "label": "Top spacing", "min": 0, "max": 100, "default": 20, "unit": "px" }, { "type": "range", "id": "mob_bottom_spacing", "label": "Bottom spacing", "min": 0, "max": 100, "default": 20, "unit": "px" } ], "blocks": [ { "name": "Name", "type": "name", "limit": 1, "settings": [ { "type": "text", "id": "label", "label": "Enter label", "default": "Full Name" }, { "type": "checkbox", "id": "required", "label": "Required", "default": true } ] }, { "name": "Email", "type": "email", "limit": 1, "settings": [ { "type": "text", "id": "label", "label": "Enter label", "default": "Your Email Address" } ] }, { "name": "Phone", "type": "phone", "limit": 1, "settings": [ { "type": "text", "id": "label", "label": "Enter label", "default": "Your Phone Number" }, { "type": "checkbox", "id": "required", "label": "Required", "default": true } ] }, { "name": "Custom field", "type": "custom-field", "settings": [ { "type": "text", "id": "label", "label": "Enter label", "default": "Custom field" }, { "type": "checkbox", "id": "required", "label": "Required", "default": true } ] }, { "name": "Message", "type": "message", "limit": 1, "settings": [ { "type": "text", "id": "label", "label": "Enter label", "default": "Your Message" }, { "type": "checkbox", "id": "required", "label": "Required", "default": true } ] }, { "name": "Submit button", "type": "button", "limit": 1, "settings": [ { "type": "text", "id": "label", "label": "Button label", "default": "Submit Now" } ] } ], "presets": [ { "name": "Contact form", "blocks": [ { "type": "name", }, { "type": "email", }, { "type": "message", }, { "type": "button", } ] } ] } {% endschema %}

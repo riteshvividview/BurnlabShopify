@@ -1,0 +1,329 @@
+{% style %}
+  .main_article_wrapper {
+    padding-top: {{ section.settings.top_spacing }}px;
+    padding-bottom: {{ section.settings.bottom_spacing }}px;
+  }
+
+  @media screen and (max-width: 640px) {
+    .main_article_wrapper {
+      padding-top: {{ section.settings.mob_top_spacing }}px;
+      padding-bottom: {{ section.settings.mob_bottom_spacing }}px;
+    }
+  }
+{% endstyle %}
+
+{{ 'article.css' | asset_url | stylesheet_tag }}
+
+<div class="main_article_wrapper color_scheme color-{{ section.settings.color_scheme }}">
+  <div class="container">
+    {% if article.image != blank %}
+      <div class="main_article_img_wrapper article_img--{{ section.settings.img_height }}">
+        {{ article.image | image_url: width: 1920 | image_tag }}
+      </div>
+    {% endif %}
+
+    <div class="main_article_info_wrapper">
+      {% if section.settings.show_author or section.settings.show_date %}
+        <div class="main_article_author_wrapper">
+          {% if section.settings.show_author %}
+            <span class="main_article_author">{{ article.author }}</span>
+          {% endif %}
+
+          {% if section.settings.show_date %}
+            <span class="main_article_published_date">{{ article.published_at | date: '%B %d, %Y' }}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="main_article_title">
+        <h1 class="{{ section.settings.font_size }}{% if section.settings.font_style == 'body' %} body_style{% endif %}">
+          {{ article.title }}
+        </h1>
+      </div>
+
+      {% if section.settings.show_tags %}
+        {% if article.tags.size > 0 %}
+          <div class="main_article_tags_wrapper">
+            {% for tag in article.tags %}
+              <span>{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% if article.content != blank %}
+        <div class="main_article_content_wrapper">
+          <div class="main_article_content_inner rte">
+            {{ article.content }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if blog.comments_enabled? %}
+      <div class="main_article_comments_wrapper">
+        {% if article.comments_count > 0 %}
+          <div class="main_article_comments">
+            <h4 class="h4">{{ 'blog.article_comments' | t }}</h4>
+
+            {% paginate article.comments by 5 %}
+              <div class="main_article_comments_inner">
+                {% for comment in article.comments %}
+                  <div class="main_article_comment">
+                    <div class="main_article_comment_body">{{ comment.content }}</div>
+                    <div class="main_article_comment_info">
+                      <span>{{ comment.author }}</span>
+                      <span>{{ comment.created_at | date: '%B %d %Y' }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              {% render 'pagination', paginate: paginate %}
+            {% endpaginate %}
+          </div>
+        {% endif %}
+
+        <div class="main_article_comment_form_wrapper">
+          <h4 class="h4">{{ 'blog.comment_form_title' | t }}</h4>
+
+          {% form 'new_comment', article %}
+            {% if form.errors %}
+              <div class="form_error_msg">
+                <p class="form__message" role="alert" tabindex="-1" autofocus>
+                  <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13">
+                    <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
+                    <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"/>
+                    <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
+                    <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+                  </svg>
+                  {{ 'templates.contact.form.error_heading' | t }}
+                </p>
+              </div>
+              <div class="form_errors">
+                <ul role="list">
+                  <li>
+                    {{ form.errors.translated_fields.email | capitalize }}
+                    {{ form.errors.messages.email }}
+                  </li>
+                </ul>
+              </div>
+            {% elsif form.posted_successfully? %}
+              <p class="form_success_msg" tabindex="-1" autofocus>
+                {{- 'icon-success.svg' | inline_asset_content -}}
+                {{ 'templates.contact.form.post_success' | t }}
+              </p>
+            {% endif %}
+
+            <div class="input_wrapper">
+              <input
+                type="text"
+                name="comment[author]"
+                id="author"
+                value="{{ form.author }}"
+                placeholder="{{ 'blog.comment_form_name' | t | append: ' *' }}"
+                required
+              >
+              <label for="author">{{ 'blog.comment_form_name' | t | append: ' *' }}</label>
+            </div>
+
+            <div class="input_wrapper">
+              <input
+                type="email"
+                name="comment[email]"
+                id="email"
+                value="{{ form.email }}"
+                placeholder="{{ 'blog.comment_form_email' | t | append: ' *' }}"
+                required
+              >
+              <label for="email">{{ 'blog.comment_form_email' | t | append: ' *' }}</label>
+            </div>
+
+            <div class="input_wrapper textarea">
+              <textarea
+                rows="5"
+                name="comment[body]"
+                id="body"
+                placeholder="{{ 'blog.comment_form_body' | t | append: ' *' }}"
+                required
+              >{{ form.body }}</textarea>
+              <label for="body">{{ 'blog.comment_form_body' | t | append: ' *' }}</label>
+            </div>
+
+            {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+            <button type="submit" class="btn">{{ 'blog.comment_form_submit' | t }}</button>
+            {% if settings.enable_magnet %}</magnetic-button>{% endif %}
+
+            {%- if blog.moderated? -%}
+              <p class="moderated_comment_text">{{ 'blog.moderated' | t | prepend: '*' }}</p>
+            {%- endif -%}
+          {% endform %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Blog posts",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font_size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "header",
+      "content": "Settings"
+    },
+    {
+      "type": "select",
+      "id": "img_height",
+      "label": "Image height",
+      "info": "Image will auto adjust on mobile screens",
+      "options": [
+        {
+          "value": "one_third",
+          "label": "1/3 of screen"
+        },
+        {
+          "value": "two_third",
+          "label": "2/3 of screen"
+        },
+        {
+          "value": "half",
+          "label": "Half of screen"
+        },
+        {
+          "value": "full",
+          "label": "Full screen"
+        },
+        {
+          "value": "auto",
+          "label": "Adapt to image"
+        }
+      ],
+      "default": "two_third"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tags",
+      "label": "Show tags",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "id": "top_spacing",
+      "label": "Top spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "Bottom spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "id": "mob_top_spacing",
+      "label": "Top spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "mob_bottom_spacing",
+      "label": "Bottom spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    }
+  ]
+}
+{% endschema %}
