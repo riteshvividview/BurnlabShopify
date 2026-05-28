@@ -1,0 +1,2290 @@
+{% comment %}
+  ============================================================
+  BURNLAB — HERO SECTION (Premium v2.1)
+  Features:
+  · Stacked dual-row scroll parallax text (opposite directions)
+      Row 1 → slides in from the LEFT on scroll
+      Row 2 → slides in from the RIGHT on scroll
+      Rows are side-by-side lines (stacked, NOT overlapping)
+  · Per-row: speed, style, size, opacity, enable/disable
+  · Global toggle to disable ALL text parallax at once
+  · Single-text auto-centering when only one row is active
+  · Mouse-move parallax on glows + side image
+  · Scroll-reveal animations with IntersectionObserver
+  · Animated stat counters
+  · Floating badge with pulse dot
+  · Video / Image / Solid Color backgrounds
+  · Grain + ambient glow + noise texture overlays
+  · Fully customisable via Shopify OS 2.0 schema
+  · Accessible (prefers-reduced-motion respected)
+  Min Width: 300px | Supports: OS 2.0
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id      = 'burnlab-hero-' | append: section.id
+  assign bg_text_1       = section.settings.bg_text_top    | default: 'BURNLAB'
+  assign bg_text_2       = section.settings.bg_text_bottom | default: 'FITNESS'
+  assign heading         = section.settings.heading        | default: 'Built for<br>Real Homes.'
+  assign subheading      = section.settings.subheading     | default: 'Premium Fitness Gear'
+  assign body_text       = section.settings.body_text      | default: 'From adjustable dumbbells to smart multifunctional kits — Burnlab designs gear for beginners and serious trainers. No hype. No shortcuts. Just solid gear that works.'
+  assign cta_label       = section.settings.cta_label      | default: 'Discover Now'
+  assign cta_url         = section.settings.cta_url        | default: '#'
+  assign cta_label_2     = section.settings.cta_label_2    | default: 'Our Story'
+  assign cta_url_2       = section.settings.cta_url_2      | default: '#'
+  assign side_image      = section.settings.side_image
+  assign bg_type         = section.settings.background_type
+  assign bg_image        = section.settings.background_image
+  assign bg_video        = section.settings.background_video
+  assign overlay_color   = section.settings.overlay_color
+  assign overlay_opacity = section.settings.overlay_opacity | divided_by: 100.0
+
+  assign bg1_on  = section.settings.bg_text_1_enabled
+  assign bg2_on  = section.settings.bg_text_2_enabled
+  assign bg_count = 0
+  if bg1_on
+    assign bg_count = bg_count | plus: 1
+  endif
+  if bg2_on
+    assign bg_count = bg_count | plus: 1
+  endif
+-%}
+
+{%- liquid
+  assign tab1_icon_label = section.settings.tab1_icon_label
+  assign tab1_thumb      = section.settings.tab1_thumb
+
+  assign tab2_icon_label = section.settings.tab2_icon_label
+  assign tab2_eyebrow    = section.settings.tab2_eyebrow    | default: 'Our Range'
+  assign tab2_body       = section.settings.tab2_body
+  assign tab2_cta_label  = section.settings.tab2_cta_label  | default: 'Shop Collections'
+  assign tab2_cta_url    = section.settings.tab2_cta_url    | default: '#'
+  assign tab2_bg_type    = section.settings.tab2_bg_type    | default: 'color'
+  assign tab2_bg_image   = section.settings.tab2_bg_image
+  assign tab2_bg_video   = section.settings.tab2_bg_video
+  assign tab2_thumb      = section.settings.tab2_thumb_image
+
+  assign tab3_icon_label = section.settings.tab3_icon_label
+  assign tab3_eyebrow    = section.settings.tab3_eyebrow    | default: 'BurnLab'
+  assign tab3_body       = section.settings.tab3_body
+  assign tab3_cta_label  = section.settings.tab3_cta_label  | default: 'Our Story'
+  assign tab3_cta_url    = section.settings.tab3_cta_url    | default: '#'
+  assign tab3_bg_type    = section.settings.tab3_bg_type    | default: 'color'
+  assign tab3_bg_image   = section.settings.tab3_bg_image
+  assign tab3_bg_video   = section.settings.tab3_bg_video
+  assign tab3_thumb      = section.settings.tab3_thumb_image
+-%}
+
+<style>
+  /* ── CSS VARIABLES ──────────────────────────────────────── */
+  #{{ section_id }} {
+    --bl-green:       {{ section.settings.accent_color  | default: '#07d16e' }};
+    --bl-navy:        {{ section.settings.section_bg    | default: '#001a2e' }};
+    --bl-pale:        {{ section.settings.text_color    | default: '#eaf4f5' }};
+    --bl-teal:        #336870;
+    --font-primary:   'Archivo Black', sans-serif;
+    --font-secondary: 'DM Sans', sans-serif;
+    --hero-min-h:     {{ section.settings.section_height | default: '100vh' }};
+    --content-max-w:  {{ section.settings.content_max_width | default: 480 }}px;
+    --side-img-w:     {{ section.settings.side_image_width | default: 38 }}%;
+    /* Per-row bg text controls */
+    --bg-txt-1-size:    {{ section.settings.bg_text_1_size | default: 17 }}vw;
+    --bg-txt-1-opacity: {{ section.settings.bg_text_1_opacity | default: 12 | divided_by: 100.0 }};
+    --bg-txt-2-size:    {{ section.settings.bg_text_2_size | default: 17 }}vw;
+    --bg-txt-2-opacity: {{ section.settings.bg_text_2_opacity | default: 10 | divided_by: 100.0 }};
+    --bg-txt-gap:       {{ section.settings.bg_text_gap | default: 12 }}px;
+    --side-fade-w:    {{ section.settings.side_image_fade_width  | default: 45 }}%;
+    --side-fade-op:   {{ section.settings.side_image_fade_opacity | default: 100 | divided_by: 100.0 }};
+    --ease-expo:      cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-back:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Light mode token overrides ────────────────────────── */
+  [data-theme="light"] #{{ section_id }} {
+    --bl-navy: {{ section.settings.hero_bg_light   | default: '#eaf4f5' }};
+    --bl-pale: {{ section.settings.hero_text_light | default: '#001a2e' }};
+  }
+
+  /* ── RESET ─────────────────────────────────────────────── */
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  /* ── SECTION SHELL ──────────────────────────────────────── */
+  #{{ section_id }} {
+    position: relative;
+    min-height: var(--hero-min-h);
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--bl-navy);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    isolation: isolate;
+  }
+
+  /* ── BACKGROUND MEDIA ───────────────────────────────────── */
+  #{{ section_id }} .bl-bg-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+  #{{ section_id }} .bl-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: {{ overlay_color | default: '#001a2e' }};
+    opacity: {{ overlay_opacity }};
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ── GRAIN ──────────────────────────────────────────────── */
+  #{{ section_id }} .bl-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    background-size: 220px;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* ── AMBIENT GLOWS ──────────────────────────────────────── */
+  #{{ section_id }} .bl-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-glow--a {
+    width: clamp(320px, 55vw, 700px);
+    height: clamp(320px, 55vw, 700px);
+    background: var(--bl-green);
+    opacity: 0.13;
+    top: -15%;
+    left: -5%;
+    animation: glowDriftA 9s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .bl-glow--b {
+    width: clamp(240px, 42vw, 520px);
+    height: clamp(240px, 42vw, 520px);
+    background: var(--bl-teal);
+    opacity: 0.16;
+    bottom: -10%;
+    right: 5%;
+    animation: glowDriftB 11s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .bl-glow--c {
+    width: clamp(180px, 30vw, 380px);
+    height: clamp(180px, 30vw, 380px);
+    background: #0af0ff;
+    opacity: 0.05;
+    top: 40%;
+    left: 50%;
+    animation: glowDriftC 13s ease-in-out infinite alternate;
+  }
+  @keyframes glowDriftA { from{transform:translate(0,0) scale(1)} to{transform:translate(50px,35px) scale(1.12)} }
+  @keyframes glowDriftB { from{transform:translate(0,0) scale(1)} to{transform:translate(-35px,-25px) scale(1.09)} }
+  @keyframes glowDriftC { from{transform:translate(0,0)} to{transform:translate(-40px,30px)} }
+
+  /* ═══════════════════════════════════════════════════════════
+     STACKED DUAL PARALLAX BG TEXT
+     ─────────────────────────────────────────────────────────
+     Two rows stacked vertically (NOT overlapping).
+     Row 1: starts to the LEFT  → scrolling moves it RIGHT
+     Row 2: starts to the RIGHT → scrolling moves it LEFT
+     When only one row is enabled, the wrapper centres it.
+  ═══════════════════════════════════════════════════════════ */
+  #{{ section_id }} .bl-bg-text-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;      /* default: rows left-anchored */
+    gap: var(--bg-txt-gap);
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+  }
+
+  /* When only one row is active → centre it horizontally */
+  #{{ section_id }} .bl-bg-text-wrap.is-single {
+    align-items: center;
+  }
+  #{{ section_id }} .bl-bg-text-wrap.is-single .bl-bg-text {
+    text-align: center;
+  }
+
+  /* ── Base text row ── */
+  #{{ section_id }} .bl-bg-text {
+    font-family: var(--font-primary);
+    font-weight: 900;
+    line-height: 0.88;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    user-select: none;
+    will-change: transform;
+  }
+
+  /* ── Per-row sizing & opacity ── */
+  #{{ section_id }} .bl-bg-text--1 {
+    font-size: var(--bg-txt-1-size);
+    opacity: var(--bg-txt-1-opacity);
+  }
+  #{{ section_id }} .bl-bg-text--2 {
+    font-size: var(--bg-txt-2-size);
+    opacity: var(--bg-txt-2-opacity);
+  }
+
+  /* ── Style variants (applied via data-bg-style attribute) ─ */
+
+  /* Outlined — stroke only, no fill (classic large text look) */
+  #{{ section_id }} .bl-bg-text[data-bg-style="outlined"] {
+    -webkit-text-stroke: 1.5px var(--bl-pale);
+    color: transparent;
+  }
+
+  /* Filled — solid colour fill */
+  #{{ section_id }} .bl-bg-text[data-bg-style="filled"] {
+    -webkit-text-stroke: 0;
+    color: var(--bl-pale);
+  }
+
+  /* Outlined Accent — stroke in the accent / brand colour */
+  #{{ section_id }} .bl-bg-text[data-bg-style="outlined-accent"] {
+    -webkit-text-stroke: 1.5px var(--bl-green);
+    color: transparent;
+  }
+
+  /* Filled Accent — solid fill in accent colour */
+  #{{ section_id }} .bl-bg-text[data-bg-style="filled-accent"] {
+    -webkit-text-stroke: 0;
+    color: var(--bl-green);
+  }
+
+  /* Gradient — horizontal gradient from accent → pale */
+  #{{ section_id }} .bl-bg-text[data-bg-style="gradient"] {
+    background: linear-gradient(90deg, var(--bl-green) 0%, var(--bl-pale) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Gradient Reverse */
+  #{{ section_id }} .bl-bg-text[data-bg-style="gradient-reverse"] {
+    background: linear-gradient(90deg, var(--bl-pale) 0%, var(--bl-green) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* ── CONTENT COLUMN ─────────────────────────────────────── */
+  #{{ section_id }} .bl-content {
+    position: relative;
+    z-index: 20;
+    flex: 0 0 auto;
+    max-width: var(--content-max-w);
+    padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 64px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ── EYEBROW ────────────────────────────────────────────── */
+  #{{ section_id }} .bl-eyebrow {
+    font-family: var(--font-secondary);
+    font-size: clamp(10px, 1.1vw, 12px);
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--bl-green);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  #{{ section_id }} .bl-eyebrow.is-visible {
+    animation: blFadeUp 0.7s var(--ease-expo) forwards;
+  }
+  #{{ section_id }} .bl-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 36px;
+    height: 1.5px;
+    background: var(--bl-green);
+    flex-shrink: 0;
+  }
+
+  /* ── HEADING ────────────────────────────────────────────── */
+  #{{ section_id }} .bl-heading {
+    font-family: var(--font-primary);
+    font-size: clamp(34px, 5.8vw, 80px);
+    font-weight: 900;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--bl-pale);
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  #{{ section_id }} .bl-heading.is-visible {
+    animation: blFadeUp 0.85s var(--ease-expo) forwards 0.15s;
+  }
+  /* richtext type wraps content in <p> — force heading font on all children */
+  #{{ section_id }} .bl-heading p,
+  #{{ section_id }} .bl-heading span,
+  #{{ section_id }} .bl-heading strong,
+  #{{ section_id }} .bl-heading em { font-family: inherit; }
+
+  #{{ section_id }} .bl-heading em {
+    font-style: normal;
+    color: var(--bl-green);
+    position: relative;
+    display: inline-block;
+  }
+  #{{ section_id }} .bl-heading em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--bl-green);
+    border-radius: 2px;
+    transition: width 0.9s var(--ease-expo) 0.9s;
+  }
+  #{{ section_id }} .bl-heading.is-visible em::after { width: 100%; }
+
+  /* ── DIVIDER ────────────────────────────────────────────── */
+  #{{ section_id }} .bl-divider {
+    width: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, var(--bl-green), transparent);
+    opacity: 0;
+    transition: width 0.8s var(--ease-expo) 0.45s, opacity 0.4s ease 0.45s;
+  }
+  #{{ section_id }} .bl-divider.is-visible { width: 52px; opacity: 1; }
+
+  /* ── BODY ───────────────────────────────────────────────── */
+  #{{ section_id }} .bl-body {
+    font-family: var(--font-secondary);
+    font-size: clamp(14px, 1.25vw, 16px);
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--bl-pale);
+    opacity: 0;
+    transform: translateY(22px);
+    max-width: 40ch;
+  }
+  #{{ section_id }} .bl-body.is-visible {
+    animation: blFadeUp 0.75s var(--ease-expo) forwards 0.35s;
+  }
+
+  /* ── CTA ROW ────────────────────────────────────────────── */
+  #{{ section_id }} .bl-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(22px);
+    margin-top: 6px;
+  }
+  #{{ section_id }} .bl-cta-row.is-visible {
+    animation: blFadeUp 0.75s var(--ease-expo) forwards 0.5s;
+  }
+
+  #{{ section_id }} .bl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 15px 30px;
+    border-radius: 100px;
+    font-family: var(--font-secondary);
+    font-size: clamp(12px, 1.1vw, 14px);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.28s var(--ease-back), box-shadow 0.28s ease, background 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #{{ section_id }} .bl-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+  }
+  #{{ section_id }} .bl-btn:hover::before { opacity: 1; }
+  #{{ section_id }} .bl-btn:hover { transform: translateY(-3px) scale(1.02); }
+  #{{ section_id }} .bl-btn:active { transform: translateY(0) scale(0.98); }
+
+  #{{ section_id }} .bl-btn--primary {
+    background: var(--bl-green);
+    color: var(--bl-navy);
+    box-shadow: 0 8px 28px rgba(7,209,110,0.32), 0 2px 6px rgba(7,209,110,0.15);
+  }
+  #{{ section_id }} .bl-btn--primary:hover {
+    box-shadow: 0 16px 40px rgba(7,209,110,0.40), 0 4px 10px rgba(7,209,110,0.2);
+  }
+  #{{ section_id }} .bl-btn--secondary {
+    background: rgba(255,255,255,0.05);
+    color: var(--bl-pale);
+    border: 1.5px solid rgba(234,244,245,0.22);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #{{ section_id }} .bl-btn--secondary:hover {
+    border-color: var(--bl-green);
+    box-shadow: 0 0 0 1px var(--bl-green), 0 8px 24px rgba(7,209,110,0.14);
+  }
+
+  /* ── STATS ──────────────────────────────────────────────── */
+  #{{ section_id }} .bl-stats {
+    display: flex;
+    gap: clamp(20px, 3vw, 40px);
+    flex-wrap: wrap;
+    margin-top: 6px;
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  #{{ section_id }} .bl-stats.is-visible {
+    animation: blFadeUp 0.75s var(--ease-expo) forwards 0.65s;
+  }
+  #{{ section_id }} .bl-stat { display: flex; flex-direction: column; gap: 3px; }
+  #{{ section_id }} .bl-stat__num {
+    font-family: var(--font-primary);
+    font-size: clamp(22px, 2.6vw, 34px);
+    font-weight: 900;
+    color: var(--bl-green);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    transition: color 0.3s;
+  }
+  #{{ section_id }} .bl-stat__label {
+    font-family: var(--font-secondary);
+    font-size: clamp(9px, 0.85vw, 11px);
+    font-weight: 400;
+    color: var(--bl-pale);
+    opacity: 0.48;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  #{{ section_id }} .bl-stat + .bl-stat {
+    border-left: 1px solid rgba(234,244,245,0.1);
+    padding-left: clamp(20px, 3vw, 40px);
+  }
+
+  /* ── LIVE TAG ───────────────────────────────────────────── */
+  #{{ section_id }} .bl-tag {
+    position: absolute;
+    top: clamp(20px, 3vw, 32px);
+    right: clamp(20px, 3vw, 40px);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0,26,46,0.55);
+    border: 1px solid rgba(7,209,110,0.25);
+    border-radius: 100px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    animation: blFadeIn 0.7s ease forwards 1.4s;
+  }
+  #{{ section_id }} .bl-tag__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bl-green);
+    flex-shrink: 0;
+    animation: blPulse 2s ease-in-out infinite;
+  }
+  #{{ section_id }} .bl-tag__text {
+    font-family: var(--font-secondary);
+    font-size: clamp(9px, 0.9vw, 11px);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bl-pale);
+    opacity: 0.8;
+  }
+  @keyframes blPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(7,209,110,0.5); }
+    50%      { box-shadow: 0 0 0 5px rgba(7,209,110,0); }
+  }
+
+  /* ── SCROLL INDICATOR ───────────────────────────────────── */
+  #{{ section_id }} .bl-scroll-hint {
+    position: absolute;
+    bottom: clamp(20px, 3vw, 32px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    animation: blFadeIn 0.7s ease forwards 1.6s;
+  }
+  #{{ section_id }} .bl-scroll-hint__text {
+    font-family: var(--font-secondary);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bl-pale);
+    opacity: 0.35;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    height: 36px;
+  }
+  #{{ section_id }} .bl-scroll-hint__line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--bl-green), transparent);
+    animation: blScrollLine 2s ease-in-out infinite;
+  }
+  @keyframes blScrollLine {
+    0%   { transform: scaleY(0); transform-origin: top; }
+    50%  { transform: scaleY(1); transform-origin: top; }
+    51%  { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ── SIDE IMAGE ─────────────────────────────────────────── */
+  #{{ section_id }} .bl-side-image {
+    position: relative;
+    z-index: 20;
+    flex: 0 0 var(--side-img-w);
+    height: var(--hero-min-h);
+    max-height: 100%;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.9s var(--ease-expo) 0.3s, transform 0.9s var(--ease-expo) 0.3s;
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-side-image.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #{{ section_id }} .bl-side-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    filter: {{ section.settings.side_image_filter | default: 'none' }};
+    will-change: transform;
+    transition: transform 0.1s linear;
+    transform: scale(1.08);
+  }
+  #{{ section_id }} .bl-side-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--side-fade-w);
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      var(--bl-navy) 0%,
+      color-mix(in srgb, var(--bl-navy) 60%, transparent) 50%,
+      transparent 100%
+    );
+    opacity: var(--side-fade-op);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ── PROGRESS BAR ───────────────────────────────────────── */
+  #{{ section_id }} .bl-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--bl-green), #0af0ff);
+    z-index: 40;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(7,209,110,0.4);
+  }
+
+  /* ── KEYFRAMES ──────────────────────────────────────────── */
+  @keyframes blFadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bl-eyebrow,
+    #{{ section_id }} .bl-heading,
+    #{{ section_id }} .bl-body,
+    #{{ section_id }} .bl-cta-row,
+    #{{ section_id }} .bl-stats,
+    #{{ section_id }} .bl-tag,
+    #{{ section_id }} .bl-scroll-hint,
+    #{{ section_id }} .bl-side-image {
+      opacity: 1 !important;
+      transform: none !important;
+      animation: none !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .bl-divider { width: 52px; opacity: 1; }
+    #{{ section_id }} .bl-heading em::after { width: 100%; }
+    #{{ section_id }} .bl-bg-text { transform: none !important; }
+    #{{ section_id }} .bl-glow--a,
+    #{{ section_id }} .bl-glow--b,
+    #{{ section_id }} .bl-glow--c { animation: none; }
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    #{{ section_id }} { --side-img-w: 36%; --content-max-w: 400px; }
+    #{{ section_id }} .bl-bg-text--1,
+    #{{ section_id }} .bl-bg-text--2 { font-size: clamp(14vw, 20vw, 24vw); }
+  }
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      flex-direction: column;
+      min-height: auto;
+      padding-bottom: clamp(60px, 14vw, 100px);
+    }
+    #{{ section_id }} .bl-content {
+      order: 1;
+      max-width: 100%;
+      padding: clamp(72px, 18vw, 90px) clamp(20px, 5vw, 40px) 24px;
+      align-items: center;
+      text-align: center;
+    }
+    #{{ section_id }} .bl-eyebrow { justify-content: center; }
+    #{{ section_id }} .bl-body  { max-width: 52ch; text-align: center; }
+    #{{ section_id }} .bl-cta-row { justify-content: center; }
+    #{{ section_id }} .bl-stats { justify-content: center; }
+    #{{ section_id }} .bl-heading em::after { display: none; }
+    #{{ section_id }} .bl-side-image { order: 2; flex: 0 0 auto; width: 100%; height: clamp(220px, 50vw, 380px); }
+    #{{ section_id }} .bl-side-image::before {
+      background: linear-gradient(to bottom, var(--bl-navy) 0%, transparent 20%, transparent 80%, var(--bl-navy) 100%);
+    }
+    #{{ section_id }} .bl-scroll-hint,
+    #{{ section_id }} .bl-progress { display: none; }
+    #{{ section_id }} .bl-bg-text--1,
+    #{{ section_id }} .bl-bg-text--2 {
+      font-size: clamp(18vw, 24vw, 30vw);
+      white-space: nowrap;
+      text-align: center;
+      line-height: 0.88;
+    }
+    /* On mobile: always centre the bg text regardless of row count */
+    #{{ section_id }} .bl-bg-text-wrap { align-items: center; }
+  }
+  @media (max-width: 480px) {
+    #{{ section_id }} .bl-tag { top: 14px; right: 14px; padding: 6px 12px; }
+    #{{ section_id }} .bl-stat + .bl-stat { border-left: none; padding-left: 0; }
+  }
+  @media (max-width: 340px) {
+    #{{ section_id }} .bl-heading { font-size: 28px; }
+    #{{ section_id }} .bl-cta-row { flex-direction: column; align-items: stretch; }
+    #{{ section_id }} .bl-btn { justify-content: center; }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     TAB BACKGROUND LAYERS (tabs 2 & 3 fade over tab 1)
+  ══════════════════════════════════════════════════════ */
+  #{{ section_id }} .bl-tab-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    will-change: opacity;
+  }
+  #{{ section_id }} .bl-tab-bg.is-active { opacity: 1; }
+  #{{ section_id }} .bl-tab-bg video,
+  #{{ section_id }} .bl-tab-bg img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  #{{ section_id }} .bl-tab-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: {{ overlay_color | default: '#001a2e' }};
+    opacity: {{ overlay_opacity }};
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ── Flash pulse on tab switch ── */
+  #{{ section_id }} .bl-tab-flash {
+    position: absolute;
+    inset: 0;
+    background: var(--bl-navy);
+    opacity: 0;
+    z-index: 6;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  #{{ section_id }} .bl-tab-flash.is-active { opacity: 0.28; }
+
+  /* ══════════════════════════════════════════════════════
+     TAB PANELS (content grid — all stacked, one visible)
+  ══════════════════════════════════════════════════════ */
+  #{{ section_id }} .bl-tab-panels-wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    width: 100%;
+  }
+  {%- assign tab_trans = section.settings.tab_transition | default: 'fade-up' -%}
+
+  #{{ section_id }} .bl-tab-panels-wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    width: 100%;
+    {%- if tab_trans == 'flip-3d' or tab_trans == 'swing-3d' -%}
+    perspective: 900px;
+    {%- endif -%}
+  }
+
+  #{{ section_id }} .bl-tab-panel {
+    grid-row: 1;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    opacity: 0;
+    backface-visibility: hidden;
+    {%- if tab_trans == 'fade-up' -%}
+    transform: translateY(20px);
+    {%- elsif tab_trans == 'fade-zoom' -%}
+    transform: scale(0.93);
+    {%- elsif tab_trans == 'fade-slide' -%}
+    transform: translateX(-28px);
+    {%- elsif tab_trans == 'flip-3d' -%}
+    transform: rotateY(42deg);
+    transform-origin: left center;
+    {%- elsif tab_trans == 'swing-3d' -%}
+    transform: rotateX(-38deg) translateY(-14px);
+    transform-origin: top center;
+    {%- else -%}
+    transform: none;
+    {%- endif -%}
+    pointer-events: none;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+    user-select: none;
+  }
+  #{{ section_id }} .bl-tab-panel.is-active {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    user-select: auto;
+  }
+
+  /* bg-text-wrap smooth fade when toggled per-tab */
+  #{{ section_id }} .bl-bg-text-wrap {
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+
+  /* Side image hidden per-tab */
+  #{{ section_id }} .bl-side-image.bl-tab-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.5s ease !important;
+  }
+  /* Static divider for panels 2 & 3 (no js-reveal) */
+  #{{ section_id }} .bl-tab-panel .bl-divider--static {
+    width: 52px;
+    height: 1.5px;
+    background: linear-gradient(90deg, var(--bl-green), transparent);
+    opacity: 1;
+  }
+  /* Heading in panels 2 & 3 starts visible */
+  #{{ section_id }} .bl-tab-panel:not([data-tab="1"]) .bl-heading,
+  #{{ section_id }} .bl-tab-panel:not([data-tab="1"]) .bl-eyebrow,
+  #{{ section_id }} .bl-tab-panel:not([data-tab="1"]) .bl-body,
+  #{{ section_id }} .bl-tab-panel:not([data-tab="1"]) .bl-cta-row {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     TAB NAVIGATION
+  ══════════════════════════════════════════════════════ */
+  #{{ section_id }} .bl-tab-nav {
+    display: flex;
+    gap: clamp(1rem, 2vw, 1.6rem);
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  #{{ section_id }} .bl-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+  #{{ section_id }} .bl-tab-thumb {
+    width: clamp(50px, 6.5vw, 70px);
+    height: clamp(50px, 6.5vw, 70px);
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2.5px solid rgba(234,244,245,0.18);
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.3s ease,
+                box-shadow 0.3s ease,
+                transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+    flex-shrink: 0;
+  }
+  #{{ section_id }} .bl-tab-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+  #{{ section_id }} .bl-tab-thumb svg {
+    width: 1.6rem;
+    height: 1.6rem;
+    color: var(--bl-pale);
+    opacity: 0.4;
+  }
+  #{{ section_id }} .bl-tab-label {
+    font-family: var(--font-secondary);
+    font-size: clamp(9px, 0.8vw, 10px);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bl-pale);
+    opacity: 0.4;
+    transition: opacity 0.25s ease, color 0.25s ease;
+    white-space: nowrap;
+    overflow-wrap: break-word;
+  }
+  /* Active / hover states */
+  #{{ section_id }} .bl-tab-btn:hover .bl-tab-thumb,
+  #{{ section_id }} .bl-tab-btn.is-active .bl-tab-thumb {
+    border-color: var(--bl-green);
+    box-shadow: 0 0 0 3px rgba(7,209,110,0.22), 0 4px 16px rgba(7,209,110,0.18);
+    transform: scale(1.1);
+  }
+  #{{ section_id }} .bl-tab-btn.is-active .bl-tab-thumb {
+    box-shadow: 0 0 0 4px rgba(7,209,110,0.3), 0 6px 22px rgba(7,209,110,0.24);
+  }
+  #{{ section_id }} .bl-tab-btn:hover .bl-tab-label,
+  #{{ section_id }} .bl-tab-btn.is-active .bl-tab-label {
+    opacity: 1;
+    color: var(--bl-green);
+  }
+  /* Active indicator dot */
+  #{{ section_id }} .bl-tab-btn::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--bl-green);
+    border-radius: 2px;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 2px;
+  }
+  #{{ section_id }} .bl-tab-btn.is-active::after { width: 100%; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bl-tab-bg,
+    #{{ section_id }} .bl-tab-panel,
+    #{{ section_id }} .bl-tab-thumb { transition: none !important; }
+  }
+
+  /* Mobile tab nav centre-align */
+  @media (max-width: 768px) {
+    #{{ section_id }} .bl-tab-nav { justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    #{{ section_id }} .bl-tab-thumb {
+      width: 46px;
+      height: 46px;
+    }
+    #{{ section_id }} .bl-tab-nav { gap: 0.9rem; }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-hero"
+  data-section-id="{{ section.id }}"
+  aria-label="{{ 'sections.hero.title' | t | default: 'Hero section' }}"
+>
+
+  <!-- Background media -->
+  {%- if bg_type == 'image' and bg_image != blank -%}
+    {{ bg_image | image_url: width: 2000 | image_tag: class: 'bl-bg-media', loading: 'eager', fetchpriority: 'high' }}
+  {%- elsif bg_type == 'video' and bg_video != blank -%}
+    {{ bg_video | video_tag: autoplay: true, loop: true, muted: true, controls: false, class: 'bl-bg-media', playsinline: true }}
+  {%- endif -%}
+  {%- if bg_type != 'color' -%}
+    <div class="bl-bg-overlay" aria-hidden="true"></div>
+  {%- endif -%}
+
+  <!-- Tab 2 background layer -->
+  <div class="bl-tab-bg" data-tab-bg="2" aria-hidden="true">
+    {%- if tab2_bg_type == 'video' and tab2_bg_video != blank -%}
+      {{ tab2_bg_video | video_tag: autoplay: false, loop: true, muted: true, controls: false, playsinline: true }}
+    {%- elsif tab2_bg_type == 'image' and tab2_bg_image != blank -%}
+      <img src="{{ tab2_bg_image | image_url: width: 2000 }}" alt="" loading="lazy">
+    {%- endif -%}
+    <div class="bl-tab-bg-overlay"></div>
+  </div>
+
+  <!-- Tab 3 background layer -->
+  <div class="bl-tab-bg" data-tab-bg="3" aria-hidden="true">
+    {%- if tab3_bg_type == 'video' and tab3_bg_video != blank -%}
+      {{ tab3_bg_video | video_tag: autoplay: false, loop: true, muted: true, controls: false, playsinline: true }}
+    {%- elsif tab3_bg_type == 'image' and tab3_bg_image != blank -%}
+      <img src="{{ tab3_bg_image | image_url: width: 2000 }}" alt="" loading="lazy">
+    {%- endif -%}
+    <div class="bl-tab-bg-overlay"></div>
+  </div>
+
+  <!-- Tab transition flash -->
+  <div class="bl-tab-flash" aria-hidden="true"></div>
+
+  <!-- Grain overlay -->
+  <div class="bl-grain" aria-hidden="true"></div>
+
+  <!-- Ambient glows -->
+  <div class="bl-glow bl-glow--a" aria-hidden="true"></div>
+  <div class="bl-glow bl-glow--b" aria-hidden="true"></div>
+  <div class="bl-glow bl-glow--c" aria-hidden="true"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STACKED DUAL PARALLAX BG TEXT
+       Row 1: slides in from LEFT  (data-parallax-dir="from-left")
+       Row 2: slides in from RIGHT (data-parallax-dir="from-right")
+       .is-single added by Liquid when only one row is enabled
+       → centres that row automatically via CSS.
+  ═══════════════════════════════════════════════════════ -->
+  {%- if bg_count > 0 -%}
+  <div
+    class="bl-bg-text-wrap{% if bg_count == 1 %} is-single{% endif %}"
+    aria-hidden="true"
+  >
+    {%- if section.settings.bg_text_1_enabled -%}
+    <div
+      class="bl-bg-text bl-bg-text--1"
+      data-parallax-dir="from-left"
+      data-parallax-speed="{{ section.settings.bg_text_1_speed | default: 18 }}"
+      data-bg-style="{{ section.settings.bg_text_1_style | default: 'outlined' }}"
+    >{{ bg_text_1 }}</div>
+    {%- endif -%}
+
+    {%- if section.settings.bg_text_2_enabled -%}
+    <div
+      class="bl-bg-text bl-bg-text--2"
+      data-parallax-dir="from-right"
+      data-parallax-speed="{{ section.settings.bg_text_2_speed | default: 18 }}"
+      data-bg-style="{{ section.settings.bg_text_2_style | default: 'filled' }}"
+    >{{ bg_text_2 }}</div>
+    {%- endif -%}
+  </div>
+  {%- endif -%}
+
+  <!-- Scroll progress bar -->
+  <div class="bl-progress" aria-hidden="true"></div>
+
+  <!-- Live badge -->
+  <div class="bl-tag" role="status">
+    <span class="bl-tag__dot"></span>
+    <span class="bl-tag__text">
+      {%- if section.settings.tag_text != blank -%}{{ section.settings.tag_text }}{%- else -%}India's Home Gym Brand{%- endif -%}
+    </span>
+  </div>
+
+  <!-- ── LEFT CONTENT ─── -->
+  <div class="bl-content">
+
+    <!-- ── Tab panels grid ── -->
+    <div class="bl-tab-panels-wrap">
+
+      <!-- Panel 1: original hero content -->
+      <div class="bl-tab-panel is-active" data-tab="1">
+        <p class="bl-eyebrow js-reveal">{{ subheading }}</p>
+        <h1 class="bl-heading js-reveal">{{ heading }}</h1>
+        <div class="bl-divider js-reveal"></div>
+        <p class="bl-body js-reveal">{{ body_text }}</p>
+        <div class="bl-cta-row js-reveal">
+          <a href="{{ cta_url }}" class="bl-btn bl-btn--primary">
+            {{ cta_label }}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7H12M12 7L7.5 2.5M12 7L7.5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          {%- if section.settings.show_secondary_cta -%}
+          <a href="{{ cta_url_2 }}" class="bl-btn bl-btn--secondary">{{ cta_label_2 }}</a>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.show_stats -%}
+        <div class="bl-stats js-reveal">
+          <div class="bl-stat">
+            <span class="bl-stat__num"
+                  data-count-target="{{ section.settings.stat1_number | default: '200000' }}"
+                  data-count-suffix="{{ section.settings.stat1_suffix | default: '+' }}">
+              {{ section.settings.stat1_number | default: '2L+' }}
+            </span>
+            <span class="bl-stat__label">{{ section.settings.stat1_label | default: 'Customers' }}</span>
+          </div>
+          <div class="bl-stat">
+            <span class="bl-stat__num"
+                  data-count-target="{{ section.settings.stat2_number | default: '2018' }}"
+                  data-count-suffix="{{ section.settings.stat2_suffix | default: '' }}">
+              {{ section.settings.stat2_number | default: '2018' }}
+            </span>
+            <span class="bl-stat__label">{{ section.settings.stat2_label | default: 'Founded' }}</span>
+          </div>
+          <div class="bl-stat">
+            <span class="bl-stat__num"
+                  data-count-target="{{ section.settings.stat3_number | default: '50' }}"
+                  data-count-suffix="{{ section.settings.stat3_suffix | default: '+' }}">
+              {{ section.settings.stat3_number | default: '50+' }}
+            </span>
+            <span class="bl-stat__label">{{ section.settings.stat3_label | default: 'Products' }}</span>
+          </div>
+        </div>
+        {%- endif -%}
+      </div><!-- /panel-1 -->
+
+      <!-- Panel 2 -->
+      <div class="bl-tab-panel" data-tab="2">
+        {%- if tab2_eyebrow != blank -%}
+          <p class="bl-eyebrow">{{ tab2_eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="bl-heading">{{ section.settings.tab2_heading | default: '<p>Train Every<br>Muscle Group.</p>' }}</h2>
+        <div class="bl-divider--static"></div>
+        <p class="bl-body">{{ tab2_body | escape }}</p>
+        <div class="bl-cta-row">
+          <a href="{{ tab2_cta_url }}" class="bl-btn bl-btn--primary">
+            {{ tab2_cta_label | escape }}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7H12M12 7L7.5 2.5M12 7L7.5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div><!-- /panel-2 -->
+
+      <!-- Panel 3 -->
+      <div class="bl-tab-panel" data-tab="3">
+        {%- if tab3_eyebrow != blank -%}
+          <p class="bl-eyebrow">{{ tab3_eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="bl-heading">{{ section.settings.tab3_heading | default: '<p>Built on<br>Passion.</p>' }}</h2>
+        <div class="bl-divider--static"></div>
+        <p class="bl-body">{{ tab3_body | escape }}</p>
+        <div class="bl-cta-row">
+          <a href="{{ tab3_cta_url }}" class="bl-btn bl-btn--primary">
+            {{ tab3_cta_label | escape }}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7H12M12 7L7.5 2.5M12 7L7.5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div><!-- /panel-3 -->
+
+    </div><!-- /bl-tab-panels-wrap -->
+
+    <!-- ── Tab navigation ── -->
+    <nav class="bl-tab-nav" aria-label="Hero tabs">
+
+      <button class="bl-tab-btn is-active" data-tab="1" aria-pressed="true"
+        data-show-side="{%- if section.settings.tab1_show_side_image == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-on="{%- if section.settings.tab1_bg_text_enabled == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-1="{{ section.settings.tab1_bg_text_row1 | default: bg_text_1 | escape }}"
+        data-bg-text-2="{{ section.settings.tab1_bg_text_row2 | default: bg_text_2 | escape }}"
+      >
+        <span class="bl-tab-thumb">
+          {%- if tab1_thumb != blank -%}
+            <img src="{{ tab1_thumb | image_url: width: 140 }}" alt="{{ tab1_icon_label | escape }}" loading="lazy">
+          {%- else -%}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          {%- endif -%}
+        </span>
+        {%- if tab1_icon_label != blank -%}
+          <span class="bl-tab-label">{{ tab1_icon_label | escape }}</span>
+        {%- endif -%}
+      </button>
+
+      <button class="bl-tab-btn" data-tab="2" aria-pressed="false"
+        data-show-side="{%- if section.settings.tab2_show_side_image == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-on="{%- if section.settings.tab2_bg_text_enabled == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-1="{{ section.settings.tab2_bg_text_row1 | default: bg_text_1 | escape }}"
+        data-bg-text-2="{{ section.settings.tab2_bg_text_row2 | default: bg_text_2 | escape }}"
+      >
+        <span class="bl-tab-thumb">
+          {%- if tab2_thumb != blank -%}
+            <img src="{{ tab2_thumb | image_url: width: 140 }}" alt="{{ tab2_icon_label | escape }}" loading="lazy">
+          {%- else -%}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="7" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="2" y="14" width="7" height="7"/><rect x="15" y="14" width="7" height="7"/></svg>
+          {%- endif -%}
+        </span>
+        {%- if tab2_icon_label != blank -%}
+          <span class="bl-tab-label">{{ tab2_icon_label | escape }}</span>
+        {%- endif -%}
+      </button>
+
+      <button class="bl-tab-btn" data-tab="3" aria-pressed="false"
+        data-show-side="{%- if section.settings.tab3_show_side_image == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-on="{%- if section.settings.tab3_bg_text_enabled == false -%}false{%- else -%}true{%- endif -%}"
+        data-bg-text-1="{{ section.settings.tab3_bg_text_row1 | default: bg_text_1 | escape }}"
+        data-bg-text-2="{{ section.settings.tab3_bg_text_row2 | default: bg_text_2 | escape }}"
+      >
+        <span class="bl-tab-thumb">
+          {%- if tab3_thumb != blank -%}
+            <img src="{{ tab3_thumb | image_url: width: 140 }}" alt="{{ tab3_icon_label | escape }}" loading="lazy">
+          {%- else -%}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          {%- endif -%}
+        </span>
+        {%- if tab3_icon_label != blank -%}
+          <span class="bl-tab-label">{{ tab3_icon_label | escape }}</span>
+        {%- endif -%}
+      </button>
+
+    </nav><!-- /bl-tab-nav -->
+
+  </div><!-- /bl-content -->
+
+  <!-- ── SIDE IMAGE ─── -->
+  {%- if side_image != blank -%}
+  <div class="bl-side-image js-side-img">
+    {{ side_image | image_url: width: 1200 | image_tag:
+      loading: 'eager',
+      fetchpriority: 'high',
+      alt: side_image.alt | default: 'Burnlab fitness gear',
+      widths: '400, 600, 900, 1200',
+      class: 'js-side-img-inner'
+    }}
+  </div>
+  {%- endif -%}
+
+  <!-- Scroll hint -->
+  <div class="bl-scroll-hint" aria-hidden="true">
+    <span class="bl-scroll-hint__text">Scroll</span>
+    <span class="bl-scroll-hint__line"></span>
+  </div>
+
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Guard ──────────────────────────────────────────────── */
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Dark / Light mode ──────────────────────────────────── */
+  var HERO_DARK = {
+    navy:  '{{ section.settings.section_bg   | default: '#001a2e' }}',
+    pale:  '{{ section.settings.text_color   | default: '#eaf4f5' }}',
+    green: '{{ section.settings.accent_color | default: '#07d16e' }}',
+    tagBg: 'rgba(0,26,46,0.55)',
+    tagColor: '#eaf4f5'
+  };
+  var HERO_LIGHT = {
+    navy:  '{{ section.settings.hero_bg_light   | default: '#eaf4f5' }}',
+    pale:  '{{ section.settings.hero_text_light | default: '#001a2e' }}',
+    green: '{{ section.settings.accent_color | default: '#07d16e' }}',
+    tagBg: 'rgba(234,244,245,0.88)',
+    tagColor: '#001a2e'
+  };
+
+  function applyHeroTheme() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var c = isLight ? HERO_LIGHT : HERO_DARK;
+    root.style.setProperty('--bl-navy', c.navy);
+    root.style.setProperty('--bl-pale', c.pale);
+    root.style.setProperty('--bl-green', c.green);
+    root.style.backgroundColor = c.navy;
+    root.style.color = c.pale;
+    var tag = root.querySelector('.bl-tag');
+    if (tag) {
+      tag.style.background = c.tagBg;
+      tag.style.color = c.tagColor;
+    }
+  }
+
+  applyHeroTheme();
+  var heroThemeObs = new MutationObserver(applyHeroTheme);
+  heroThemeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function lerp(a, b, t)    { return a + (b - a) * t; }
+
+  /* ══════════════════════════════════════════════════════════
+     1. INTERSECTION OBSERVER — reveal content elements
+  ══════════════════════════════════════════════════════════ */
+  var revealEls = root.querySelectorAll('.js-reveal');
+  var sideImg   = root.querySelector('.js-side-img');
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(function (el) { io.observe(el); });
+  if (sideImg) io.observe(sideImg);
+
+  /* ══════════════════════════════════════════════════════════
+     2. SCROLL PARALLAX
+        ─────────────────────────────────────────────────────
+        STACKED ROWS — each row moves independently:
+          "from-left"  → starts at -initialOffset, moves RIGHT (+) on scroll
+          "from-right" → starts at +initialOffset, moves LEFT  (-) on scroll
+
+        GLOBAL TOGGLE: enable_bg_text_parallax
+          false → all rows stay at translateX(0), no movement at all.
+
+        SINGLE TEXT: when .bl-bg-text-wrap.is-single, initial offset is
+          halved so the centred text stays mostly centred and just drifts.
+
+        Also drives: scroll progress bar + side image subtle shift.
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── Config from schema ── */
+  var PARALLAX_ENABLED = {{ section.settings.enable_bg_text_parallax | default: true }};
+  /*
+   * Per-row speeds are read from data-parallax-speed on each element.
+   * Schema range 0–80 → divide by 100 to get 0.0–0.80 px/px of scroll.
+   */
+  var INIT_OFFSET_VW   = {{ section.settings.parallax_initial_offset | default: 10 }};
+  var SIDE_IMG_SPEED   = 0.06;
+
+  /* Collect all bg text rows */
+  var bgTextRows = root.querySelectorAll('.bl-bg-text[data-parallax-dir]');
+  var isSingle   = root.querySelector('.bl-bg-text-wrap.is-single') !== null;
+
+  var progress     = root.querySelector('.bl-progress');
+  var sideImgInner = root.querySelector('.js-side-img-inner');
+
+  /* Pre-parse per-row speed from data attribute */
+  var rowSpeeds = [];
+  bgTextRows.forEach(function (row) {
+    var raw = parseFloat(row.getAttribute('data-parallax-speed') || '18');
+    rowSpeeds.push(raw / 100);
+  });
+
+  /* Smoothed scroll for buttery parallax */
+  var scrollY       = window.scrollY;
+  var scrollYSmooth = scrollY;
+  var rafId         = null;
+
+  function getProgress() {
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    return docH > 0 ? clamp(window.scrollY / docH, 0, 1) : 0;
+  }
+
+  function tick() {
+    scrollYSmooth = lerp(scrollYSmooth, scrollY, 0.08);
+
+    /* Section-relative scroll progress */
+    var rect            = root.getBoundingClientRect();
+    var rootTop         = rect.top + scrollYSmooth;
+    var sectionProgress = scrollYSmooth - rootTop;
+
+    if (!reducedMotion) {
+
+      /* ── Stacked bg text parallax ── */
+      if (bgTextRows.length > 0) {
+        /*
+         * For single centred text use half the offset so it stays
+         * roughly centred throughout the scroll.
+         */
+        var baseOffset = (isSingle ? INIT_OFFSET_VW * 0.5 : INIT_OFFSET_VW)
+                         * window.innerWidth / 100;
+
+        bgTextRows.forEach(function (row, i) {
+          if (!PARALLAX_ENABLED) {
+            /* Parallax disabled globally — snap to natural position */
+            row.style.transform = 'translateX(0)';
+            return;
+          }
+
+          var speed = rowSpeeds[i] || 0.18;
+          var dir   = row.getAttribute('data-parallax-dir');
+          var shift = sectionProgress * speed;
+
+          if (dir === 'from-left') {
+            /*
+             * Starts to the LEFT (negative), scroll pushes it rightward.
+             * translateX = -baseOffset + shift
+             */
+            row.style.transform = 'translateX(' + (-baseOffset + shift) + 'px)';
+          } else {
+            /*
+             * Starts to the RIGHT (positive), scroll pulls it leftward.
+             * translateX = +baseOffset - shift
+             */
+            row.style.transform = 'translateX(' + (baseOffset - shift) + 'px)';
+          }
+        });
+      }
+
+      /* ── Side image inner parallax ── */
+      if (sideImgInner) {
+        var imgShift = sectionProgress * SIDE_IMG_SPEED;
+        sideImgInner.style.transform = 'translateY(' + imgShift + 'px) scale(1.08)';
+      }
+    }
+
+    /* ── Progress bar ── */
+    if (progress) {
+      progress.style.width = (getProgress() * 100) + '%';
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('scroll', function () {
+    scrollY = window.scrollY;
+  }, { passive: true });
+
+  rafId = requestAnimationFrame(tick);
+
+  /* ══════════════════════════════════════════════════════════
+     3. MOUSE PARALLAX — glows
+  ══════════════════════════════════════════════════════════ */
+  {%- if section.settings.enable_parallax -%}
+  if (!reducedMotion) {
+    var glowA = root.querySelector('.bl-glow--a');
+    var glowB = root.querySelector('.bl-glow--b');
+    var glowC = root.querySelector('.bl-glow--c');
+    var mx = 0, my = 0;
+    var gx = 0, gy = 0;
+
+    root.addEventListener('mousemove', function (e) {
+      var r  = root.getBoundingClientRect();
+      mx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
+      my = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+    }, { passive: true });
+
+    root.addEventListener('mouseleave', function () { mx = 0; my = 0; });
+
+    function mouseRaf() {
+      gx = lerp(gx, mx, 0.06);
+      gy = lerp(gy, my, 0.06);
+      if (glowA) glowA.style.transform = 'translate(' + (gx * 28) + 'px,' + (gy * 18) + 'px)';
+      if (glowB) glowB.style.transform = 'translate(' + (-gx * 22) + 'px,' + (-gy * 14) + 'px)';
+      if (glowC) glowC.style.transform = 'translate(' + (gx * 16) + 'px,' + (gy * 22) + 'px)';
+      requestAnimationFrame(mouseRaf);
+    }
+    requestAnimationFrame(mouseRaf);
+  }
+  {%- endif -%}
+
+  /* ══════════════════════════════════════════════════════════
+     4. ANIMATED STAT COUNTERS
+  ══════════════════════════════════════════════════════════ */
+  if (!reducedMotion) {
+    var statsRow = root.querySelector('.bl-stats');
+    if (statsRow) {
+      var statsDone = false;
+      var statsObs  = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting && !statsDone) {
+          statsDone = true;
+          statsObs.disconnect();
+          animateCounters();
+        }
+      }, { threshold: 0.5 });
+      statsObs.observe(statsRow);
+    }
+  }
+
+  function animateCounters() {
+    var nums = root.querySelectorAll('[data-count-target]');
+    nums.forEach(function (el) {
+      var rawTarget = el.getAttribute('data-count-target');
+      var suffix    = el.getAttribute('data-count-suffix') || '';
+      var target    = parseFloat(rawTarget.replace(/[^0-9.]/g, ''));
+      if (isNaN(target)) return;
+
+      var duration  = 1800;
+      var startTime = null;
+
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function step(now) {
+        if (!startTime) startTime = now;
+        var elapsed  = now - startTime;
+        var progress = clamp(elapsed / duration, 0, 1);
+        var current  = Math.round(easeOut(progress) * target);
+        el.textContent = current.toLocaleString('en-IN') + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     5. TAB SWITCHING
+  ══════════════════════════════════════════════════════════ */
+  (function () {
+    var tabBtns   = root.querySelectorAll('.bl-tab-btn');
+    var tabPanels = root.querySelectorAll('.bl-tab-panel');
+    var tabBgs    = root.querySelectorAll('.bl-tab-bg[data-tab-bg]');
+    var flash     = root.querySelector('.bl-tab-flash');
+    var sideEl    = root.querySelector('.bl-side-image');
+    var bgWrap    = root.querySelector('.bl-bg-text-wrap');
+    var bgRow1    = root.querySelector('.bl-bg-text--1');
+    var bgRow2    = root.querySelector('.bl-bg-text--2');
+    var current   = 1;
+
+    function applyTabMeta(btn) {
+      /* Side image */
+      if (sideEl) {
+        var showSide = btn.getAttribute('data-show-side') !== 'false';
+        sideEl.classList.toggle('bl-tab-hidden', !showSide);
+      }
+
+      /* Background text */
+      if (bgWrap) {
+        var bgOn = btn.getAttribute('data-bg-text-on') !== 'false';
+        bgWrap.style.opacity    = bgOn ? '' : '0';
+        bgWrap.style.visibility = bgOn ? '' : 'hidden';
+        if (bgOn) {
+          var t1 = btn.getAttribute('data-bg-text-1');
+          var t2 = btn.getAttribute('data-bg-text-2');
+          if (bgRow1 && t1) bgRow1.textContent = t1;
+          if (bgRow2 && t2) bgRow2.textContent = t2;
+        }
+      }
+    }
+
+    function switchTab(n) {
+      if (n === current) return;
+      current = n;
+
+      /* Flash pulse */
+      if (flash && !reducedMotion) {
+        flash.classList.add('is-active');
+        setTimeout(function () { flash.classList.remove('is-active'); }, 220);
+      }
+
+      /* Backgrounds */
+      tabBgs.forEach(function (bg) {
+        var idx = parseInt(bg.getAttribute('data-tab-bg'), 10);
+        bg.classList.toggle('is-active', idx === n);
+        var vid = bg.querySelector('video');
+        if (vid) {
+          if (idx === n) { vid.play().catch(function () {}); }
+          else { vid.pause(); }
+        }
+      });
+
+      /* Content panels */
+      tabPanels.forEach(function (p) {
+        p.classList.toggle('is-active', parseInt(p.getAttribute('data-tab'), 10) === n);
+      });
+
+      /* Buttons + side image + bg text */
+      tabBtns.forEach(function (b) {
+        var isActive = parseInt(b.getAttribute('data-tab'), 10) === n;
+        b.classList.toggle('is-active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        if (isActive) applyTabMeta(b);
+      });
+    }
+
+    /* Apply meta for tab 1 on load */
+    var firstBtn = root.querySelector('.bl-tab-btn[data-tab="1"]');
+    if (firstBtn) applyTabMeta(firstBtn);
+
+    tabBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        switchTab(parseInt(this.getAttribute('data-tab'), 10));
+      });
+    });
+  }());
+
+  /* ── Cleanup on section unmount (Shopify theme editor) ── */
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      cancelAnimationFrame(rafId);
+    }
+  });
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Burnlab Hero",
+  "tag": "section",
+  "class": "burnlab-hero-section",
+  "settings": [
+
+    {
+      "type": "header",
+      "content": "Background Media"
+    },
+    {
+      "type": "select",
+      "id": "background_type",
+      "label": "Background Type",
+      "options": [
+        { "value": "color", "label": "Solid Color" },
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "color"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background Image"
+    },
+    {
+      "type": "video",
+      "id": "background_video",
+      "label": "Background Video"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay Color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Overlay Opacity",
+      "default": 30
+    },
+
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Eyebrow / Sub-heading",
+      "default": "Premium Fitness Gear"
+    },
+    {
+      "type": "richtext",
+      "id": "heading",
+      "label": "Main Heading (H1)",
+      "default": "<p>Built for<br/>Real Homes.</p>",
+      "info": "Wrap words in <em> tags to colour them with the accent colour."
+    },
+    {
+      "type": "textarea",
+      "id": "body_text",
+      "label": "Body Paragraph",
+      "default": "From adjustable dumbbells to smart multifunctional kits — Burnlab designs gear for beginners and serious trainers. No hype. No shortcuts. Just solid gear that works."
+    },
+    {
+      "type": "text",
+      "id": "tag_text",
+      "label": "Live Badge Text",
+      "default": "India's Home Gym Brand"
+    },
+
+    {
+      "type": "header",
+      "content": "CTAs"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Primary CTA Label",
+      "default": "Discover Now"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Primary CTA URL"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_cta",
+      "label": "Show Secondary CTA",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_label_2",
+      "label": "Secondary CTA Label",
+      "default": "Our Story"
+    },
+    {
+      "type": "url",
+      "id": "cta_url_2",
+      "label": "Secondary CTA URL"
+    },
+
+    {
+      "type": "header",
+      "content": "Stats"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_stats",
+      "label": "Show Stats Row",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "stat1_number",
+      "label": "Stat 1 — Number",
+      "default": "200000",
+      "info": "Pure number for counter animation (e.g. 200000)."
+    },
+    {
+      "type": "text",
+      "id": "stat1_suffix",
+      "label": "Stat 1 — Suffix",
+      "default": "+",
+      "info": "Appended after the animated number (e.g. +, K, %)"
+    },
+    {
+      "type": "text",
+      "id": "stat1_label",
+      "label": "Stat 1 — Label",
+      "default": "Customers"
+    },
+    {
+      "type": "text",
+      "id": "stat2_number",
+      "label": "Stat 2 — Number",
+      "default": "2018"
+    },
+    {
+      "type": "text",
+      "id": "stat2_suffix",
+      "label": "Stat 2 — Suffix",
+      "info": "Leave empty for no suffix (e.g. a year like 2018)"
+    },
+    {
+      "type": "text",
+      "id": "stat2_label",
+      "label": "Stat 2 — Label",
+      "default": "Founded"
+    },
+    {
+      "type": "text",
+      "id": "stat3_number",
+      "label": "Stat 3 — Number",
+      "default": "50"
+    },
+    {
+      "type": "text",
+      "id": "stat3_suffix",
+      "label": "Stat 3 — Suffix",
+      "default": "+"
+    },
+    {
+      "type": "text",
+      "id": "stat3_label",
+      "label": "Stat 3 — Label",
+      "default": "Products"
+    },
+
+    {
+      "type": "header",
+      "content": "Side Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "side_image",
+      "label": "Side Image"
+    },
+    {
+      "type": "range",
+      "id": "side_image_width",
+      "min": 20,
+      "max": 55,
+      "step": 1,
+      "unit": "%",
+      "label": "Side Image Width",
+      "default": 38
+    },
+    {
+      "type": "select",
+      "id": "side_image_filter",
+      "label": "Side Image Filter",
+      "options": [
+        { "value": "none",                              "label": "None" },
+        { "value": "grayscale(100%)",                  "label": "Greyscale" },
+        { "value": "grayscale(60%) brightness(1.1)",   "label": "Faded" },
+        { "value": "sepia(30%)",                        "label": "Warm Sepia" },
+        { "value": "brightness(0.85) contrast(1.1)",   "label": "Dark & Vivid" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "side_image_fade_width",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Side Image — Left Fade Width",
+      "default": 45,
+      "info": "How far the background-colour fade bleeds into the image from the left edge."
+    },
+    {
+      "type": "range",
+      "id": "side_image_fade_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Side Image — Left Fade Opacity",
+      "default": 100,
+      "info": "Strength of the left-edge fade. 100% = fully blended. 0% = no fade."
+    },
+
+    {
+      "type": "header",
+      "content": "Colours"
+    },
+    {
+      "type": "color",
+      "id": "section_bg",
+      "label": "Section Background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Colour",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Colour",
+      "default": "#07d16e"
+    },
+
+    {
+      "type": "header",
+      "content": "Light Mode Colors"
+    },
+    {
+      "type": "color",
+      "id": "hero_bg_light",
+      "label": "Background (Light Mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "hero_text_light",
+      "label": "Text Color (Light Mode)",
+      "default": "#001a2e"
+    },
+
+    {
+      "type": "header",
+      "content": "Background Text — Global Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_bg_text_parallax",
+      "label": "Enable Scroll Parallax on Background Text",
+      "default": true,
+      "info": "Uncheck to disable ALL text movement. Individual rows are still visible; they just won't slide."
+    },
+    {
+      "type": "range",
+      "id": "parallax_initial_offset",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "vw",
+      "label": "Starting Offset (how far off-screen each row begins)",
+      "default": 10,
+      "info": "Row 1 starts this many vw to the LEFT. Row 2 starts this many vw to the RIGHT. They slide inward on scroll."
+    },
+    {
+      "type": "range",
+      "id": "bg_text_gap",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Gap Between Text Rows",
+      "default": 12
+    },
+
+    {
+      "type": "header",
+      "content": "Background Text — Row 1 (slides in from LEFT)"
+    },
+    {
+      "type": "checkbox",
+      "id": "bg_text_1_enabled",
+      "label": "Show Row 1",
+      "default": true,
+      "info": "Disable to remove this row entirely. If Row 2 is also enabled, Row 1 sits on top."
+    },
+    {
+      "type": "text",
+      "id": "bg_text_top",
+      "label": "Row 1 Text",
+      "default": "BURNLAB"
+    },
+    {
+      "type": "select",
+      "id": "bg_text_1_style",
+      "label": "Row 1 Style",
+      "options": [
+        { "value": "outlined",         "label": "Outlined (border/stroke, no fill)" },
+        { "value": "filled",           "label": "Filled (solid text colour)" },
+        { "value": "outlined-accent",  "label": "Outlined Accent (stroke in brand colour)" },
+        { "value": "filled-accent",    "label": "Filled Accent (solid brand colour)" },
+        { "value": "gradient",         "label": "Gradient (accent → text colour)" },
+        { "value": "gradient-reverse", "label": "Gradient Reverse (text → accent colour)" }
+      ],
+      "default": "outlined"
+    },
+    {
+      "type": "range",
+      "id": "bg_text_1_size",
+      "min": 6,
+      "max": 30,
+      "step": 1,
+      "unit": "vw",
+      "label": "Row 1 Text Size",
+      "default": 17
+    },
+    {
+      "type": "range",
+      "id": "bg_text_1_opacity",
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "unit": "%",
+      "label": "Row 1 Opacity",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "bg_text_1_speed",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "label": "Row 1 Scroll Speed",
+      "default": 18,
+      "info": "0 = static (no movement). Higher = travels further per pixel of scroll."
+    },
+
+    {
+      "type": "header",
+      "content": "Background Text — Row 2 (slides in from RIGHT)"
+    },
+    {
+      "type": "checkbox",
+      "id": "bg_text_2_enabled",
+      "label": "Show Row 2",
+      "default": true,
+      "info": "Disable to remove this row. If only Row 1 is active, it will auto-centre."
+    },
+    {
+      "type": "text",
+      "id": "bg_text_bottom",
+      "label": "Row 2 Text",
+      "default": "FITNESS"
+    },
+    {
+      "type": "select",
+      "id": "bg_text_2_style",
+      "label": "Row 2 Style",
+      "options": [
+        { "value": "outlined",         "label": "Outlined (border/stroke, no fill)" },
+        { "value": "filled",           "label": "Filled (solid text colour)" },
+        { "value": "outlined-accent",  "label": "Outlined Accent (stroke in brand colour)" },
+        { "value": "filled-accent",    "label": "Filled Accent (solid brand colour)" },
+        { "value": "gradient",         "label": "Gradient (accent → text colour)" },
+        { "value": "gradient-reverse", "label": "Gradient Reverse (text → accent colour)" }
+      ],
+      "default": "filled"
+    },
+    {
+      "type": "range",
+      "id": "bg_text_2_size",
+      "min": 6,
+      "max": 30,
+      "step": 1,
+      "unit": "vw",
+      "label": "Row 2 Text Size",
+      "default": 17
+    },
+    {
+      "type": "range",
+      "id": "bg_text_2_opacity",
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "unit": "%",
+      "label": "Row 2 Opacity",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "bg_text_2_speed",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "label": "Row 2 Scroll Speed",
+      "default": 18,
+      "info": "0 = static (no movement). Higher = travels further per pixel of scroll."
+    },
+
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 280,
+      "max": 640,
+      "step": 10,
+      "unit": "px",
+      "label": "Content Column Max Width",
+      "default": 480
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "Section Height",
+      "options": [
+        { "value": "100vh", "label": "Full Viewport" },
+        { "value": "90vh",  "label": "90% Viewport"  },
+        { "value": "80vh",  "label": "80% Viewport"  },
+        { "value": "700px", "label": "700px Fixed"   },
+        { "value": "600px", "label": "600px Fixed"   },
+        { "value": "auto",  "label": "Auto (content)" }
+      ],
+      "default": "100vh"
+    },
+
+    {
+      "type": "header",
+      "content": "Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable Mouse Parallax on Glows",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "tab_transition",
+      "label": "Tab Switch Transition Effect",
+      "options": [
+        { "value": "fade-up",    "label": "Fade Up" },
+        { "value": "fade-zoom",  "label": "Fade Zoom In" },
+        { "value": "fade-slide", "label": "Fade Slide Left" },
+        { "value": "fade",       "label": "Fade Only" },
+        { "value": "flip-3d",    "label": "3D Flip (Y axis — card flip)" },
+        { "value": "swing-3d",   "label": "3D Swing (X axis — perspective drop)" }
+      ],
+      "default": "fade-up"
+    },
+
+    {
+      "type": "header",
+      "content": "Tab Navigation"
+    },
+    {
+      "type": "text",
+      "id": "tab1_icon_label",
+      "label": "Tab 1 Button Label",
+      "default": "Home",
+      "info": "Leave blank to show only the thumbnail with no label."
+    },
+    {
+      "type": "image_picker",
+      "id": "tab1_thumb",
+      "label": "Tab 1 Thumbnail Image",
+      "info": "Circle thumbnail for the tab button. Leave blank to use the default icon."
+    },
+    {
+      "type": "checkbox",
+      "id": "tab1_show_side_image",
+      "label": "Tab 1 Show Side Image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "tab1_bg_text_enabled",
+      "label": "Tab 1 Show Background Parallax Text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tab1_bg_text_row1",
+      "label": "Tab 1 Background Text Row 1",
+      "info": "Leave blank to inherit the global Row 1 value."
+    },
+    {
+      "type": "text",
+      "id": "tab1_bg_text_row2",
+      "label": "Tab 1 Background Text Row 2",
+      "info": "Leave blank to inherit the global Row 2 value."
+    },
+
+    {
+      "type": "header",
+      "content": "Tab 2 Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "tab2_thumb_image",
+      "label": "Tab 2 Thumbnail Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "tab2_show_side_image",
+      "label": "Tab 2 Show Side Image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "tab2_bg_text_enabled",
+      "label": "Tab 2 Show Background Parallax Text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tab2_bg_text_row1",
+      "label": "Tab 2 Background Text Row 1",
+      "info": "Leave blank to inherit the global Row 1 value."
+    },
+    {
+      "type": "text",
+      "id": "tab2_bg_text_row2",
+      "label": "Tab 2 Background Text Row 2",
+      "info": "Leave blank to inherit the global Row 2 value."
+    },
+    {
+      "type": "text",
+      "id": "tab2_icon_label",
+      "label": "Tab 2 Button Label",
+      "default": "Strength",
+      "info": "Leave blank to show only the thumbnail with no label."
+    },
+    {
+      "type": "text",
+      "id": "tab2_eyebrow",
+      "label": "Tab 2 Eyebrow",
+      "default": "Our Range"
+    },
+    {
+      "type": "richtext",
+      "id": "tab2_heading",
+      "label": "Tab 2 Heading",
+      "default": "<p>Train Every<br/>Muscle Group.</p>"
+    },
+    {
+      "type": "textarea",
+      "id": "tab2_body",
+      "label": "Tab 2 Body Text",
+      "default": "Explore our full range of barbells, racks, resistance bands, and more — built for serious home training."
+    },
+    {
+      "type": "text",
+      "id": "tab2_cta_label",
+      "label": "Tab 2 CTA Label",
+      "default": "Shop Collections"
+    },
+    {
+      "type": "url",
+      "id": "tab2_cta_url",
+      "label": "Tab 2 CTA URL"
+    },
+
+    {
+      "type": "header",
+      "content": "Tab 2 Background"
+    },
+    {
+      "type": "select",
+      "id": "tab2_bg_type",
+      "label": "Tab 2 Background Type",
+      "options": [
+        { "value": "color", "label": "Solid Color (uses section background)" },
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "color"
+    },
+    {
+      "type": "image_picker",
+      "id": "tab2_bg_image",
+      "label": "Tab 2 Background Image"
+    },
+    {
+      "type": "video",
+      "id": "tab2_bg_video",
+      "label": "Tab 2 Background Video"
+    },
+
+    {
+      "type": "header",
+      "content": "Tab 3 Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "tab3_thumb_image",
+      "label": "Tab 3 Thumbnail Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "tab3_show_side_image",
+      "label": "Tab 3 Show Side Image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "tab3_bg_text_enabled",
+      "label": "Tab 3 Show Background Parallax Text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tab3_bg_text_row1",
+      "label": "Tab 3 Background Text Row 1",
+      "info": "Leave blank to inherit the global Row 1 value."
+    },
+    {
+      "type": "text",
+      "id": "tab3_bg_text_row2",
+      "label": "Tab 3 Background Text Row 2",
+      "info": "Leave blank to inherit the global Row 2 value."
+    },
+    {
+      "type": "text",
+      "id": "tab3_icon_label",
+      "label": "Tab 3 Button Label",
+      "default": "Story",
+      "info": "Leave blank to show only the thumbnail with no label."
+    },
+    {
+      "type": "text",
+      "id": "tab3_eyebrow",
+      "label": "Tab 3 Eyebrow",
+      "default": "BurnLab"
+    },
+    {
+      "type": "richtext",
+      "id": "tab3_heading",
+      "label": "Tab 3 Heading",
+      "default": "<p>Built on<br/>Passion.</p>"
+    },
+    {
+      "type": "textarea",
+      "id": "tab3_body",
+      "label": "Tab 3 Body Text",
+      "default": "From garage workouts to nationwide delivery — our story is your story. Real gear. Real results."
+    },
+    {
+      "type": "text",
+      "id": "tab3_cta_label",
+      "label": "Tab 3 CTA Label",
+      "default": "Our Story"
+    },
+    {
+      "type": "url",
+      "id": "tab3_cta_url",
+      "label": "Tab 3 CTA URL"
+    },
+
+    {
+      "type": "header",
+      "content": "Tab 3 Background"
+    },
+    {
+      "type": "select",
+      "id": "tab3_bg_type",
+      "label": "Tab 3 Background Type",
+      "options": [
+        { "value": "color", "label": "Solid Color (uses section background)" },
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "color"
+    },
+    {
+      "type": "image_picker",
+      "id": "tab3_bg_image",
+      "label": "Tab 3 Background Image"
+    },
+    {
+      "type": "video",
+      "id": "tab3_bg_video",
+      "label": "Tab 3 Background Video"
+    }
+
+  ],
+  "presets": [
+    {
+      "name": "Burnlab Hero",
+      "category": "Hero"
+    }
+  ]
+}
+{% endschema %}

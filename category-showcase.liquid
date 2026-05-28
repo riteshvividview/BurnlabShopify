@@ -1,0 +1,1077 @@
+{% comment %}
+  ============================================================
+  BURNLAB — COLLECTION CATEGORY SHOWCASE
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id         = 'burnlab-cat-showcase-' | append: section.id
+
+  assign eyebrow            = section.settings.eyebrow
+  assign heading            = section.settings.heading
+  assign description        = section.settings.description
+  assign btn_label          = section.settings.btn_label
+  assign btn_url            = section.settings.btn_url          | default: '#'
+  assign img_side           = section.settings.img_side         | default: 'right'
+  assign card_columns       = section.settings.card_columns     | default: '2'
+  assign card_radius        = section.settings.card_radius      | default: 16
+  assign card_ratio         = section.settings.card_ratio       | default: '4/5'
+  assign btn_style          = section.settings.btn_style        | default: 'green'
+  assign show_btn           = section.settings.show_btn
+  assign enable_animations  = section.settings.enable_animations
+  assign enable_hover_glow  = section.settings.enable_hover_glow
+
+  assign bg_color           = section.settings.bg_color         | default: '#001a2e'
+  assign text_color         = section.settings.text_color       | default: '#eaf4f5'
+  assign accent_color       = section.settings.accent_color     | default: '#07d16e'
+  assign overlay_color      = section.settings.overlay_color    | default: '#001a2e'
+  assign overlay_opacity    = section.settings.overlay_opacity  | default: 55
+
+  assign heading_size       = section.settings.heading_size     | default: 52
+  assign heading_size_mob   = section.settings.heading_size_mob | default: 32
+
+  assign bg_type            = section.settings.bg_type          | default: 'color'
+  assign bg_image           = section.settings.bg_image
+  assign bg_image_pos       = section.settings.bg_image_pos     | default: 'center center'
+  assign bg_video_url       = section.settings.bg_video_url
+  assign bg_gradient        = section.settings.bg_gradient      | default: 'linear-gradient(135deg, #001a2e 0%, #0a3d55 50%, #001a2e 100%)'
+  assign bg_overlay_color   = section.settings.bg_overlay_color | default: '#001a2e'
+  assign bg_overlay_opacity = section.settings.bg_overlay_opacity | default: 40
+-%}
+
+<style>
+  /* ── RESET ── */
+  #{{ section_id }} *,
+  #{{ section_id }} *::before,
+  #{{ section_id }} *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── ROOT ── */
+  #{{ section_id }} {
+    --bl-green:        {{ accent_color }};
+    --bl-navy:         {{ bg_color }};
+    --bl-pale:         {{ text_color }};
+    --card-radius:     {{ card_radius }}px;
+    --overlay-opacity: {{ overlay_opacity | divided_by: 100.0 }};
+
+    background-color: var(--bl-navy);
+    {% if bg_type == 'gradient' and bg_gradient != blank %}
+      background: {{ bg_gradient }};
+    {% endif %}
+    color: var(--bl-pale);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  /* ── SECTION BACKGROUND MEDIA ── */
+  #{{ section_id }} .bl-sec-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #{{ section_id }} .bl-sec-bg__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: {{ bg_image_pos }};
+    display: block;
+  }
+  #{{ section_id }} .bl-sec-bg__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── SECTION BACKGROUND OVERLAY ── */
+  #{{ section_id }} .bl-sec-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: {{ bg_overlay_color }};
+    opacity: {{ bg_overlay_opacity | divided_by: 100.0 }};
+    pointer-events: none;
+  }
+
+  /* ── AMBIENT GLOW (above overlay) ── */
+  #{{ section_id }} .bl-showcase__glow {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(7,209,110,0.07) 0%, transparent 70%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 2;
+    {% if img_side == 'right' %}top: -220px; left: -180px;{% else %}top: -220px; right: -180px;{% endif %}
+  }
+
+  /* ── INNER WRAPPER ── */
+  #{{ section_id }} .bl-showcase__inner {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+    display: grid;
+    grid-template-columns: {% if img_side == 'right' %}37fr 59fr{% else %}59fr 37fr{% endif %};
+    gap: clamp(3rem, 6vw, 8rem);
+    align-items: center;
+  }
+
+  /* ── EDITORIAL PANEL ── */
+  #{{ section_id }} .bl-showcase__editorial {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.4rem, 2vw, 2.2rem);
+    {% if img_side == 'left' %}order: 2;{% endif %}
+    will-change: transform;
+  }
+
+  {% if enable_animations %}
+  #{{ section_id }} .bl-showcase__editorial {
+    opacity: 0;
+    transform: translateX({% if img_side == 'right' %}-40px{% else %}40px{% endif %});
+    transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #{{ section_id }}.is-visible .bl-showcase__editorial,
+  .shopify-design-mode #{{ section_id }} .bl-showcase__editorial {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  {% endif %}
+
+  /* ── EYEBROW ── */
+  #{{ section_id }} .bl-showcase__eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--bl-green);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bl-showcase__eyebrow::before {
+    content: '';
+    flex-shrink: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--bl-green);
+    border-radius: 2px;
+  }
+
+  /* ── HEADING ── */
+  #{{ section_id }} .bl-showcase__heading {
+    font-family: 'Archivo Black', sans-serif;
+    font-weight: 400;
+    font-size: clamp({{ heading_size_mob }}px, 4vw, {{ heading_size }}px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--bl-pale);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bl-showcase__heading em     { color: var(--bl-green); font-style: normal; }
+  #{{ section_id }} .bl-showcase__heading strong { font-weight: 400; }
+  #{{ section_id }} .bl-showcase__heading a      { color: inherit; text-decoration: none; }
+
+  /* ── BODY ── */
+  #{{ section_id }} .bl-showcase__body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(1.3rem, 1.5vw, 1.6rem);
+    line-height: 1.7;
+    color: var(--bl-pale);
+    opacity: 0.72;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bl-showcase__body p           { margin-bottom: 0.6em; }
+  #{{ section_id }} .bl-showcase__body p:last-child { margin-bottom: 0; }
+
+  /* ── CTA BUTTON ── */
+  #{{ section_id }} .bl-showcase__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(1.2rem, 1.4vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    align-self: flex-start;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.35s ease,
+                color 0.3s ease,
+                border-color 0.3s ease;
+    {% if btn_style == 'green' %}
+      background: var(--bl-green);
+      color: var(--bl-navy);
+      padding: 14px 34px;
+      border-radius: 50px;
+      border: 2px solid transparent;
+    {% elsif btn_style == 'outline' %}
+      background: transparent;
+      color: var(--bl-pale);
+      padding: 14px 34px;
+      border-radius: 50px;
+      border: 2px solid rgba(234,244,245,0.25);
+    {% else %}
+      background: transparent;
+      color: var(--bl-green);
+      padding: 6px 0;
+      border-radius: 0;
+      border: none;
+      border-bottom: 2px solid var(--bl-green);
+    {% endif %}
+  }
+  {% if btn_style != 'link' %}
+  #{{ section_id }} .bl-showcase__btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    transition: left 0.5s ease;
+    pointer-events: none;
+  }
+  #{{ section_id }} .bl-showcase__btn:hover::before { left: 100%; }
+  {% endif %}
+  #{{ section_id }} .bl-showcase__btn:hover {
+    {% if btn_style == 'green' %}
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(7,209,110,0.3);
+    {% elsif btn_style == 'outline' %}
+      border-color: var(--bl-green);
+      color: var(--bl-green);
+      transform: translateY(-2px);
+    {% endif %}
+  }
+  #{{ section_id }} .bl-showcase__btn svg {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+  #{{ section_id }} .bl-showcase__btn:hover svg { transform: translateX(4px); }
+
+  /* ── CARDS GRID ── */
+  #{{ section_id }} .bl-showcase__grid {
+    display: grid;
+    grid-template-columns: repeat({{ card_columns }}, 1fr);
+    gap: clamp(0.7rem, 1.2vw, 1.4rem);
+    {% if img_side == 'left' %}order: 1;{% endif %}
+  }
+
+  /* ── SINGLE CARD ── */
+  #{{ section_id }} .bl-cat-card {
+    position: relative;
+    display: block;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    text-decoration: none;
+    cursor: pointer;
+    will-change: transform;
+    transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.4s ease;
+  }
+
+  {% if enable_animations %}
+  #{{ section_id }} .bl-cat-card {
+    clip-path: inset(100% 0 0 0);
+  }
+  #{{ section_id }}.is-visible .bl-cat-card,
+  .shopify-design-mode #{{ section_id }} .bl-cat-card {
+    clip-path: inset(0% 0 0 0);
+    transition: clip-path 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.4s ease;
+  }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(1) { transition-delay: 0.05s; }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(2) { transition-delay: 0.15s; }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(3) { transition-delay: 0.25s; }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(4) { transition-delay: 0.35s; }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(5) { transition-delay: 0.45s; }
+  #{{ section_id }}.is-visible .bl-cat-card:nth-child(6) { transition-delay: 0.55s; }
+  {% endif %}
+
+  #{{ section_id }} .bl-cat-card:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4){% if enable_hover_glow %}, 0 0 0 2px var(--bl-green){% endif %};
+  }
+
+  /* ── CARD MEDIA WRAPPER ── */
+  #{{ section_id }} .bl-cat-card__img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: {{ card_ratio }};
+    overflow: hidden;
+    background: rgba(234,244,245,0.04);
+  }
+
+  /* ── CARD IMAGE ── */
+  #{{ section_id }} .bl-cat-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #{{ section_id }} .bl-cat-card:hover .bl-cat-card__img img {
+    transform: scale(1.08);
+  }
+
+  /* ── CARD VIDEO ── */
+  #{{ section_id }} .bl-cat-card__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #{{ section_id }} .bl-cat-card:hover .bl-cat-card__video {
+    transform: scale(1.08);
+  }
+  /* Badge shown on cards that use video */
+  #{{ section_id }} .bl-cat-card__media-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    backdrop-filter: blur(4px);
+  }
+  #{{ section_id }} .bl-cat-card__media-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: #ffffff;
+  }
+
+  #{{ section_id }} .bl-cat-card__img .bl-placeholder-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: rgba(234,244,245,0.05);
+    color: rgba(234,244,245,0.05);
+  }
+
+  /* ── CARD OVERLAY ── */
+  #{{ section_id }} .bl-cat-card__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, {{ overlay_color }} 0%, transparent 65%);
+    opacity: var(--overlay-opacity);
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.4s ease;
+  }
+  #{{ section_id }} .bl-cat-card:hover .bl-cat-card__overlay {
+    opacity: {{ overlay_opacity | plus: 15 | at_most: 100 | divided_by: 100.0 }};
+  }
+
+  /* ── CARD LABEL ── */
+  #{{ section_id }} .bl-cat-card__label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: clamp(1rem, 1.8vw, 1.6rem);
+    z-index: 3;
+  }
+  #{{ section_id }} .bl-cat-card__label span {
+    font-family: 'Archivo Black', sans-serif;
+    font-weight: 400;
+    font-size: clamp(1rem, 1.3vw, 1.35rem);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #ffffff;
+    display: inline-block;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    transition: color 0.3s ease;
+    position: relative;
+  }
+  #{{ section_id }} .bl-cat-card__label span::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--bl-green);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #{{ section_id }} .bl-cat-card:hover .bl-cat-card__label span::after { width: 100%; }
+  #{{ section_id }} .bl-cat-card--featured .bl-cat-card__label span {
+    text-decoration: underline;
+    text-decoration-color: var(--bl-green);
+    text-underline-offset: 5px;
+  }
+  #{{ section_id }} .bl-cat-card--placeholder {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── RESPONSIVE: 1024px ── */
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-showcase__inner {
+      grid-template-columns: 1fr;
+      gap: clamp(2.4rem, 5vw, 4rem);
+    }
+    #{{ section_id }} .bl-showcase__editorial { order: 1 !important; }
+    #{{ section_id }} .bl-showcase__grid {
+      order: 2 !important;
+      grid-template-columns: repeat({{ card_columns | at_most: 4 }}, 1fr);
+    }
+  }
+
+  /* ── RESPONSIVE: 768px ── */
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    }
+    #{{ section_id }} .bl-showcase__heading {
+      font-size: clamp({{ heading_size_mob }}px, 7vw, {{ heading_size_mob | plus: 10 }}px);
+    }
+    #{{ section_id }} .bl-showcase__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(0.6rem, 2vw, 1rem);
+    }
+    #{{ section_id }} .bl-showcase__btn {
+      align-self: stretch;
+      justify-content: center;
+    }
+  }
+
+  /* ── RESPONSIVE: 480px ── */
+  @media (max-width: 480px) {
+    #{{ section_id }} .bl-showcase__heading {
+      font-size: clamp(2rem, 8vw, 3rem) !important;
+    }
+    #{{ section_id }} .bl-showcase__body {
+      font-size: clamp(1.3rem, 4vw, 1.5rem);
+    }
+    #{{ section_id }} .bl-showcase__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.7rem;
+    }
+    #{{ section_id }} .bl-cat-card__label { padding: 0.7rem; }
+    #{{ section_id }} .bl-cat-card__label span {
+      font-size: clamp(0.8rem, 3vw, 1.05rem);
+    }
+    #{{ section_id }} .bl-cat-card__media-badge {
+      width: 22px;
+      height: 22px;
+      top: 6px;
+      right: 6px;
+    }
+    #{{ section_id }} .bl-cat-card__media-badge svg {
+      width: 9px;
+      height: 9px;
+    }
+  }
+
+  /* ── REDUCED MOTION ── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bl-showcase__editorial,
+    #{{ section_id }} .bl-cat-card {
+      opacity: 1 !important;
+      transform: none !important;
+      clip-path: none !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .bl-cat-card__img img,
+    #{{ section_id }} .bl-cat-card__video {
+      transition: none;
+    }
+  }
+</style>
+
+<section id="{{ section_id }}"
+  aria-label="{{ section.settings.heading | default: 'Category Showcase' | strip_html | escape }}"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
+
+  <!-- ── Section Background Media ── -->
+  {%- if bg_type == 'image' and bg_image != blank -%}
+    <div class="bl-sec-bg" aria-hidden="true">
+      <img
+        class="bl-sec-bg__img"
+        src="{{ bg_image | image_url: width: 2000 }}"
+        srcset="{{ bg_image | image_url: width: 800 }} 800w,
+                {{ bg_image | image_url: width: 1400 }} 1400w,
+                {{ bg_image | image_url: width: 2000 }} 2000w"
+        sizes="100vw"
+        alt=""
+        loading="lazy"
+        width="2000"
+        height="1200">
+    </div>
+  {%- elsif bg_type == 'video' and bg_video_url != blank -%}
+    <div class="bl-sec-bg" aria-hidden="true">
+      <video
+        class="bl-sec-bg__video"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata">
+        <source src="{{ bg_video_url }}" type="video/mp4">
+      </video>
+    </div>
+  {%- endif -%}
+
+  <!-- ── Section Background Overlay ── -->
+  {%- if bg_type != 'color' and bg_overlay_opacity > 0 -%}
+    <div class="bl-sec-overlay" aria-hidden="true"></div>
+  {%- endif -%}
+
+  <div class="bl-showcase__glow" aria-hidden="true"></div>
+
+  <div class="bl-showcase__inner">
+
+    <!-- ── Editorial Text Panel ── -->
+    <div class="bl-showcase__editorial">
+
+      {%- if eyebrow != blank -%}
+        <span class="bl-showcase__eyebrow">{{ eyebrow | escape }}</span>
+      {%- endif -%}
+
+      {%- if heading != blank -%}
+        <h2 class="bl-showcase__heading">{{ heading }}</h2>
+      {%- endif -%}
+
+      {%- if description != blank -%}
+        <div class="bl-showcase__body">{{ description }}</div>
+      {%- endif -%}
+
+      {%- if show_btn and btn_label != blank -%}
+        <a href="{{ btn_url }}" class="bl-showcase__btn">
+          {{- btn_label | escape -}}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+      {%- endif -%}
+
+    </div>
+
+    <!-- ── Category Cards Grid ── -->
+    <div class="bl-showcase__grid">
+
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+          {%- assign card_link    = block.settings.card_url  | default: '#' -%}
+          {%- assign card_is_video = false -%}
+          {%- if block.settings.media_type == 'video' and block.settings.video_url != blank -%}
+            {%- assign card_is_video = true -%}
+          {%- endif -%}
+
+          <a href="{{ card_link }}"
+             class="bl-cat-card{% if block.settings.featured %} bl-cat-card--featured{% endif %}"
+             aria-label="{{ block.settings.label | default: 'View category' | escape }}"
+             {{ block.shopify_attributes }}>
+
+            <div class="bl-cat-card__img">
+
+              {%- if card_is_video -%}
+                <video
+                  class="bl-cat-card__video"
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  {% if block.settings.image != blank %}
+                    poster="{{ block.settings.image | image_url: width: 900 }}"
+                  {% endif %}>
+                  <source src="{{ block.settings.video_url }}" type="video/mp4">
+                </video>
+                <div class="bl-cat-card__media-badge" aria-label="Video">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+
+              {%- elsif block.settings.image != blank -%}
+                <img
+                  src="{{ block.settings.image | image_url: width: 900 }}"
+                  srcset="{{ block.settings.image | image_url: width: 480 }} 480w,
+                          {{ block.settings.image | image_url: width: 900 }} 900w,
+                          {{ block.settings.image | image_url: width: 1200 }} 1200w"
+                  sizes="(max-width: 480px) 45vw, (max-width: 768px) 45vw, (max-width: 1024px) 25vw, 20vw"
+                  alt="{{ block.settings.image.alt | default: block.settings.label | escape }}"
+                  loading="lazy"
+                  width="900"
+                  height="1125">
+
+              {%- else -%}
+                {{ 'collection-2' | placeholder_svg_tag: 'bl-placeholder-svg' }}
+              {%- endif -%}
+
+            </div>
+
+            <div class="bl-cat-card__overlay" aria-hidden="true"></div>
+
+            <div class="bl-cat-card__label">
+              <span>{{ block.settings.label | default: 'Category' }}</span>
+            </div>
+
+          </a>
+        {%- endfor -%}
+
+      {%- else -%}
+        {%- for i in (1..4) -%}
+          <div class="bl-cat-card bl-cat-card--placeholder">
+            <div class="bl-cat-card__img">
+              {{ 'collection-1' | placeholder_svg_tag: 'bl-placeholder-svg' }}
+            </div>
+            <div class="bl-cat-card__overlay" aria-hidden="true"></div>
+            <div class="bl-cat-card__label"><span>Category {{ i }}</span></div>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+
+    </div>
+
+  </div>
+</section>
+
+{% if enable_animations %}
+<script>
+(function() {
+  'use strict';
+  var sectionEl = document.getElementById('{{ section_id }}');
+  if (!sectionEl) return;
+
+  /* Curtain wipe + editorial slide-in on scroll */
+  var revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealObserver.observe(sectionEl);
+
+  /* Card videos — play when in view, pause when out */
+  var cardVideos = sectionEl.querySelectorAll('.bl-cat-card__video');
+  if (cardVideos.length) {
+    var videoObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        var vid = entry.target;
+        if (entry.isIntersecting) {
+          vid.play().catch(function() {});
+        } else {
+          vid.pause();
+        }
+      });
+    }, { threshold: 0.3 });
+    cardVideos.forEach(function(vid) { videoObserver.observe(vid); });
+  }
+
+  /* Shopify editor compatibility */
+  if (window.Shopify && window.Shopify.designMode) {
+    document.addEventListener('shopify:section:load', function(e) {
+      if (e.detail && e.detail.sectionId === '{{ section.id }}') {
+        sectionEl.classList.add('is-visible');
+        sectionEl.querySelectorAll('.bl-cat-card__video').forEach(function(vid) {
+          vid.play().catch(function() {});
+        });
+      }
+    });
+  }
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Category Showcase",
+  "tag": "section",
+  "class": "burnlab-cat-showcase",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow label",
+      "default": "Shop by Category"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Built for <em>Every</em> Workout"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Explore our premium range of gym equipment engineered for performance and built to last. Find the right gear for your training style.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_btn",
+      "label": "Show button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button label",
+      "default": "View All Products"
+    },
+    {
+      "type": "url",
+      "id": "btn_url",
+      "label": "Button URL"
+    },
+    {
+      "type": "select",
+      "id": "btn_style",
+      "label": "Button style",
+      "options": [
+        { "value": "green",   "label": "Filled green" },
+        { "value": "outline", "label": "Outline"      },
+        { "value": "link",    "label": "Text link"    }
+      ],
+      "default": "green"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "img_side",
+      "label": "Cards position",
+      "options": [
+        { "value": "right", "label": "Cards on the right, text on the left" },
+        { "value": "left",  "label": "Cards on the left, text on the right" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "select",
+      "id": "card_columns",
+      "label": "Cards per row",
+      "options": [
+        { "value": "2", "label": "2 columns" },
+        { "value": "3", "label": "3 columns" },
+        { "value": "4", "label": "4 columns" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "card_ratio",
+      "label": "Card image ratio",
+      "options": [
+        { "value": "4/5",  "label": "Portrait 4x5"   },
+        { "value": "3/4",  "label": "Tall 3x4"       },
+        { "value": "1/1",  "label": "Square 1x1"     },
+        { "value": "16/9", "label": "Landscape 16x9" }
+      ],
+      "default": "4/5"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Section Background"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "Background type",
+      "options": [
+        { "value": "color",    "label": "Solid color" },
+        { "value": "gradient", "label": "Gradient"    },
+        { "value": "image",    "label": "Image"       },
+        { "value": "video",    "label": "Video"       }
+      ],
+      "default": "color",
+      "info": "Solid color uses the Background color setting below. Gradient uses the CSS gradient field."
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "Background image",
+      "info": "Active when background type is set to Image"
+    },
+    {
+      "type": "select",
+      "id": "bg_image_pos",
+      "label": "Background image position",
+      "options": [
+        { "value": "center center", "label": "Center"       },
+        { "value": "top center",    "label": "Top"          },
+        { "value": "bottom center", "label": "Bottom"       },
+        { "value": "left center",   "label": "Left"         },
+        { "value": "right center",  "label": "Right"        }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "text",
+      "id": "bg_video_url",
+      "label": "Background video URL",
+      "info": "Paste a direct MP4 link. Active when background type is set to Video. Plays muted and loops automatically."
+    },
+    {
+      "type": "text",
+      "id": "bg_gradient",
+      "label": "Background gradient CSS",
+      "default": "linear-gradient(135deg, #001a2e 0%, #0a3d55 50%, #001a2e 100%)",
+      "info": "Paste any valid CSS gradient value. Active when background type is set to Gradient."
+    },
+    {
+      "type": "color",
+      "id": "bg_overlay_color",
+      "label": "Background overlay color",
+      "default": "#001a2e",
+      "info": "Color layer placed over image or video backgrounds to improve text contrast"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay_opacity",
+      "label": "Background overlay opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "unit": "%",
+      "info": "0 is fully transparent, 100 is fully opaque. Has no effect on solid color or gradient backgrounds unless set intentionally."
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size (desktop)",
+      "min": 28,
+      "max": 80,
+      "step": 2,
+      "default": 52,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mob",
+      "label": "Heading size (mobile)",
+      "min": 20,
+      "max": 48,
+      "step": 2,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#001a2e",
+      "info": "Used as the solid background and as a fallback while image or video loads"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Card overlay color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Card overlay strength",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "default": 55,
+      "info": "Controls the gradient overlay on each category card"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hover_glow",
+      "label": "Enable green glow on card hover",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 48,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category_card",
+      "name": "Category card",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Card media"
+        },
+        {
+          "type": "select",
+          "id": "media_type",
+          "label": "Media type",
+          "options": [
+            { "value": "image", "label": "Image" },
+            { "value": "video", "label": "Video" }
+          ],
+          "default": "image",
+          "info": "Choose Image to upload a photo, or Video to paste an MP4 URL"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Category image",
+          "info": "Used for Image type. Also used as the video poster frame when media type is Video."
+        },
+        {
+          "type": "text",
+          "id": "video_url",
+          "label": "Video URL",
+          "info": "Paste a direct MP4 link. Active when media type is set to Video. Plays muted and loops in view."
+        },
+        {
+          "type": "header",
+          "content": "Card content"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Category label",
+          "default": "Category Name"
+        },
+        {
+          "type": "url",
+          "id": "card_url",
+          "label": "Link URL"
+        },
+        {
+          "type": "checkbox",
+          "id": "featured",
+          "label": "Featured style (shows permanent underline on label)",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Category Showcase",
+      "blocks": [
+        { "type": "category_card" },
+        { "type": "category_card" },
+        { "type": "category_card" },
+        { "type": "category_card" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,397 @@
+{% style %}
+  .related_products_wrapper-{{ section.id }} {
+      padding-top: {{ section.settings.top_spacing }}px;
+      padding-bottom: {{ section.settings.bottom_spacing }}px;
+  }
+
+  @media screen and (max-width: 640px) {
+      .related_products_wrapper-{{ section.id }} {
+          padding-top: {{ section.settings.mob_top_spacing }}px;
+          padding-bottom: {{ section.settings.mob_bottom_spacing }}px;
+      }
+  }
+{% endstyle %}
+
+{{ 'related-products.css' | asset_url | stylesheet_tag }}
+{{ 'product-card.css' | asset_url | stylesheet_tag }}
+
+<div class="related_products_wrapper-{{ section.id }} color_scheme color-{{ section.settings.color_scheme }}" style="--border-radius: {{ section.settings.border-radius }}px;">
+  <div class="container">
+    <related-products
+      data-type="related"
+      data-section-id="{{ section.id }}"
+      data-product-id="{{ product.id }}"
+      data-columns="{{ section.settings.columns }}"
+      data-mobile-columns="{{ section.settings.mob_cols }}"
+      data-spacing="{{ settings.horizontal_spacing }}"
+      data-url="{{ routes.product_recommendations_url }}?limit={{ section.settings.limit }}"
+    >
+      {% if recommendations.performed? and recommendations.products_count > 0 %}
+        {% if section.settings.head != blank %}
+          <div class="related_products_head rhead-{{ section.settings.head_align }}">
+            <h2 class="section_heading {{ section.settings.font_size }} {% if section.settings.font_style == 'body' %}body_style{% endif %}">
+              {{ section.settings.head }}
+            </h2>
+            <div class="rp_arrows ig_arrows">
+              <button class="swiper-button-prev vtgs__prev" aria-label="{{ 'Previous button' }}">{% render 'icon-left' %}</button>
+              <button class="swiper-button-next vtgs__next" aria-label="{{ 'Next button' }}">{% render 'icon-right' %}</button>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+
+
+      <div class="related_products_inner swiper card_block_{{ section.settings.back_block }}">
+        <div class="swiper-wrapper">
+          {% for recommendation in recommendations.products %}
+            <div class="related_product_block swiper-slide {% if recommendations.performed? and recommendations.products_count > 0 %}has_collection{% endif %}">
+              {% render 'product-card',
+                  product: recommendation,
+                  index: forloop.index,
+                  card_bg: section.settings.bg,
+                  card_bg_color: section.settings.bg_color,
+                  aspect_ratio: section.settings.aspect_ratio,
+                  show_badges: settings.show_badges,
+                  show_vendor: section.settings.show_vendor,
+                  show_options: section.settings.show_options,
+                  swatch_shape: settings.swatch_shape,
+                  quick_view: section.settings.show_quick_view,
+                  columns: section.settings.columns,
+                  spacing: settings.horizontal_spacing,
+                  img_size: section.settings.img_size,
+                  product_title_position: section.settings.product_title_position,
+                  title_upcase: section.settings.title_upcase,
+                  show_description: section.settings.show_description,
+                  back_block: section.settings.back_block,
+                  card_color: product.metafields.custom.product_card_color.value,
+                  product_content_align: section.settings.product_content_align
+                %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </related-products>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Related products",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "color_scheme"
+    },
+    {
+      "type": "range",
+      "id": "border-radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "head",
+      "label": "Heading",
+      "default": "You May Also Like"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font_size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Number of products to load",
+      "min": 4,
+      "max": 12,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Number of products per column",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Mobile layout"
+    },
+    {
+      "type": "select",
+      "id": "mob_cols",
+      "label": "Number of column in mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "One"
+        },
+        {
+          "value": "2",
+          "label": "Two"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "header",
+      "content": "Product cards"
+    },
+    {
+      "type": "header",
+      "content": "Product cards"
+    },
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        }
+      ],
+      "default": "square"
+    },
+    {
+      "type": "select",
+      "id": "img_size",
+      "label": "Image size",
+      "options": [
+        {
+          "value": "contain",
+          "label": "Contain"
+        },
+        {
+          "value": "cover",
+          "label": "Cover"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "checkbox",
+      "id": "bg",
+      "label": "Card background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Card background color",
+      "default": "#fff",
+      "visible_if": "{{ section.settings.bg }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "product_content_align",
+      "label": "Product content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "product_title_position",
+      "label": "Product title position",
+      "options": [
+        {
+          "value": "product-title-top",
+          "label": "Top"
+        },
+        {
+          "value": "product-title-bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "product-title-bottom"
+    },
+    {
+      "type": "checkbox",
+      "id": "title_upcase",
+      "label": "Title upcase",
+      "default": false,
+      "info": "Display title in upcase"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show description",
+      "default": false,
+      "info": "Display product description"
+    },
+    {
+      "type": "select",
+      "id": "back_block",
+      "label": "Background block position",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        },
+        {
+          "value": "none",
+          "label": "None"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Top spacing",
+      "id": "top_spacing",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Bottom spacing",
+      "id": "bottom_spacing",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Top spacing",
+      "id": "mob_top_spacing",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Bottom spacing",
+      "id": "mob_bottom_spacing",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Related products"
+    }
+  ]
+}
+{% endschema %}

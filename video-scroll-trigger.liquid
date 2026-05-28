@@ -1,0 +1,824 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Video Scroll Trigger
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-video-scroll-' | append: section.id -%}
+
+{%- liquid
+  assign bg_color          = section.settings.bg_color | default: '#001a2e'
+  assign text_color        = section.settings.text_color | default: '#eaf4f5'
+  assign accent_color      = section.settings.accent_color | default: '#07d16e'
+  assign bg_text_color     = section.settings.bg_text_color | default: '#ffffff'
+  assign bg_text_opacity   = section.settings.bg_text_opacity | default: 8
+
+  assign eyebrow_text  = section.settings.eyebrow_text
+  assign bg_text_row1  = section.settings.bg_text_row1
+  assign bg_text_row2  = section.settings.bg_text_row2
+  assign left_heading  = section.settings.left_heading
+  assign left_desc     = section.settings.left_desc
+  assign right_heading = section.settings.right_heading
+  assign right_desc    = section.settings.right_desc
+  assign cta_label     = section.settings.cta_label
+  assign cta_url       = section.settings.cta_url | default: '#'
+  assign cta_label_2   = section.settings.cta_label_2
+  assign cta_url_2     = section.settings.cta_url_2 | default: '#'
+
+  assign heading_size          = section.settings.heading_size | default: 18
+  assign heading_size_mobile   = heading_size | times: 0.8 | round
+  assign body_size             = section.settings.body_size | default: 15
+  assign body_size_mobile      = body_size | times: 0.9 | round
+  assign bg_text_size          = section.settings.bg_text_size | default: 100
+  assign bg_text_size_mobile   = bg_text_size | times: 0.48 | round
+
+  assign scroll_multiplier  = section.settings.scroll_multiplier | default: 3
+  assign video_width_pct    = section.settings.video_width_pct | default: 55
+  assign video_border_radius = section.settings.video_border_radius | default: 20
+
+  assign enable_animations = section.settings.enable_animations
+  assign enable_glow       = section.settings.enable_glow
+
+  assign padding_top           = section.settings.padding_top | default: 80
+  assign padding_bottom        = section.settings.padding_bottom | default: 80
+  assign padding_top_mobile    = section.settings.padding_top_mobile | default: 48
+  assign padding_bottom_mobile = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+<style>
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  #{{ section_id }} {
+    --vst-bg:             {{ bg_color }};
+    --vst-text:           {{ text_color }};
+    --vst-accent:         {{ accent_color }};
+    --vst-bg-text-clr:    {{ bg_text_color }};
+    --vst-bg-text-op:     {{ bg_text_opacity }};
+    --vst-video-width:    {{ video_width_pct }}%;
+    --vst-radius:         {{ video_border_radius }}px;
+    background-color: var(--vst-bg);
+    color:            var(--vst-text);
+    position:   relative;
+    overflow:   hidden;
+    isolation:  isolate;
+    height:     calc({{ scroll_multiplier }} * 100vh);
+  }
+
+  /* Shopify design-mode: disable sticky so section is fully visible in editor */
+  .shopify-design-mode #{{ section_id }} {
+    height: auto;
+  }
+  .shopify-design-mode #{{ section_id }} .bl-vst-sticky-panel {
+    position: relative;
+    height: auto;
+    min-height: 80vh;
+  }
+
+  #{{ section_id }} .bl-vst-scroll-outer {
+    position: relative;
+    height: 100%;
+  }
+
+  /* ── Sticky viewport panel ─────────────────────────── */
+  #{{ section_id }} .bl-vst-sticky-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-block: clamp({{ padding_top_mobile }}px, 5vw, {{ padding_top }}px);
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+  }
+
+  /* ── Background layer ──────────────────────────────── */
+  #{{ section_id }} .bl-vst-bg-layer {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  }
+  #{{ section_id }} .bl-vst-glow-1 {
+    position: absolute; top: -15%; left: -8%;
+    width: min(52%, 620px); height: 70%; opacity: 0.2;
+  }
+  #{{ section_id }} .bl-vst-glow-2 {
+    position: absolute; bottom: -15%; right: -8%;
+    width: min(46%, 560px); height: 65%; opacity: 0.15;
+  }
+  #{{ section_id }} .bl-grain { z-index: 2; }
+
+  /* ── Background ghost text ─────────────────────────── */
+  #{{ section_id }} .bl-vst-bg-text-layer {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.1em;
+    pointer-events: none; overflow: hidden;
+    opacity: calc(var(--vst-bg-text-op) / 100);
+  }
+  #{{ section_id }} .bl-vst-bg-row {
+    font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+    font-weight: 400;
+    font-size: clamp({{ bg_text_size_mobile }}px, 12vw, {{ bg_text_size }}px);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--vst-bg-text-clr);
+    will-change: transform;
+    max-width: 100vw;
+  }
+
+  /* ── Inner content ─────────────────────────────────── */
+  #{{ section_id }} .bl-vst-inner {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 1400px;
+    margin-inline: auto;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: clamp(1.2rem, 2vw, 2.4rem);
+  }
+  #{{ section_id }} .bl-vst-eyebrow { text-align: center; }
+
+  /* ── Three-column grid ─────────────────────────────── */
+  #{{ section_id }} .bl-vst-grid {
+    display: grid;
+    grid-template-columns: 1fr var(--vst-video-width) 1fr;
+    gap: clamp(1.2rem, 2vw, 3rem);
+    align-items: center;
+    width: 100%;
+  }
+  #{{ section_id }} .bl-vst-col {
+    display: flex; flex-direction: column; gap: 0.6rem;
+  }
+  #{{ section_id }} .bl-vst-col-heading {
+    font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+    font-weight: 400;
+    font-size: clamp({{ heading_size_mobile }}px, 1.4vw, {{ heading_size }}px);
+    line-height: 1.1; letter-spacing: -0.01em;
+    color: var(--vst-accent);
+    overflow-wrap: break-word; word-break: break-word;
+  }
+  #{{ section_id }} .bl-vst-col-body {
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp({{ body_size_mobile }}px, 1.15vw, {{ body_size }}px);
+    line-height: 1.72;
+    color: var(--vst-text); opacity: 0.82;
+    overflow-wrap: break-word; word-break: break-word;
+  }
+
+  /* ── Video column ──────────────────────────────────── */
+  #{{ section_id }} .bl-vst-video-col {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  #{{ section_id }} .bl-vst-video-wrap {
+    position: relative; width: 100%;
+    border-radius: var(--vst-radius);
+    overflow: hidden; background: #000;
+    box-shadow:
+      0 32px 72px rgba(0,0,0,0.52),
+      0 0 0 1px rgba(255,255,255,0.07),
+      0 0 48px rgba(7,209,110,0.08);
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-vst-video,
+  #{{ section_id }} .bl-vst-fallback-img {
+    display: block; width: 100%; height: auto; object-fit: cover;
+  }
+  #{{ section_id }} .bl-vst-video-placeholder {
+    width: 100%; aspect-ratio: 16/9;
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(0.9rem, 1.1vw, 1.3rem);
+    color: rgba(255,255,255,0.3);
+    text-align: center; padding: 1rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────── */
+  #{{ section_id }} .bl-vst-progress-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: rgba(255,255,255,0.1); z-index: 5;
+  }
+  #{{ section_id }} .bl-vst-progress-fill {
+    height: 100%; background: var(--vst-accent);
+    transform-origin: left center; transform: scaleX(0);
+    will-change: transform;
+  }
+
+  /* ── CTA ───────────────────────────────────────────── */
+  #{{ section_id }} .bl-vst-cta {
+    display: flex; align-items: center; justify-content: center;
+    gap: 1.2rem; flex-wrap: wrap;
+  }
+
+  /* ── Scroll hint ───────────────────────────────────── */
+  #{{ section_id }} .bl-vst-scroll-hint {
+    position: absolute; bottom: 2rem; left: 50%;
+    transform: translateX(-50%); z-index: 15;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.45rem;
+    opacity: 0.42;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  #{{ section_id }} .bl-vst-scroll-hint.is-hidden { opacity: 0; }
+  #{{ section_id }} .bl-vst-scroll-hint-text {
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(0.65rem, 0.8vw, 0.9rem);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--vst-text);
+  }
+  #{{ section_id }} .bl-vst-scroll-hint-chevron {
+    width: 14px; height: 14px;
+    border-right: 2px solid var(--vst-text);
+    border-bottom: 2px solid var(--vst-text);
+    transform: rotate(45deg);
+    animation: vst-chevron-{{ section.id }} 1.6s ease-in-out infinite;
+  }
+  @keyframes vst-chevron-{{ section.id }} {
+    0%, 100% { transform: rotate(45deg) translateY(0);   opacity: 0.9; }
+    50%       { transform: rotate(45deg) translateY(4px); opacity: 0.4; }
+  }
+
+  /* ── Reveal states ─────────────────────────────────── */
+  #{{ section_id }} .bl-reveal {
+    opacity: 0; transform: translateY(22px);
+    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+                transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-reveal--left {
+    opacity: 0; transform: translateX(-28px);
+    transition: opacity 0.72s cubic-bezier(0.16,1,0.3,1),
+                transform 0.72s cubic-bezier(0.16,1,0.3,1);
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-reveal--right {
+    opacity: 0; transform: translateX(28px);
+    transition: opacity 0.72s cubic-bezier(0.16,1,0.3,1),
+                transform 0.72s cubic-bezier(0.16,1,0.3,1);
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-reveal--scale {
+    opacity: 0; transform: scale(0.9);
+    transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
+                transform 0.65s cubic-bezier(0.16,1,0.3,1);
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-reveal.is-visible,
+  #{{ section_id }} .bl-reveal--left.is-visible,
+  #{{ section_id }} .bl-reveal--right.is-visible,
+  #{{ section_id }} .bl-reveal--scale.is-visible,
+  .shopify-design-mode #{{ section_id }} .bl-reveal,
+  .shopify-design-mode #{{ section_id }} .bl-reveal--left,
+  .shopify-design-mode #{{ section_id }} .bl-reveal--right,
+  .shopify-design-mode #{{ section_id }} .bl-reveal--scale {
+    opacity: 1; transform: none;
+  }
+
+  /* ── Responsive — tablet ───────────────────────────── */
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-vst-grid {
+      grid-template-columns: 1fr min(65%, var(--vst-video-width)) 1fr;
+    }
+  }
+
+  /* ── Responsive — mobile ───────────────────────────── */
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top:    {{ padding_top_mobile }}px !important;
+      padding-bottom: {{ padding_bottom_mobile }}px !important;
+    }
+    #{{ section_id }} .bl-vst-grid {
+      grid-template-columns: 1fr;
+    }
+    #{{ section_id }} .bl-vst-col--left  { order: 2; text-align: center; }
+    #{{ section_id }} .bl-vst-video-col  { order: 1; }
+    #{{ section_id }} .bl-vst-col--right { order: 3; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    #{{ section_id }} .bl-vst-sticky-panel {
+      padding-block:  {{ padding_top_mobile }}px {{ padding_bottom_mobile }}px;
+      padding-inline: 1.6rem;
+    }
+    #{{ section_id }} .bl-vst-grid { gap: 1rem; }
+    #{{ section_id }} .bl-vst-col-heading {
+      font-size: clamp(1rem, 4vw, 1.3rem);
+    }
+    #{{ section_id }} .bl-vst-col-body {
+      font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+    }
+    #{{ section_id }} .bl-vst-bg-row {
+      font-size: clamp(2rem, 13vw, 3.5rem);
+    }
+    #{{ section_id }} .bl-vst-cta { flex-direction: column; width: 100%; }
+    #{{ section_id }} .bl-vst-cta .bl-btn-pill { width: 100%; justify-content: center; }
+  }
+
+  /* ── Reduced motion ────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bl-vst-scroll-hint-chevron { animation: none; }
+    #{{ section_id }} .bl-vst-scroll-hint         { transition: none; }
+    #{{ section_id }} .bl-vst-video-wrap          { transition: none !important; }
+    #{{ section_id }} .bl-reveal,
+    #{{ section_id }} .bl-reveal--left,
+    #{{ section_id }} .bl-reveal--right,
+    #{{ section_id }} .bl-reveal--scale {
+      opacity: 1 !important; transform: none !important; transition: none !important;
+    }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  aria-label="{%- if eyebrow_text != blank -%}{{ eyebrow_text | escape }}{%- else -%}Video Feature{%- endif -%}">
+
+  <div class="bl-vst-scroll-outer">
+    <div class="bl-vst-sticky-panel">
+
+      <!-- Decorative background -->
+      <div class="bl-vst-bg-layer" aria-hidden="true">
+        {%- if enable_glow != false -%}
+          <div class="bl-glow-blob bl-glow-blob--green bl-vst-glow-1"></div>
+          <div class="bl-glow-blob bl-glow-blob--teal bl-vst-glow-2"></div>
+        {%- endif -%}
+        <div class="bl-grain"></div>
+      </div>
+
+      <!-- Ghost text behind everything -->
+      <div class="bl-vst-bg-text-layer" aria-hidden="true">
+        {%- if bg_text_row1 != blank -%}
+          <div class="bl-vst-bg-row bl-vst-bg-row--1">{{ bg_text_row1 | escape }}</div>
+        {%- endif -%}
+        {%- if bg_text_row2 != blank -%}
+          <div class="bl-vst-bg-row bl-vst-bg-row--2">{{ bg_text_row2 | escape }}</div>
+        {%- endif -%}
+      </div>
+
+      <!-- Main content -->
+      <div class="bl-vst-inner">
+
+        {%- if eyebrow_text != blank -%}
+          <div class="bl-eyebrow bl-vst-eyebrow bl-reveal">{{ eyebrow_text | escape }}</div>
+        {%- endif -%}
+
+        <div class="bl-vst-grid">
+
+          <!-- Left column -->
+          <div class="bl-vst-col bl-vst-col--left bl-reveal--left">
+            {%- if left_heading != blank -%}
+              <h3 class="bl-vst-col-heading">{{ left_heading | escape }}</h3>
+            {%- endif -%}
+            {%- if left_desc != blank -%}
+              <p class="bl-vst-col-body">{{ left_desc | escape }}</p>
+            {%- endif -%}
+          </div>
+
+          <!-- Video -->
+          <div class="bl-vst-video-col">
+            <div class="bl-vst-video-wrap">
+              {%- if section.settings.video != blank -%}
+                <video
+                  class="bl-vst-video"
+                  muted
+                  playsinline
+                  preload="auto"
+                  aria-hidden="true"
+                  {%- if section.settings.video_poster != blank -%}
+                    poster="{{ section.settings.video_poster | image_url: width: 1200 }}"
+                  {%- endif -%}
+                >
+                  {%- for source in section.settings.video.sources -%}
+                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                  {%- endfor -%}
+                </video>
+              {%- elsif section.settings.video_poster != blank -%}
+                <img
+                  src="{{ section.settings.video_poster | image_url: width: 1200 }}"
+                  alt="{{ section.settings.video_poster.alt | default: '' | escape }}"
+                  class="bl-vst-fallback-img"
+                  width="{{ section.settings.video_poster.width }}"
+                  height="{{ section.settings.video_poster.height }}"
+                  loading="lazy"
+                >
+              {%- else -%}
+                <div class="bl-vst-video-placeholder">
+                  <span>Add a video in the theme editor</span>
+                </div>
+              {%- endif -%}
+              <div class="bl-vst-progress-bar" aria-hidden="true">
+                <div class="bl-vst-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div class="bl-vst-col bl-vst-col--right bl-reveal--right">
+            {%- if right_heading != blank -%}
+              <h3 class="bl-vst-col-heading">{{ right_heading | escape }}</h3>
+            {%- endif -%}
+            {%- if right_desc != blank -%}
+              <p class="bl-vst-col-body">{{ right_desc | escape }}</p>
+            {%- endif -%}
+          </div>
+
+        </div><!-- /bl-vst-grid -->
+
+        {%- if cta_label != blank or cta_label_2 != blank -%}
+          <div class="bl-vst-cta bl-reveal--scale">
+            {%- if cta_label != blank -%}
+              <a href="{{ cta_url }}" class="bl-btn-pill bl-btn-pill--green">{{ cta_label | escape }}</a>
+            {%- endif -%}
+            {%- if cta_label_2 != blank -%}
+              <a href="{{ cta_url_2 }}" class="bl-btn-pill bl-btn-pill--outline">{{ cta_label_2 | escape }}</a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+      </div><!-- /bl-vst-inner -->
+
+      <!-- Scroll hint -->
+      <div class="bl-vst-scroll-hint" aria-hidden="true">
+        <span class="bl-vst-scroll-hint-text">Scroll</span>
+        <div class="bl-vst-scroll-hint-chevron"></div>
+      </div>
+
+    </div><!-- /bl-vst-sticky-panel -->
+  </div><!-- /bl-vst-scroll-outer -->
+
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var inDesignMode  = document.documentElement.classList.contains('shopify-design-mode');
+
+  var video        = root.querySelector('.bl-vst-video');
+  var progressFill = root.querySelector('.bl-vst-progress-fill');
+  var bgRow1       = root.querySelector('.bl-vst-bg-row--1');
+  var bgRow2       = root.querySelector('.bl-vst-bg-row--2');
+  var scrollHint   = root.querySelector('.bl-vst-scroll-hint');
+  var videoWrap    = root.querySelector('.bl-vst-video-wrap');
+
+  /* ── Scroll scrubbing (always active) ─────────────── */
+  if (video && !inDesignMode) {
+
+    var rafId          = null;
+    var latestProgress = 0;
+
+    function calcProgress() {
+      var rect       = root.getBoundingClientRect();
+      var totalH     = root.offsetHeight;
+      var winH       = window.innerHeight;
+      var scrollable = totalH - winH;
+      if (scrollable <= 0) return 0;
+      return Math.max(0, Math.min(1, -rect.top / scrollable));
+    }
+
+    function applyFrame() {
+      rafId = null;
+      var p = latestProgress;
+
+      /* Video scrub */
+      if (video.duration && !isNaN(video.duration) && isFinite(video.duration)) {
+        var target = p * video.duration;
+        if (Math.abs(target - video.currentTime) > 0.016) {
+          try {
+            if (video.fastSeek) { video.fastSeek(target); }
+            else                { video.currentTime = target; }
+          } catch (e) {}
+        }
+      }
+
+      /* Progress bar */
+      if (progressFill) {
+        progressFill.style.transform = 'scaleX(' + p + ')';
+      }
+
+      /* Scroll hint — hide after 4% progress */
+      if (scrollHint) {
+        scrollHint.classList.toggle('is-hidden', p > 0.04);
+      }
+
+      {% if enable_animations != false %}
+      /* Decorative effects — only when animations enabled and no reduced-motion */
+      if (!reducedMotion) {
+        /* Bg text counter-parallax */
+        var shift = p * 5;
+        if (bgRow1) bgRow1.style.transform = 'translateX(-' + shift + '%)';
+        if (bgRow2) bgRow2.style.transform = 'translateX('  + shift + '%)';
+
+        /* Video wrap: subtle scale 0.94 → 1.0 over first 40% of scroll */
+        if (videoWrap) {
+          var sc = 0.94 + Math.min(p / 0.4, 1) * 0.06;
+          videoWrap.style.transform = 'scale(' + sc + ')';
+        }
+      }
+      {% endif %}
+    }
+
+    function onScroll() {
+      latestProgress = calcProgress();
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyFrame);
+      }
+    }
+
+    video.addEventListener('loadedmetadata', function () {
+      latestProgress = calcProgress();
+      applyFrame();
+    });
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+  }
+
+  {% if enable_animations != false %}
+  /* ── Scroll-reveal via IntersectionObserver ─────── */
+  var revealObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  root.querySelectorAll(
+    '#{{ section_id }} .bl-reveal, ' +
+    '#{{ section_id }} .bl-reveal--left, ' +
+    '#{{ section_id }} .bl-reveal--right, ' +
+    '#{{ section_id }} .bl-reveal--scale'
+  ).forEach(function (el) { revealObs.observe(el); });
+  {% endif %}
+});
+</script>
+
+{% schema %}
+{
+  "name": "Video Scroll Trigger",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    {
+      "type": "text",
+      "id": "eyebrow_text",
+      "label": "Eyebrow Label",
+      "default": "The BurnLab Experience"
+    },
+    {
+      "type": "text",
+      "id": "bg_text_row1",
+      "label": "Background Text Row 1",
+      "default": "BURNLAB"
+    },
+    {
+      "type": "text",
+      "id": "bg_text_row2",
+      "label": "Background Text Row 2",
+      "default": "FITNESS"
+    },
+
+    { "type": "header", "content": "Left Column" },
+    {
+      "type": "text",
+      "id": "left_heading",
+      "label": "Left Heading",
+      "default": "Engineered for Performance"
+    },
+    {
+      "type": "textarea",
+      "id": "left_desc",
+      "label": "Left Description",
+      "default": "Every component is precision-engineered with commercial-grade materials, tested under extreme conditions, and built to outlast decades of intense training."
+    },
+
+    { "type": "header", "content": "Right Column" },
+    {
+      "type": "text",
+      "id": "right_heading",
+      "label": "Right Heading",
+      "default": "Designed for Your Space"
+    },
+    {
+      "type": "textarea",
+      "id": "right_desc",
+      "label": "Right Description",
+      "default": "BurnLab equipment transforms any room into a world-class training environment. Clean lines, smart dimensions, zero compromise on quality."
+    },
+
+    { "type": "header", "content": "CTA Buttons" },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Primary Button Label",
+      "default": "Shop Equipment"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Primary Button URL"
+    },
+    {
+      "type": "text",
+      "id": "cta_label_2",
+      "label": "Secondary Button Label",
+      "info": "Leave blank to hide"
+    },
+    {
+      "type": "url",
+      "id": "cta_url_2",
+      "label": "Secondary Button URL"
+    },
+
+    { "type": "header", "content": "Video" },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video File",
+      "info": "Upload an MP4 via Shopify Files. The video will be scrubbed forward and backward as the user scrolls."
+    },
+    {
+      "type": "image_picker",
+      "id": "video_poster",
+      "label": "Poster Image",
+      "info": "Shown before the video loads, or as a static fallback when no video is set"
+    },
+
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "range",
+      "id": "scroll_multiplier",
+      "label": "Section Scroll Height",
+      "info": "Multiplied by viewport height. Higher value gives more time to scrub the video.",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "video_width_pct",
+      "label": "Video Width",
+      "min": 30,
+      "max": 75,
+      "step": 5,
+      "unit": "%",
+      "default": 55
+    },
+    {
+      "type": "range",
+      "id": "video_border_radius",
+      "label": "Video Corner Radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+
+    { "type": "header", "content": "Typography" },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Column Heading Size",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "label": "Body Text Size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "bg_text_size",
+      "label": "Background Text Size",
+      "min": 40,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 100
+    },
+
+    { "type": "header", "content": "Colors" },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "bg_text_color",
+      "label": "Background Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "bg_text_opacity",
+      "label": "Background Text Opacity",
+      "min": 2,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 8
+    },
+
+    { "type": "header", "content": "Animations and Effects" },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glow",
+      "label": "Enable Glow Effects",
+      "default": true
+    },
+
+    { "type": "header", "content": "Desktop Padding" },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+
+    { "type": "header", "content": "Mobile Padding" },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top Mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom Mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video Scroll Trigger",
+      "category": "Video"
+    }
+  ]
+}
+{% endschema %}

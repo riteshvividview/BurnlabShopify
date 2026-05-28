@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    {%- capture ecom_header_content -%}{%- render 'ecom_header' -%}{%- endcapture -%}{%- unless ecom_header_content contains 'Liquid error' -%}{{ ecom_header_content }}{%- endunless -%}
+
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- endif -%}
+
+    {% comment %} Google Fonts — Preconnect hints for performance {% endcomment %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    {% comment %} Google Fonts — Archivo Black (primary) + DM Sans (secondary) {% endcomment %}
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap"
+      rel="stylesheet"
+    >
+
+    {% comment %} Inlined CSS Variables — from Shopify theme settings {% endcomment %}
+    {% render 'theme-variable-css' %}
+
+    {% comment %} BurnLab base — brand tokens, custom @font-face, font overrides {% endcomment %}
+    {{ 'base.css' | asset_url | stylesheet_tag: preload: true }}
+
+    {% comment %} Critical render-blocking CSS {% endcomment %}
+    {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
+    {{ 'fancybox.css' | asset_url | stylesheet_tag: preload: true }}
+    {{ 'header-section.css' | asset_url | stylesheet_tag: preload: true }}
+
+    {% comment %} Social, title, meta {% endcomment %}
+    {% render 'meta-tags' %}
+
+    {% comment %} Swiper + Lenis {% endcomment %}
+    {{ 'swiper.css' | asset_url | stylesheet_tag: preload: true }}
+    {{ 'lenis.css' | asset_url | stylesheet_tag: preload: true }}
+
+    {% comment %} BurnLab global theme — components, utilities, animations {% endcomment %}
+    {{ 'theme.css' | asset_url | stylesheet_tag }}
+
+    {{ content_for_header }}
+
+    <script src="{{ 'critical.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'fancybox.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'swiper.js' | asset_url }}" defer></script>
+    <script src="{{ 'lenis.js' | asset_url }}" defer></script>
+  </head>
+
+  <body>
+    {% comment %} Global scroll progress bar {% endcomment %}
+    <div id="bl-scroll-progress" aria-hidden="true"></div>
+
+    {% sections 'header-group' %}
+
+    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
+      {% if settings.enable_breadcrumbs %}
+        {% render 'breadcrumbs' %}
+      {% endif %}
+
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+    {% section 'announcement-popup' %}
+
+    {% if settings.show_scroll_to_top %}
+      <scroll-to-top class="color_scheme color-{{ settings.top_color_scheme }}">
+        <button aria-label="{{ 'general.scroll_to_top.title' | t }}" class="scroll_to_top">
+          {{ 'scroll-to-top.svg' | inline_asset_content }}
+        </button>
+      </scroll-to-top>
+    {% endif %}
+
+    <ul hidden>
+      <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
+      <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
+    </ul>
+
+    {% render 'search-drawer' %}
+
+    {% if settings.cart_type == 'drawer' %}
+      {{ 'cart-drawer.css' | asset_url | stylesheet_tag }}
+      {% render 'cart-drawer' %}
+    {% endif %}
+
+    {% if localization.available_countries.size > 0 or localization.available_languages.size > 0 %}
+      {% render 'localization' %}
+    {% endif %}
+
+    {% render 'quick-add-drawer' %}
+
+    {% render 'initialize-js' %}
+
+    {% comment %} Global scroll progress bar script {% endcomment %}
+    <script>
+    (function() {
+      var bar = document.getElementById('bl-scroll-progress');
+      if (!bar) return;
+      var ticking = false;
+      function update() {
+        var doc = document.documentElement;
+        var scrolled = window.scrollY;
+        var total = doc.scrollHeight - window.innerHeight;
+        bar.style.width = (total > 0 ? Math.min(scrolled / total, 1) * 100 : 0) + '%';
+        ticking = false;
+      }
+      window.addEventListener('scroll', function() {
+        if (!ticking) { requestAnimationFrame(update); ticking = true; }
+      }, { passive: true });
+    })();
+    </script>
+
+    {%- capture ecom_footer_content -%}{%- render 'ecom_footer' -%}{%- endcapture -%}{%- unless ecom_footer_content contains 'Liquid error' -%}{{ ecom_footer_content }}{%- endunless -%}
+  </body>
+</html>

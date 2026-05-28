@@ -1,0 +1,1113 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Image Gallery Collage
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Asymmetric editorial collage — stagger offsets, parallax, hover reveals
+  Block types: hero (wide), duo (two stacked), badge (icon + image)
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-gallery-collage-' | append: section.id -%}
+
+{%- liquid
+  assign section_bg    = section.settings.section_bg    | default: '#001a2e'
+  assign text_color    = section.settings.text_color    | default: '#eaf4f5'
+  assign accent_color  = section.settings.accent_color  | default: '#07d16e'
+  assign muted_color   = section.settings.muted_color   | default: '#336870'
+  assign card_bg       = section.settings.card_bg       | default: '#001e35'
+  assign dm_class      = ''
+  if request.design_mode
+    assign dm_class = ' is-visible'
+  endif
+  assign show_eyebrow  = section.settings.show_eyebrow
+  assign eyebrow       = section.settings.eyebrow       | default: 'Our Gallery'
+  assign heading       = section.settings.heading       | default: 'Built for Performance'
+  assign heading_size  = section.settings.heading_size  | default: 52
+  assign head_align    = section.settings.head_align    | default: 'left'
+  assign description   = section.settings.description
+  assign show_button   = section.settings.show_button
+  assign btn_label     = section.settings.btn_label     | default: 'View All'
+  assign btn_link      = section.settings.btn_link      | default: '#'
+  assign btn_style     = section.settings.btn_style     | default: 'primary'
+  assign new_tab       = section.settings.new_tab
+  assign columns       = section.settings.columns       | default: 3
+  assign gap           = section.settings.gap           | default: 20
+  assign border_radius = section.settings.border_radius | default: 16
+  assign enable_anims  = section.settings.enable_animations
+  assign enable_parallax = section.settings.enable_parallax
+  assign enable_hover  = section.settings.enable_hover_effects
+  assign pad_top       = section.settings.padding_top           | default: 80
+  assign pad_bot       = section.settings.padding_bottom        | default: 80
+  assign pad_top_mob   = section.settings.padding_top_mobile    | default: 48
+  assign pad_bot_mob   = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+{% style %}
+
+#{{ section_id }} * { box-sizing: border-box; }
+
+#{{ section_id }} {
+  --gc-bg:      {{ section_bg }};
+  --gc-text:    {{ text_color }};
+  --gc-accent:  {{ accent_color }};
+  --gc-muted:   {{ muted_color }};
+  --gc-card:    {{ card_bg }};
+  --gc-gap:     {{ gap }}px;
+  --gc-radius:  {{ border_radius }}px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--gc-bg);
+  color: var(--gc-text);
+}
+
+/* ── Blobs ────────────────────────────────────────────── */
+#{{ section_id }} .gc-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform;
+}
+#{{ section_id }} .gc-blob--green {
+  width: clamp(280px, 50vw, 700px);
+  height: clamp(280px, 50vw, 700px);
+  background: radial-gradient(circle, rgba(7,209,110,0.09) 0%, transparent 70%);
+  top: -180px; right: -100px;
+}
+#{{ section_id }} .gc-blob--teal {
+  width: clamp(200px, 38vw, 520px);
+  height: clamp(200px, 38vw, 520px);
+  background: radial-gradient(circle, rgba(51,104,112,0.14) 0%, transparent 70%);
+  bottom: -120px; left: -80px;
+}
+
+/* Grain */
+#{{ section_id }} .gc-grain {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px; opacity: 0.4;
+}
+
+/* Inner wrapper */
+#{{ section_id }} .gc-inner {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 6rem);
+}
+
+/* ── Header ───────────────────────────────────────────── */
+#{{ section_id }} .gc-header {
+  text-align: {{ head_align }};
+  margin-bottom: clamp(3rem, 5vw, 5rem);
+}
+#{{ section_id }} .gc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.82rem, 1vw, 0.98rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gc-accent);
+  margin-bottom: 1rem;
+}
+#{{ section_id }} .gc-eyebrow::before,
+#{{ section_id }} .gc-eyebrow::after {
+  content: '';
+  height: 2px;
+  background: var(--gc-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+  width: clamp(1.8rem, 3vw, 3rem);
+  display: block;
+}
+{% unless head_align == 'center' %}
+#{{ section_id }} .gc-eyebrow::after { display: none; }
+{% endunless %}
+#{{ section_id }} .gc-heading {
+  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, {{ heading_size }}px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--gc-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin: 0 0 1rem;
+}
+#{{ section_id }} .gc-desc {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+  line-height: 1.65;
+  color: rgba(234,244,245,0.6);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+{% if head_align == 'center' %}
+#{{ section_id }} .gc-desc { max-width: 62ch; margin-inline: auto; }
+{% endif %}
+
+/* ── Collage Grid ─────────────────────────────────────── */
+#{{ section_id }} .gc-grid {
+  display: grid;
+  grid-template-columns: repeat({{ columns }}, 1fr);
+  gap: var(--gc-gap);
+  align-items: start;
+}
+
+/* ── Blocks ───────────────────────────────────────────── */
+#{{ section_id }} .gc-block {
+  position: relative;
+  min-width: 0;
+}
+#{{ section_id }} .gc-block--hero { grid-column: span 2; }
+
+/* ── Media container ──────────────────────────────────── */
+#{{ section_id }} .gc-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--gc-radius);
+  background: var(--gc-card);
+  display: block;
+  /* Fallback height so container renders before images load */
+  min-height: 160px;
+}
+/* Parallax inner — position: absolute so it fills the container
+   regardless of how the parent's height was established (aspect-ratio).
+   Extends 8% beyond top & bottom: clipped by overflow:hidden, gives
+   JS room to translateY without showing edges. */
+#{{ section_id }} .gc-pi {
+  position: absolute;
+  top: -8%;
+  left: 0;
+  right: 0;
+  bottom: -8%;
+}
+#{{ section_id }} .gc-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+/* Placeholder SVG — must also fill the absolute gc-pi wrapper */
+#{{ section_id }} .gc-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: rgba(51,104,112,0.45);
+  color: rgba(71,130,140,0.5);
+}
+
+/* Hero aspect ratios */
+#{{ section_id }} .gc-block--hero .gc-media[data-ratio="landscape"] { aspect-ratio: 16 / 9; }
+#{{ section_id }} .gc-block--hero .gc-media[data-ratio="portrait"]  { aspect-ratio: 4 / 5;  }
+#{{ section_id }} .gc-block--hero .gc-media[data-ratio="square"]    { aspect-ratio: 1 / 1;  }
+#{{ section_id }} .gc-block--hero .gc-media[data-ratio="tall"]      { aspect-ratio: 3 / 4;  }
+
+/* Duo block */
+#{{ section_id }} .gc-block--duo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gc-gap);
+}
+#{{ section_id }} .gc-block--duo .gc-media--top    { aspect-ratio: 4 / 3; }
+#{{ section_id }} .gc-block--duo .gc-media--bottom { aspect-ratio: 3 / 4; }
+
+/* Badge block */
+#{{ section_id }} .gc-block--badge .gc-media[data-ratio="portrait"]  { aspect-ratio: 2 / 3; }
+#{{ section_id }} .gc-block--badge .gc-media[data-ratio="square"]    { aspect-ratio: 1 / 1; }
+#{{ section_id }} .gc-block--badge .gc-media[data-ratio="landscape"] { aspect-ratio: 4 / 3; }
+#{{ section_id }} .gc-badge-wrap { position: relative; }
+#{{ section_id }} .gc-badge-icon {
+  position: absolute;
+  top: -18px;
+  right: -14px;
+  z-index: 12;
+  width: clamp(52px, 5.5vw, 76px);
+  height: clamp(52px, 5.5vw, 76px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--gc-accent);
+  box-shadow: 0 0 24px rgba(7,209,110,0.45), 0 4px 16px rgba(0,0,0,0.4);
+  background: var(--gc-card);
+}
+#{{ section_id }} .gc-badge-icon img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+
+/* ── Overlay ──────────────────────────────────────────── */
+#{{ section_id }} .gc-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,26,46,0.88) 0%, rgba(0,26,46,0.12) 52%, transparent 100%);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.38s ease;
+  {% if enable_hover %}opacity: 0;{% else %}opacity: 0.42;{% endif %}
+}
+
+/* ── Caption overlay ──────────────────────────────────── */
+#{{ section_id }} .gc-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: clamp(0.9rem, 2vw, 1.5rem);
+  z-index: 5;
+  pointer-events: none;
+  {% if enable_hover %}
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  {% else %}
+  transform: none;
+  opacity: 1;
+  {% endif %}
+}
+#{{ section_id }} .gc-tag {
+  display: inline-block;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.62rem, 0.85vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #001a2e;
+  background: var(--gc-accent);
+  padding: 0.18em 0.6em;
+  border-radius: 100px;
+  margin-bottom: 0.45rem;
+  line-height: 1.5;
+}
+#{{ section_id }} .gc-caption-title {
+  display: block;
+  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+  font-weight: 400;
+  font-size: clamp(0.95rem, 1.4vw, 1.2rem);
+  line-height: 1.15;
+  color: var(--gc-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+#{{ section_id }} .gc-caption-sub {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.74rem, 0.95vw, 0.86rem);
+  line-height: 1.5;
+  color: rgba(234,244,245,0.72);
+  margin: 0.28rem 0 0;
+  overflow-wrap: break-word;
+}
+
+/* Caption below image (badge block label) */
+#{{ section_id }} .gc-block-label {
+  padding: clamp(0.65rem, 1vw, 0.9rem) 0;
+  overflow-wrap: break-word;
+}
+#{{ section_id }} .gc-block-label .gc-caption-title {
+  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+  color: rgba(234,244,245,0.85);
+}
+
+/* ── Hover effects ────────────────────────────────────── */
+{% if enable_hover %}
+#{{ section_id }} .gc-media:hover .gc-img     { transform: scale(1.07); }
+#{{ section_id }} .gc-media:hover .gc-overlay  { opacity: 1; }
+#{{ section_id }} .gc-media:hover .gc-caption  { transform: none; opacity: 1; }
+{% endif %}
+
+/* ── CTA button ───────────────────────────────────────── */
+#{{ section_id }} .gc-cta {
+  display: flex;
+  margin-top: clamp(2.5rem, 5vw, 4.5rem);
+  {% if head_align == 'center' %}justify-content: center;
+  {% elsif head_align == 'right' %}justify-content: flex-end;
+  {% else %}justify-content: flex-start;{% endif %}
+}
+#{{ section_id }} .gc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 2.1rem;
+  border-radius: 100px;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.88rem, 1.05vw, 0.98rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  {% if btn_style == 'primary' %}
+  background: var(--gc-accent);
+  color: #001a2e;
+  border: none;
+  box-shadow: 0 8px 24px rgba(7,209,110,0.25);
+  {% else %}
+  background: transparent;
+  color: var(--gc-text);
+  border: 1.5px solid rgba(234,244,245,0.28);
+  {% endif %}
+}
+#{{ section_id }} .gc-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  {% if btn_style == 'primary' %}
+  box-shadow: 0 14px 36px rgba(7,209,110,0.38);
+  {% else %}
+  border-color: var(--gc-accent);
+  color: var(--gc-accent);
+  {% endif %}
+}
+#{{ section_id }} .gc-btn svg { pointer-events: none; transition: transform 0.25s ease; }
+#{{ section_id }} .gc-btn:hover svg { transform: translateX(4px); }
+
+/* ── Reveal animations ───────────────────────────────── */
+{% if enable_anims %}
+#{{ section_id }} .gc-hdr-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+#{{ section_id }} .gc-hdr-item.is-visible { opacity: 1; transform: none; }
+#{{ section_id }} .gc-hdr-item--d1 { transition-delay: 0.1s; }
+#{{ section_id }} .gc-hdr-item--d2 { transition-delay: 0.2s; }
+
+#{{ section_id }} .gc-block {
+  opacity: 0;
+  transform: translateY(40px) scale(0.97);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+#{{ section_id }} .gc-block.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .gc-block,
+  #{{ section_id }} .gc-hdr-item {
+    opacity: 1 !important; transform: none !important; transition: none !important;
+  }
+}
+{% endif %}
+
+/* Shopify editor */
+.shopify-design-mode #{{ section_id }} .gc-block,
+.shopify-design-mode #{{ section_id }} .gc-hdr-item {
+  opacity: 1 !important; transform: none !important;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1024px) {
+  #{{ section_id }} .gc-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pad_top_mob }}px !important;
+    padding-bottom: {{ pad_bot_mob }}px !important;
+  }
+  #{{ section_id }} .gc-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(0.75rem, 2.5vw, 1.2rem);
+  }
+  #{{ section_id }} .gc-block--hero { grid-column: span 2; }
+  #{{ section_id }} .gc-block--hero .gc-media[data-ratio="landscape"],
+  #{{ section_id }} .gc-block--hero .gc-media[data-ratio="tall"] { aspect-ratio: 4 / 3; }
+  /* Always show captions and overlay on touch screens */
+  #{{ section_id }} .gc-overlay { opacity: 0.42 !important; }
+  #{{ section_id }} .gc-caption { transform: none !important; opacity: 1 !important; }
+  /* Reduce vertical shifts on tablet — they can cause large gaps */
+  #{{ section_id }} .gc-block { padding-top: min(var(--v-shift, 0px), 40px) !important; }
+}
+@media (max-width: 480px) {
+  #{{ section_id }} .gc-heading { font-size: clamp(2rem, 8vw, 3rem) !important; }
+  #{{ section_id }} .gc-grid { grid-template-columns: 1fr; }
+  #{{ section_id }} .gc-block--hero { grid-column: span 1; }
+  /* Remove vertical shifts entirely on mobile — single column needs no stagger */
+  #{{ section_id }} .gc-block { padding-top: 0 !important; }
+  #{{ section_id }} .gc-cta { justify-content: center; }
+  #{{ section_id }} .gc-btn { width: 100%; justify-content: center; }
+}
+
+{% endstyle %}
+
+<section
+  id="{{ section_id }}"
+  style="padding-top: {{ pad_top }}px; padding-bottom: {{ pad_bot }}px;"
+>
+  <div class="gc-blob gc-blob--green" aria-hidden="true" data-blob-parallax="0.10"></div>
+  <div class="gc-blob gc-blob--teal"  aria-hidden="true" data-blob-parallax="0.06"></div>
+  <div class="gc-grain" aria-hidden="true"></div>
+
+  <div class="gc-inner">
+
+    {%- if heading != blank or description != blank or show_eyebrow -%}
+    <header class="gc-header">
+      {%- if show_eyebrow and eyebrow != blank -%}
+        <p class="gc-eyebrow{% if enable_anims %} gc-hdr-item{{ dm_class }}{% endif %}">
+          {{- eyebrow | escape -}}
+        </p>
+      {%- endif -%}
+      {%- if heading != blank -%}
+        <h2 class="gc-heading{% if enable_anims %} gc-hdr-item gc-hdr-item--d1{{ dm_class }}{% endif %}">
+          {{- heading | escape -}}
+        </h2>
+      {%- endif -%}
+      {%- if description != blank -%}
+        <div class="gc-desc{% if enable_anims %} gc-hdr-item gc-hdr-item--d2{{ dm_class }}{% endif %}">
+          {{ description }}
+        </div>
+      {%- endif -%}
+    </header>
+    {%- endif -%}
+
+    <div class="gc-grid" id="gc-grid-{{ section.id }}">
+      {%- for block in section.blocks -%}
+
+        {%- case block.type -%}
+
+        {%- when 'hero' -%}
+          <div
+            class="gc-block gc-block--hero{{ dm_class }}"
+            style="--v-shift: {{ block.settings.vertical_shift }}px; padding-top: {{ block.settings.vertical_shift }}px;"
+            {{ block.shopify_attributes }}
+          >
+            <div class="gc-media" data-ratio="{{ block.settings.aspect_ratio | default: 'landscape' }}" data-img-parallax>
+              <div class="gc-pi">
+                {%- if block.settings.image != blank -%}
+                  <img
+                    src="{{ block.settings.image | image_url: width: 1400 }}"
+                    alt="{{ block.settings.image.alt | default: block.settings.caption_title | default: heading | escape }}"
+                    loading="lazy"
+                    width="{{ block.settings.image.width }}"
+                    height="{{ block.settings.image.height }}"
+                    class="gc-img"
+                  >
+                {%- else -%}
+                  {{ 'lifestyle-1' | placeholder_svg_tag: 'gc-placeholder' }}
+                {%- endif -%}
+              </div>
+              <div class="gc-overlay" aria-hidden="true"></div>
+              {%- if block.settings.tag != blank or block.settings.caption_title != blank or block.settings.caption_text != blank -%}
+                <div class="gc-caption">
+                  {%- if block.settings.tag != blank -%}
+                    <span class="gc-tag">{{ block.settings.tag | escape }}</span>
+                  {%- endif -%}
+                  {%- if block.settings.caption_title != blank -%}
+                    <strong class="gc-caption-title">{{ block.settings.caption_title | escape }}</strong>
+                  {%- endif -%}
+                  {%- if block.settings.caption_text != blank -%}
+                    <p class="gc-caption-sub">{{ block.settings.caption_text | escape }}</p>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+
+        {%- when 'duo' -%}
+          <div
+            class="gc-block gc-block--duo{{ dm_class }}"
+            style="--v-shift: {{ block.settings.vertical_shift }}px; padding-top: {{ block.settings.vertical_shift }}px;"
+            {{ block.shopify_attributes }}
+          >
+            <div class="gc-media gc-media--top" data-img-parallax>
+              <div class="gc-pi">
+                {%- if block.settings.image_1 != blank -%}
+                  <img
+                    src="{{ block.settings.image_1 | image_url: width: 800 }}"
+                    alt="{{ block.settings.image_1.alt | default: block.settings.label_1 | escape }}"
+                    loading="lazy"
+                    class="gc-img"
+                  >
+                {%- else -%}
+                  {{ 'lifestyle-2' | placeholder_svg_tag: 'gc-placeholder' }}
+                {%- endif -%}
+              </div>
+              <div class="gc-overlay" aria-hidden="true"></div>
+              {%- if block.settings.label_1 != blank -%}
+                <div class="gc-caption">
+                  <strong class="gc-caption-title">{{ block.settings.label_1 | escape }}</strong>
+                </div>
+              {%- endif -%}
+            </div>
+            <div class="gc-media gc-media--bottom" data-img-parallax>
+              <div class="gc-pi">
+                {%- if block.settings.image_2 != blank -%}
+                  <img
+                    src="{{ block.settings.image_2 | image_url: width: 800 }}"
+                    alt="{{ block.settings.image_2.alt | default: block.settings.label_2 | escape }}"
+                    loading="lazy"
+                    class="gc-img"
+                  >
+                {%- else -%}
+                  {{ 'product-2' | placeholder_svg_tag: 'gc-placeholder' }}
+                {%- endif -%}
+              </div>
+              <div class="gc-overlay" aria-hidden="true"></div>
+              {%- if block.settings.label_2 != blank -%}
+                <div class="gc-caption">
+                  <strong class="gc-caption-title">{{ block.settings.label_2 | escape }}</strong>
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+
+        {%- when 'badge' -%}
+          <div
+            class="gc-block gc-block--badge{{ dm_class }}"
+            style="--v-shift: {{ block.settings.vertical_shift }}px; padding-top: {{ block.settings.vertical_shift }}px;"
+            {{ block.shopify_attributes }}
+          >
+            <div class="gc-badge-wrap">
+              <div class="gc-media" data-ratio="{{ block.settings.aspect_ratio | default: 'portrait' }}" data-img-parallax>
+                <div class="gc-pi">
+                  {%- if block.settings.image != blank -%}
+                    <img
+                      src="{{ block.settings.image | image_url: width: 800 }}"
+                      alt="{{ block.settings.image.alt | default: block.settings.caption_title | escape }}"
+                      loading="lazy"
+                      class="gc-img"
+                    >
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag: 'gc-placeholder' }}
+                  {%- endif -%}
+                </div>
+                <div class="gc-overlay" aria-hidden="true"></div>
+                {%- if block.settings.tag != blank or block.settings.caption_title != blank or block.settings.caption_text != blank -%}
+                  <div class="gc-caption">
+                    {%- if block.settings.tag != blank -%}
+                      <span class="gc-tag">{{ block.settings.tag | escape }}</span>
+                    {%- endif -%}
+                    {%- if block.settings.caption_title != blank -%}
+                      <strong class="gc-caption-title">{{ block.settings.caption_title | escape }}</strong>
+                    {%- endif -%}
+                    {%- if block.settings.caption_text != blank -%}
+                      <p class="gc-caption-sub">{{ block.settings.caption_text | escape }}</p>
+                    {%- endif -%}
+                  </div>
+                {%- endif -%}
+              </div>
+              {%- if block.settings.badge_image != blank -%}
+                <div class="gc-badge-icon" aria-hidden="true">
+                  <img src="{{ block.settings.badge_image | image_url: width: 160 }}" alt="" loading="lazy">
+                </div>
+              {%- endif -%}
+            </div>
+            {%- if block.settings.block_label != blank -%}
+              <div class="gc-block-label">
+                <strong class="gc-caption-title">{{ block.settings.block_label | escape }}</strong>
+              </div>
+            {%- endif -%}
+          </div>
+
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+    {%- if show_button and btn_label != blank -%}
+      <div class="gc-cta{% if enable_anims %} gc-hdr-item gc-hdr-item--d2{% endif %}">
+        <a
+          href="{{ btn_link | default: '#' }}"
+          class="gc-btn"
+          {% if new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+        >
+          {{ btn_label | escape }}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% if enable_anims %}
+<script>
+(function () {
+  function initGallery() {
+    var sec = document.getElementById('{{ section_id }}');
+    if (!sec || sec.dataset.gcInit) return;
+    sec.dataset.gcInit = '1';
+
+    /* ── Header items reveal ── */
+    var hdrObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          hdrObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    sec.querySelectorAll('.gc-hdr-item').forEach(function (el) { hdrObs.observe(el); });
+
+    /* ── Block cascade reveal (left→right column stagger) ── */
+    var grid = sec.querySelector('.gc-grid');
+    if (grid) {
+      var blockObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var all = Array.from(grid.querySelectorAll('.gc-block'));
+          var idx = all.indexOf(entry.target);
+          var cols = window.innerWidth <= 480 ? 1 : window.innerWidth <= 768 ? 2 : {{ columns }};
+          var colPos = idx % cols;
+          var rowPos = Math.floor(idx / cols);
+          var delay = colPos * 0.13 + rowPos * 0.06;
+          entry.target.style.transitionDelay = Math.min(delay, 0.55) + 's';
+          entry.target.classList.add('is-visible');
+          blockObs.unobserve(entry.target);
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+      grid.querySelectorAll('.gc-block:not(.is-visible)').forEach(function (el) { blockObs.observe(el); });
+    }
+
+    {% if enable_parallax %}
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    /* ── Blob parallax ── */
+    var blobs = sec.querySelectorAll('[data-blob-parallax]');
+    var secTop = sec.getBoundingClientRect().top + window.scrollY;
+    function refreshSecTop() { secTop = sec.getBoundingClientRect().top + window.scrollY; }
+    window.addEventListener('resize', refreshSecTop, { passive: true });
+
+    /* ── Image parallax (translateY on .gc-pi inner wrapper) ── */
+    var imgContainers = sec.querySelectorAll('[data-img-parallax]');
+
+    var ticking = false;
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(function () {
+          if (blobs.length) {
+            var off = window.scrollY - secTop;
+            blobs.forEach(function (b) {
+              b.style.transform = 'translateY(' + (off * parseFloat(b.getAttribute('data-blob-parallax'))) + 'px)';
+            });
+          }
+          var vh = window.innerHeight;
+          imgContainers.forEach(function (container) {
+            var rect = container.getBoundingClientRect();
+            if (rect.bottom < -80 || rect.top > vh + 80) return;
+            var center = rect.top + rect.height / 2;
+            var progress = (vh / 2 - center) / (vh / 2);
+            var clamped = Math.max(-0.5, Math.min(0.5, progress));
+            var pi = container.querySelector('.gc-pi');
+            if (pi) pi.style.transform = 'translateY(' + (clamped * 7) + '%)';
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    {% endif %}
+  }
+
+  /* Handle first load (both before and after DOMContentLoaded) */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGallery);
+  } else {
+    initGallery();
+  }
+
+  /* Handle Shopify editor section add / block add events */
+  document.addEventListener('shopify:section:load', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      var sec = document.getElementById('{{ section_id }}');
+      if (sec) delete sec.dataset.gcInit;
+      initGallery();
+    }
+  });
+  document.addEventListener('shopify:block:select', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      var sec = document.getElementById('{{ section_id }}');
+      if (sec) {
+        sec.querySelectorAll('.gc-block, .gc-hdr-item').forEach(function (el) {
+          el.classList.add('is-visible');
+        });
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Image Gallery Collage",
+  "settings": [
+    { "type": "header", "content": "Section Header" },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "Show eyebrow label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow label",
+      "default": "Our Gallery"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Built for Performance"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading max size",
+      "min": 24, "max": 80, "step": 2, "unit": "px", "default": 52
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Header alignment",
+      "options": [
+        { "value": "left",   "label": "Left"   },
+        { "value": "center", "label": "Center" },
+        { "value": "right",  "label": "Right"  }
+      ],
+      "default": "left"
+    },
+    { "type": "header", "content": "Call to Action" },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "Show button",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button label",
+      "default": "View All"
+    },
+    {
+      "type": "url",
+      "id": "btn_link",
+      "label": "Button link"
+    },
+    {
+      "type": "checkbox",
+      "id": "new_tab",
+      "label": "Open link in new tab",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "btn_style",
+      "label": "Button style",
+      "options": [
+        { "value": "primary", "label": "Primary (green)" },
+        { "value": "outline", "label": "Outline"         }
+      ],
+      "default": "primary"
+    },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "min": 2, "max": 4, "step": 1, "default": 3,
+      "info": "Hero blocks always span 2 columns to create the wide editorial look."
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap between blocks",
+      "min": 8, "max": 40, "step": 2, "unit": "px", "default": 20
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Image corner radius",
+      "min": 0, "max": 32, "step": 2, "unit": "px", "default": 16
+    },
+    { "type": "header", "content": "Colors" },
+    {
+      "type": "color",
+      "id": "section_bg",
+      "label": "Section background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "muted_color",
+      "label": "Muted color",
+      "default": "#336870"
+    },
+    {
+      "type": "color",
+      "id": "card_bg",
+      "label": "Card placeholder background",
+      "default": "#001e35"
+    },
+    { "type": "header", "content": "Animations and Effects" },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable parallax",
+      "default": true,
+      "info": "Subtle depth effect on images and background blobs while scrolling."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hover_effects",
+      "label": "Enable hover effects",
+      "default": true,
+      "info": "Image zoom and caption reveal on mouse hover. Always visible on touch devices."
+    },
+    { "type": "header", "content": "Desktop Padding" },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80
+    },
+    { "type": "header", "content": "Mobile Padding" },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "hero",
+      "name": "Hero Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "aspect_ratio",
+          "label": "Aspect ratio",
+          "options": [
+            { "value": "landscape", "label": "Landscape (16:9)" },
+            { "value": "portrait",  "label": "Portrait (4:5)"   },
+            { "value": "square",    "label": "Square (1:1)"     },
+            { "value": "tall",      "label": "Tall (3:4)"       }
+          ],
+          "default": "landscape"
+        },
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Tag label",
+          "info": "Small green pill label shown over the image."
+        },
+        {
+          "type": "text",
+          "id": "caption_title",
+          "label": "Caption title"
+        },
+        {
+          "type": "text",
+          "id": "caption_text",
+          "label": "Caption subtitle"
+        },
+        {
+          "type": "range",
+          "id": "vertical_shift",
+          "label": "Vertical offset",
+          "min": 0, "max": 80, "step": 4, "unit": "px", "default": 0,
+          "info": "Shift this block down to create the collage stagger effect."
+        }
+      ]
+    },
+    {
+      "type": "duo",
+      "name": "Duo Images",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image_1",
+          "label": "Top image"
+        },
+        {
+          "type": "text",
+          "id": "label_1",
+          "label": "Top image caption"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "Bottom image"
+        },
+        {
+          "type": "text",
+          "id": "label_2",
+          "label": "Bottom image caption"
+        },
+        {
+          "type": "range",
+          "id": "vertical_shift",
+          "label": "Vertical offset",
+          "min": 0, "max": 80, "step": 4, "unit": "px", "default": 0,
+          "info": "Shift this block down to create the collage stagger effect."
+        }
+      ]
+    },
+    {
+      "type": "badge",
+      "name": "Badge Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Main image"
+        },
+        {
+          "type": "select",
+          "id": "aspect_ratio",
+          "label": "Aspect ratio",
+          "options": [
+            { "value": "portrait",  "label": "Portrait (2:3)"  },
+            { "value": "square",    "label": "Square (1:1)"    },
+            { "value": "landscape", "label": "Landscape (4:3)" }
+          ],
+          "default": "portrait"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_image",
+          "label": "Badge icon",
+          "info": "Small circular image pinned to the corner of the main image."
+        },
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Tag label"
+        },
+        {
+          "type": "text",
+          "id": "caption_title",
+          "label": "Caption title"
+        },
+        {
+          "type": "text",
+          "id": "caption_text",
+          "label": "Caption subtitle"
+        },
+        {
+          "type": "text",
+          "id": "block_label",
+          "label": "Label below image",
+          "info": "Optional text shown beneath the main image."
+        },
+        {
+          "type": "range",
+          "id": "vertical_shift",
+          "label": "Vertical offset",
+          "min": 0, "max": 80, "step": 4, "unit": "px", "default": 0,
+          "info": "Shift this block down to create the collage stagger effect."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image Gallery Collage",
+      "blocks": [
+        {
+          "type": "hero",
+          "settings": {
+            "aspect_ratio": "landscape",
+            "tag": "Premium Equipment",
+            "caption_title": "Power Rack Pro",
+            "caption_text": "Heavy-duty home gym essentials built to last",
+            "vertical_shift": 0
+          }
+        },
+        {
+          "type": "duo",
+          "settings": {
+            "label_1": "Olympic Barbell Set",
+            "label_2": "Cast Iron Plates",
+            "vertical_shift": 40
+          }
+        },
+        {
+          "type": "badge",
+          "settings": {
+            "aspect_ratio": "portrait",
+            "tag": "New Arrival",
+            "caption_title": "Battle Ropes Pro",
+            "caption_text": "Full-body conditioning, any space",
+            "block_label": "BurnLab Pro Series",
+            "vertical_shift": 20
+          }
+        },
+        {
+          "type": "hero",
+          "settings": {
+            "aspect_ratio": "tall",
+            "tag": "Featured",
+            "caption_title": "Train Like a Champion",
+            "caption_text": "Build your dream training space with BurnLab",
+            "vertical_shift": 0
+          }
+        },
+        {
+          "type": "duo",
+          "settings": {
+            "label_1": "Adjustable Dumbbells",
+            "label_2": "Resistance Bands",
+            "vertical_shift": 24
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,192 @@
+/*
+ * ═══════════════════════════════════════════════════════════════
+ * BURNLAB — BASE CSS
+ * Brand design tokens, custom font faces, and global foundations
+ * Load order: after theme-variable-css inline, before critical.css
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/*
+ * ── Custom Font Faces (INACTIVE — font files not yet in assets) ──
+ *
+ * When you upload the brand font files to Shopify Assets, remove
+ * the comment block below and re-enable these @font-face rules.
+ * File names required: qui-bold.woff2, qui-bold.woff,
+ *                      newblack-typeface.woff2, newblack-typeface.woff
+ *
+ * @font-face {
+ *   font-family: 'QUI Bold';
+ *   src: url('qui-bold.woff2') format('woff2'),
+ *        url('qui-bold.woff')  format('woff');
+ *   font-weight: 700;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ *
+ * @font-face {
+ *   font-family: 'Newblack';
+ *   src: url('newblack-typeface.woff2') format('woff2'),
+ *        url('newblack-typeface.woff')  format('woff');
+ *   font-weight: 400;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ *
+ * Then update the two variables below to:
+ *   --bl-font-primary:   'QUI Bold', 'Archivo Black', sans-serif;
+ *   --bl-font-secondary: 'Newblack', 'DM Sans', sans-serif;
+ * ──────────────────────────────────────────────────────────────
+ */
+
+/* ── HTML Root — 10px base for rem calculations ─────────────── */
+html {
+  font-size: 62.5%;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── BurnLab Brand Tokens ────────────────────────────────────── */
+:root {
+  /* Primary palette */
+  --bl-green:        #07d16e;
+  --bl-navy:         #001a2e;
+  --bl-teal:         #336870;
+  --bl-pale:         #eaf4f5;
+
+  /* Secondary palette */
+  --bl-mint:         #cfede1;
+  --bl-blue-grey:    #d6e3ea;
+  --bl-light-teal:   #bfe1db;
+  --bl-neutral-grey: #e1e7ea;
+  --bl-soft-navy:    #ccdce6;
+
+  /* Surface layers (navy-based transparencies) */
+  --bl-surface-1:    rgba(0, 26, 46, 0.95);
+  --bl-surface-2:    rgba(10, 40, 64, 0.85);
+  --bl-surface-3:    rgba(20, 55, 85, 0.6);
+  --bl-surface-glass: rgba(255, 255, 255, 0.04);
+
+  /* Green transparencies */
+  --bl-green-30:     rgba(7, 209, 110, 0.3);
+  --bl-green-20:     rgba(7, 209, 110, 0.2);
+  --bl-green-12:     rgba(7, 209, 110, 0.12);
+  --bl-green-06:     rgba(7, 209, 110, 0.06);
+
+  /* Pale transparencies */
+  --bl-pale-20:      rgba(234, 244, 245, 0.2);
+  --bl-pale-12:      rgba(234, 244, 245, 0.12);
+  --bl-pale-06:      rgba(234, 244, 245, 0.06);
+
+  /* Typography — using Google Fonts loaded in theme.liquid head.
+     Once QUI Bold / Newblack font files are uploaded to assets,
+     re-enable the @font-face blocks above and update these vars. */
+  --bl-font-primary:   'Archivo Black', sans-serif;
+  --bl-font-secondary: 'DM Sans', sans-serif;
+
+  /* Easing curves */
+  --bl-ease-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --bl-ease-back:   cubic-bezier(0.34, 1.56, 0.64, 1);
+  --bl-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --bl-ease-in:     cubic-bezier(0.55, 0, 1, 0.45);
+
+  /* Shadows */
+  --bl-shadow-green:  0 8px 28px rgba(7, 209, 110, 0.32), 0 2px 6px rgba(7, 209, 110, 0.15);
+  --bl-shadow-green-lg: 0 16px 48px rgba(7, 209, 110, 0.4), 0 4px 12px rgba(7, 209, 110, 0.2);
+  --bl-shadow-navy:   0 8px 32px rgba(0, 26, 46, 0.45);
+  --bl-shadow-soft:   0 4px 24px rgba(0, 26, 46, 0.18);
+  --bl-shadow-card:   0 2px 16px rgba(0, 26, 46, 0.12);
+
+  /* Glow effects */
+  --bl-glow-green:    0 0 24px rgba(7, 209, 110, 0.45);
+  --bl-glow-teal:     0 0 24px rgba(51, 104, 112, 0.4);
+
+  /* Border radius scale */
+  --bl-radius-xs:   4px;
+  --bl-radius-sm:   8px;
+  --bl-radius-md:   12px;
+  --bl-radius-lg:   20px;
+  --bl-radius-xl:   32px;
+  --bl-radius-pill: 100px;
+
+  /* Spacing tokens */
+  --bl-space-2xs: 0.4rem;
+  --bl-space-xs:  0.8rem;
+  --bl-space-sm:  1.2rem;
+  --bl-space-md:  1.6rem;
+  --bl-space-lg:  3.2rem;
+  --bl-space-xl:  4.8rem;
+  --bl-space-2xl: 6.4rem;
+  --bl-space-3xl: 9.6rem;
+
+  /* Transition presets */
+  --bl-t-fast:   0.15s ease;
+  --bl-t-base:   0.3s ease;
+  --bl-t-slow:   0.6s var(--bl-ease-expo);
+  --bl-t-reveal: 0.75s var(--bl-ease-expo);
+
+  /* Z-index scale */
+  --z-below:    -1;
+  --z-base:      1;
+  --z-raised:    10;
+  --z-floating:  50;
+  --z-overlay:   100;
+  --z-drawer:    999;
+  --z-toast:     9000;
+  --z-modal:     9999;
+}
+
+/* ── Override Shopify theme font variables with Archivo Black / DM Sans ── */
+:root {
+  --font-heading-family: 'Archivo Black', sans-serif;
+  --font-body-family:    'DM Sans', sans-serif;
+  --font-heading-weight: 900;
+  --font-heading-style:  normal;
+}
+
+/* ── Body baseline ───────────────────────────────────────────── */
+body {
+  font-family: var(--bl-font-secondary);
+  font-size: 1.6rem;
+  line-height: 1.65;
+}
+
+/* ── Text selection ──────────────────────────────────────────── */
+::selection {
+  background-color: var(--bl-green);
+  color: var(--bl-navy);
+}
+::-moz-selection {
+  background-color: var(--bl-green);
+  color: var(--bl-navy);
+}
+
+/* ── Custom scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bl-navy);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bl-teal);
+  border-radius: 3px;
+  transition: background var(--bl-t-base);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bl-green);
+}
+
+/* ── Focus ring ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--bl-green);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ── Smooth image rendering ──────────────────────────────────── */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}

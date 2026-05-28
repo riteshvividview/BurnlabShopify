@@ -1,0 +1,992 @@
+{% comment %}
+  ============================================================
+  BURNLAB — ICON WITH TEXT
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id        = 'burnlab-icon-text-' | append: section.id
+  assign eyebrow           = section.settings.eyebrow           | default: 'Why BurnLab'
+  assign heading           = section.settings.heading           | default: 'Built Different. Built Better.'
+  assign subtitle          = section.settings.subtitle          | default: 'Premium home gym equipment engineered for real performance.'
+  assign show_hdr          = section.settings.show_section_header
+  assign bg_type           = section.settings.bg_type           | default: 'navy'
+  assign bg_color_custom   = section.settings.bg_color_custom   | default: '#001a2e'
+  assign text_color        = section.settings.text_color        | default: '#eaf4f5'
+  assign accent_color      = section.settings.accent_color      | default: '#07d16e'
+  assign card_style        = section.settings.card_style        | default: 'glass'
+  assign col_desktop       = section.settings.columns_desktop   | default: 4
+  assign col_tablet        = section.settings.columns_tablet    | default: 2
+  assign icon_size         = section.settings.icon_size         | default: 52
+  assign heading_size      = section.settings.heading_size      | default: 28
+  assign body_size         = section.settings.body_size         | default: 15
+  assign enable_grain      = section.settings.enable_grain
+  assign enable_glows      = section.settings.enable_glows
+  assign enable_hover      = section.settings.enable_hover
+  assign enable_anim       = section.settings.enable_animations
+  assign icon_shape        = section.settings.icon_shape        | default: 'rounded'
+  assign card_gap          = section.settings.card_gap          | default: 28
+  assign section_hdr_align = section.settings.section_hdr_align | default: 'left'
+
+  assign heading_size_mobile = heading_size | minus: 6
+  if heading_size_mobile < 18
+    assign heading_size_mobile = 18
+  endif
+  assign body_size_mobile = body_size | minus: 1
+  if body_size_mobile < 13
+    assign body_size_mobile = 13
+  endif
+
+  if bg_type == 'pale'
+    assign resolved_bg = '#eaf4f5'
+  elsif bg_type == 'teal'
+    assign resolved_bg = '#336870'
+  elsif bg_type == 'custom'
+    assign resolved_bg = bg_color_custom
+  else
+    assign resolved_bg = '#001a2e'
+  endif
+-%}
+
+<style>
+  /* ── CSS VARIABLES ─────────────────────────────────────── */
+  #{{ section_id }} {
+    --bl-green:         {{ accent_color }};
+    --bl-navy:          #001a2e;
+    --bl-pale:          #eaf4f5;
+    --bl-teal:          #336870;
+    --font-primary:     'Archivo Black', sans-serif;
+    --font-secondary:   'DM Sans', sans-serif;
+    --ease-expo:        cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-back:        cubic-bezier(0.34, 1.56, 0.64, 1);
+    --section-bg:       {{ resolved_bg }};
+    --section-text:     {{ text_color }};
+    --section-accent:   {{ accent_color }};
+    --icon-sz:          {{ icon_size }}px;
+    --col-desktop:      {{ col_desktop }};
+    --col-tablet:       {{ col_tablet }};
+    --card-gap:         {{ card_gap }}px;
+  }
+
+  /* ── RESET ─────────────────────────────────────────────── */
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  /* ── SECTION SHELL ──────────────────────────────────────── */
+  #{{ section_id }} {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--section-bg);
+    color: var(--section-text);
+    isolation: isolate;
+  }
+
+  /* ── GRAIN ──────────────────────────────────────────────── */
+  #{{ section_id }} .itwt-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    background-size: 220px;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── AMBIENT GLOWS ──────────────────────────────────────── */
+  #{{ section_id }} .itwt-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+  }
+  #{{ section_id }} .itwt-glow--a {
+    width: clamp(200px, 40vw, 500px);
+    height: clamp(200px, 40vw, 500px);
+    background: var(--section-accent);
+    opacity: 0.07;
+    top: -10%;
+    right: -5%;
+    animation: itwtGlowA 12s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .itwt-glow--b {
+    width: clamp(150px, 30vw, 380px);
+    height: clamp(150px, 30vw, 380px);
+    background: var(--bl-teal);
+    opacity: 0.09;
+    bottom: -5%;
+    left: 5%;
+    animation: itwtGlowB 15s ease-in-out infinite alternate;
+  }
+  @keyframes itwtGlowA {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(-30px,25px) scale(1.1); }
+  }
+  @keyframes itwtGlowB {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(25px,-20px) scale(1.08); }
+  }
+
+  /* ── CONTAINER ──────────────────────────────────────────── */
+  #{{ section_id }} .itwt-container {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+  }
+
+  /* ── SECTION HEADER ─────────────────────────────────────── */
+  #{{ section_id }} .itwt-header {
+    margin-bottom: clamp(2.4rem, 5vw, 4.8rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #{{ section_id }} .itwt-header[data-align="center"] {
+    align-items: center;
+    text-align: center;
+  }
+  #{{ section_id }} .itwt-header[data-align="right"] {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  #{{ section_id }} .itwt-eyebrow {
+    font-family: var(--font-secondary);
+    font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--section-accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+  }
+  #{{ section_id }} .itwt-header[data-align="center"] .itwt-eyebrow { justify-content: center; }
+  #{{ section_id }} .itwt-header[data-align="right"]  .itwt-eyebrow { justify-content: flex-end; }
+  #{{ section_id }} .itwt-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 2px;
+    background: var(--section-accent);
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  #{{ section_id }} .itwt-main-heading {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 4.8rem);
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+    color: var(--section-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+  }
+
+  #{{ section_id }} .itwt-subtitle {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.3rem, 1.5vw, 1.6rem);
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--section-text);
+    opacity: 0.70;
+    max-width: 60ch;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Header accent line — width drawn in by JS/CSS transition */
+  #{{ section_id }} .itwt-header-line {
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--section-accent), transparent);
+    margin-top: clamp(1.2rem, 2vw, 2rem);
+    border-radius: 2px;
+    transition: width 1s var(--ease-expo) 0.4s;
+  }
+  #{{ section_id }} .itwt-header-line.is-visible { width: clamp(60px, 8vw, 100px); }
+  #{{ section_id }} .itwt-header[data-align="center"] .itwt-header-line {
+    background: linear-gradient(90deg, transparent, var(--section-accent), transparent);
+    align-self: center;
+  }
+  #{{ section_id }} .itwt-header[data-align="right"] .itwt-header-line {
+    background: linear-gradient(270deg, var(--section-accent), transparent);
+    align-self: flex-end;
+  }
+
+  /* ── GRID ───────────────────────────────────────────────── */
+  #{{ section_id }} .itwt-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--col-desktop), 1fr);
+    gap: var(--card-gap);
+  }
+
+  /* ── CARD ───────────────────────────────────────────────── */
+  #{{ section_id }} .itwt-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 1.5vw, 1.4rem);
+    padding: clamp(1.6rem, 2.5vw, 2.4rem);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.4s ease;
+    will-change: transform;
+  }
+
+  /* Glass */
+  #{{ section_id }} .itwt-card--glass {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(234,244,245,0.10);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  /* Dark */
+  #{{ section_id }} .itwt-card--dark {
+    background: rgba(0,26,46,0.60);
+    border: 1px solid rgba(234,244,245,0.08);
+  }
+  /* Light */
+  #{{ section_id }} .itwt-card--light {
+    background: rgba(234,244,245,0.97);
+    border: 1px solid rgba(0,26,46,0.06);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+  }
+  #{{ section_id }} .itwt-card--light .itwt-card-heading { color: #001a2e; }
+  #{{ section_id }} .itwt-card--light .itwt-card-text    { color: #001a2e; opacity: 0.65; }
+  /* Outlined */
+  #{{ section_id }} .itwt-card--outlined {
+    background: transparent;
+    border: 1px solid rgba(234,244,245,0.20);
+  }
+  /* Teal */
+  #{{ section_id }} .itwt-card--teal {
+    background: rgba(51,104,112,0.28);
+    border: 1px solid rgba(7,209,110,0.14);
+  }
+  /* Pale */
+  #{{ section_id }} .itwt-card--pale {
+    background: rgba(234,244,245,0.06);
+    border: 1px solid rgba(234,244,245,0.12);
+  }
+
+  /* Hover effects */
+  {%- if enable_hover -%}
+  #{{ section_id }} .itwt-card:hover {
+    box-shadow: 0 20px 50px rgba(7,209,110,0.12), 0 6px 20px rgba(0,0,0,0.20);
+  }
+  #{{ section_id }} .itwt-card--light:hover {
+    box-shadow: 0 20px 50px rgba(7,209,110,0.14), 0 6px 20px rgba(0,0,0,0.10);
+  }
+  #{{ section_id }} .itwt-card:hover .itwt-card-accent    { transform: scaleX(1); }
+  #{{ section_id }} .itwt-card:hover .itwt-icon-ring       { opacity: 1; transform: scale(1.6); }
+  #{{ section_id }} .itwt-card:hover .itwt-icon-wrap       { transform: scale(1.08) translateY(-2px); }
+  {%- endif -%}
+
+  /* ── ICON WRAPPER ───────────────────────────────────────── */
+  #{{ section_id }} .itwt-icon-wrap {
+    position: relative;
+    width: var(--icon-sz);
+    height: var(--icon-sz);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7,209,110,0.10);
+    border: 1px solid rgba(7,209,110,0.22);
+    transition: transform 0.4s var(--ease-back);
+    will-change: transform;
+    z-index: 1;
+  }
+  #{{ section_id }} .itwt-icon-wrap--rounded { border-radius: 14px; }
+  #{{ section_id }} .itwt-icon-wrap--circle  { border-radius: 50%; }
+  #{{ section_id }} .itwt-icon-wrap--square  { border-radius: 6px; }
+
+  #{{ section_id }} .itwt-card--light .itwt-icon-wrap {
+    background: rgba(7,209,110,0.12);
+    border-color: rgba(7,209,110,0.35);
+  }
+
+  #{{ section_id }} .itwt-icon-img {
+    width: 55%;
+    height: 55%;
+    object-fit: contain;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  #{{ section_id }} .itwt-icon-placeholder {
+    color: var(--section-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55%;
+    height: 55%;
+    position: relative;
+    z-index: 1;
+  }
+  #{{ section_id }} .itwt-icon-placeholder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Ring that expands on hover */
+  #{{ section_id }} .itwt-icon-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: inherit;
+    border: 1.5px solid var(--section-accent);
+    opacity: 0;
+    transform: scale(1);
+    transition: opacity 0.35s ease, transform 0.45s var(--ease-back);
+    pointer-events: none;
+  }
+  #{{ section_id }} .itwt-icon-wrap--circle .itwt-icon-ring { border-radius: 50%; }
+  #{{ section_id }} .itwt-icon-wrap--square  .itwt-icon-ring { border-radius: 8px; }
+
+  /* ── CARD BODY ──────────────────────────────────────────── */
+  #{{ section_id }} .itwt-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  #{{ section_id }} .itwt-card-heading {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp({{ heading_size_mobile }}px, 2.2vw, {{ heading_size }}px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--section-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  #{{ section_id }} .itwt-card-text {
+    font-family: var(--font-secondary);
+    font-size: clamp({{ body_size_mobile }}px, 1.3vw, {{ body_size }}px);
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--section-text);
+    opacity: 0.70;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  #{{ section_id }} .itwt-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-secondary);
+    font-size: clamp(1.1rem, 1.1vw, 1.3rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--section-accent);
+    text-decoration: none;
+    margin-top: 0.4rem;
+    transition: gap 0.25s var(--ease-back), opacity 0.2s ease;
+    overflow-wrap: break-word;
+  }
+  #{{ section_id }} .itwt-card-cta:hover { gap: 10px; opacity: 0.82; }
+
+  /* Green line that draws from left on hover */
+  #{{ section_id }} .itwt-card-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--section-accent), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s var(--ease-expo);
+  }
+
+  /* ── REVEAL ANIMATION ───────────────────────────────────── */
+  #{{ section_id }} .itwt-reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    will-change: transform;
+    transition: opacity 0.7s var(--ease-expo), transform 0.7s var(--ease-expo);
+  }
+  #{{ section_id }} .itwt-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Shopify design mode — always visible in editor */
+  #{{ section_id }}.is-visible .itwt-reveal,
+  .shopify-design-mode #{{ section_id }} .itwt-reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .shopify-design-mode #{{ section_id }} .itwt-header-line {
+    width: clamp(60px, 8vw, 100px);
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .itwt-reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .itwt-header-line { width: clamp(60px, 8vw, 100px); transition: none; }
+    #{{ section_id }} .itwt-glow--a,
+    #{{ section_id }} .itwt-glow--b    { animation: none; }
+    #{{ section_id }} .itwt-card       { transition: none; }
+    #{{ section_id }} .itwt-icon-wrap  { transition: none; }
+    #{{ section_id }} .itwt-icon-ring  { display: none; }
+    #{{ section_id }} .itwt-card-accent { display: none; }
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    }
+    #{{ section_id }} .itwt-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    #{{ section_id }} .itwt-main-heading {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    #{{ section_id }} .itwt-grid {
+      grid-template-columns: repeat(var(--col-tablet), 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    #{{ section_id }} .itwt-grid {
+      grid-template-columns: 1fr;
+    }
+    #{{ section_id }} .itwt-main-heading {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+    #{{ section_id }} .itwt-card-cta {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-icon-text"
+  data-section-id="{{ section.id }}"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
+
+  {%- if enable_grain -%}
+  <div class="itwt-grain" aria-hidden="true"></div>
+  {%- endif -%}
+
+  {%- if enable_glows -%}
+  <div class="itwt-glow itwt-glow--a" aria-hidden="true"></div>
+  <div class="itwt-glow itwt-glow--b" aria-hidden="true"></div>
+  {%- endif -%}
+
+  <div class="itwt-container">
+
+    {%- if show_hdr -%}
+    <div class="itwt-header" data-align="{{ section_hdr_align }}">
+      {%- if eyebrow != blank -%}
+      <p class="itwt-eyebrow itwt-reveal">{{ eyebrow }}</p>
+      {%- endif -%}
+      {%- if heading != blank -%}
+      <h2 class="itwt-main-heading itwt-reveal">{{ heading }}</h2>
+      {%- endif -%}
+      {%- if subtitle != blank -%}
+      <p class="itwt-subtitle itwt-reveal">{{ subtitle }}</p>
+      {%- endif -%}
+      <div class="itwt-header-line" aria-hidden="true"></div>
+    </div>
+    {%- endif -%}
+
+    <div class="itwt-grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign bk_icon     = block.settings.icon_image
+          assign bk_heading  = block.settings.block_heading | default: 'Icon with Text'
+          assign bk_body     = block.settings.block_body    | default: 'This section allows you to highlight key content with a featured image and supporting text.'
+          assign bk_cta_lbl  = block.settings.cta_label     | default: 'Learn More'
+          assign bk_cta_url  = block.settings.cta_url
+          assign bk_show_cta = block.settings.show_cta
+        -%}
+        <div
+          class="itwt-card itwt-card--{{ card_style }} itwt-reveal"
+          data-card-index="{{ forloop.index0 }}"
+          {{ block.shopify_attributes }}
+        >
+          <!-- Icon -->
+          <div class="itwt-icon-wrap itwt-icon-wrap--{{ icon_shape }}">
+            {%- if bk_icon != blank -%}
+              {{ bk_icon | image_url: width: 120 | image_tag:
+                loading: 'lazy',
+                alt: bk_icon.alt | default: bk_heading,
+                class: 'itwt-icon-img',
+                widths: '48, 60, 80, 120'
+              }}
+            {%- else -%}
+              <div class="itwt-icon-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="7" y="7" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="22" y="7" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="7" y="22" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="22" y="22" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </div>
+            {%- endif -%}
+            <div class="itwt-icon-ring" aria-hidden="true"></div>
+          </div>
+
+          <!-- Text body -->
+          <div class="itwt-card-body">
+            {%- if bk_heading != blank -%}
+            <h3 class="itwt-card-heading">{{ bk_heading }}</h3>
+            {%- endif -%}
+            {%- if bk_body != blank -%}
+            <p class="itwt-card-text">{{ bk_body }}</p>
+            {%- endif -%}
+            {%- if bk_show_cta and bk_cta_lbl != blank -%}
+            <a href="{{ bk_cta_url | default: '#' }}" class="itwt-card-cta">
+              {{ bk_cta_lbl }}
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M1 6H11M11 6L6.5 1.5M11 6L6.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            {%- endif -%}
+          </div>
+
+          <!-- Bottom green accent line (hover) -->
+          <div class="itwt-card-accent" aria-hidden="true"></div>
+        </div>
+      {%- endfor -%}
+    </div>
+
+  </div>
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+(function () {
+  'use strict';
+
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── 1. INTERSECTIONOBSERVER — staggered cascade reveal ── */
+  var revealEls = root.querySelectorAll('.itwt-reveal');
+  var lineEl    = root.querySelector('.itwt-header-line');
+
+  /* Pre-assign stagger delays on card elements */
+  var cardEls = root.querySelectorAll('.itwt-card.itwt-reveal');
+  if (!reducedMotion) {
+    cardEls.forEach(function (card) {
+      var idx = parseInt(card.getAttribute('data-card-index') || '0', 10);
+      card.style.transitionDelay = (idx * 0.09) + 's';
+    });
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        var el = entry.target;
+        el.classList.add('is-visible');
+        /* Remove stagger delay after reveal so hover transitions are instant */
+        el.addEventListener('transitionend', function cleanup() {
+          el.style.transitionDelay = '';
+          el.removeEventListener('transitionend', cleanup);
+        });
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(function (el) { observer.observe(el); });
+
+  /* Separate observer for the header line (width animation, not opacity) */
+  if (lineEl) {
+    var lineObserver = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) {
+        lineEl.classList.add('is-visible');
+        lineObserver.disconnect();
+      }
+    }, { threshold: 0.1 });
+    lineObserver.observe(lineEl);
+  }
+
+  /* ── 2. 3D TILT HOVER on cards ──────────────────────────── */
+  if (!reducedMotion) {
+    cardEls.forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var rect = card.getBoundingClientRect();
+        var cx = rect.left + rect.width  / 2;
+        var cy = rect.top  + rect.height / 2;
+        var dx = (e.clientX - cx) / (rect.width  / 2);
+        var dy = (e.clientY - cy) / (rect.height / 2);
+        card.style.transform = [
+          'translateY(-6px)',
+          'scale(1.01)',
+          'rotateX(' + (-dy * 5) + 'deg)',
+          'rotateY(' + ( dx * 5) + 'deg)'
+        ].join(' ');
+        card.style.transition = 'box-shadow 0.4s ease';
+      }, { passive: true });
+
+      card.addEventListener('mouseleave', function () {
+        card.style.transform  = '';
+        card.style.transition = 'box-shadow 0.4s ease, transform 0.5s var(--ease-back)';
+      });
+    });
+  }
+
+  /* ── 3. CLEANUP on section unmount (Shopify editor) ─────── */
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      observer.disconnect();
+    }
+  });
+
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Icon With Text",
+  "tag": "section",
+  "class": "burnlab-icon-text-section",
+  "max_blocks": 12,
+  "blocks": [
+    {
+      "type": "icon_card",
+      "name": "Icon Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon_image",
+          "label": "Icon Image"
+        },
+        {
+          "type": "text",
+          "id": "block_heading",
+          "label": "Heading",
+          "default": "Icon with Text"
+        },
+        {
+          "type": "textarea",
+          "id": "block_body",
+          "label": "Body Text",
+          "default": "This section allows you to highlight key content with a featured image and supporting text. Use it to showcase a product, collection, promotion, or brand story."
+        },
+        {
+          "type": "checkbox",
+          "id": "show_cta",
+          "label": "Show CTA Link",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "CTA Label",
+          "default": "Learn More"
+        },
+        {
+          "type": "url",
+          "id": "cta_url",
+          "label": "CTA URL"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_section_header",
+      "label": "Show Section Header",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow Label",
+      "default": "Why BurnLab"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Built Different. Built Better."
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Section Subtitle",
+      "default": "Premium home gym equipment engineered for real performance."
+    },
+    {
+      "type": "select",
+      "id": "section_hdr_align",
+      "label": "Header Alignment",
+      "options": [
+        { "value": "left",   "label": "Left"   },
+        { "value": "center", "label": "Center" },
+        { "value": "right",  "label": "Right"  }
+      ],
+      "default": "left"
+    },
+
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "Background Type",
+      "options": [
+        { "value": "navy",   "label": "Navy (Dark)"   },
+        { "value": "pale",   "label": "Pale (Light)"  },
+        { "value": "teal",   "label": "Teal"          },
+        { "value": "custom", "label": "Custom Color"  }
+      ],
+      "default": "navy"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_custom",
+      "label": "Custom Background Color",
+      "default": "#001a2e",
+      "info": "Only used when Background Type is set to Custom Color."
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Card Heading Size",
+      "min": 16,
+      "max": 52,
+      "step": 2,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "label": "Card Body Text Size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+
+    {
+      "type": "header",
+      "content": "Card Settings"
+    },
+    {
+      "type": "select",
+      "id": "card_style",
+      "label": "Card Style",
+      "options": [
+        { "value": "glass",    "label": "Glass (backdrop blur)"     },
+        { "value": "dark",     "label": "Dark (solid navy)"         },
+        { "value": "light",    "label": "Light (pale, for dark bg)" },
+        { "value": "outlined", "label": "Outlined (border only)"    },
+        { "value": "teal",     "label": "Teal"                      },
+        { "value": "pale",     "label": "Pale Mist"                 }
+      ],
+      "default": "glass"
+    },
+    {
+      "type": "select",
+      "id": "icon_shape",
+      "label": "Icon Container Shape",
+      "options": [
+        { "value": "rounded", "label": "Rounded Square" },
+        { "value": "circle",  "label": "Circle"         },
+        { "value": "square",  "label": "Sharp Square"   }
+      ],
+      "default": "rounded"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Icon Container Size",
+      "min": 36,
+      "max": 96,
+      "step": 4,
+      "unit": "px",
+      "default": 52
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hover",
+      "label": "Enable Card Hover Effects",
+      "default": true
+    },
+
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns (Desktop)",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "label": "Columns (Tablet)",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "Gap Between Cards",
+      "min": 8,
+      "max": 64,
+      "step": 4,
+      "unit": "px",
+      "default": 28
+    },
+
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grain",
+      "label": "Enable Grain Texture",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glows",
+      "label": "Enable Ambient Glow Blobs",
+      "default": true
+    },
+
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Icon With Text",
+      "category": "Features",
+      "blocks": [
+        { "type": "icon_card" },
+        { "type": "icon_card" },
+        { "type": "icon_card" },
+        { "type": "icon_card" }
+      ]
+    }
+  ]
+}
+{% endschema %}

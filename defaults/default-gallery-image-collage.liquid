@@ -1,0 +1,431 @@
+{% style %}
+    #shopify-section-{{ section.id }} .section_padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    position: relative;
+    z-index: 1;
+  }
+
+    @media screen and (max-width: 640px) {
+    #shopify-section-{{ section.id }} .section_padding {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+  }
+{% endstyle %}
+
+{{ 'image-gallery-collage.css' | asset_url | stylesheet_tag }}
+
+<div class="gallery-collage color_scheme color-{{ section.settings.color_scheme }} section_padding"
+    style="--border-radius: {{ section.settings.border_radius }}px;"
+>
+  <div class="container">
+
+    <!-- Heading -->
+    <div class="collage_head_head collage_head--{{ section.settings.head_align }}">
+      {% if section.settings.head != blank %}
+        <h2 class="section_heading {{ section.settings.font-size }} {% if section.settings.font_style == 'body' %}body_style{% endif %}">
+          {{ section.settings.head }}
+        </h2>
+      {% endif %}
+
+      {% if section.settings.text != blank %}
+        <div class="section_rteText" style="--text-max-width:{{ section.settings.max-width }}%;">
+          {{ section.settings.text }}
+        </div>
+      {% endif %}
+
+      {% if section.settings.btn_link != blank or section.settings.btn_label != blank %}
+          <div class="collage-with-btn">
+          {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+              {% render 'section-button' 
+              button_label: section.settings.btn_label,
+              btn_link: section.settings.btn_link,
+              new_tab: section.settings.new_tab,
+              style: section.settings.style
+              %}
+              {%if settings.enable_magnet %}{% endif %}
+              {%if settings.enable_magnet %}</magnetic-button>{% endif %}
+          </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Blocks -->
+    <div class="image-gallery-collage-blocks">
+      {% for block in section.blocks %}
+        {% case block.type %}
+        {% when 'icon-with-image' %}
+        <div class="icon_with_image_collage collage_gallery_col"  
+            style="
+            --block-padding-top: {{ block.settings.padding_top }}px;
+            --block-padding-bottom: {{ block.settings.padding_bottom }}px;
+            --block-margin-top: {{ block.settings.margin_top }}px;
+            --block-margin-bottom: {{ block.settings.margin_bottom }}px;
+          ">
+            <div class="icon_image_collage">
+                <div class="image_collage_block collage-icon">
+                    {% if block.settings.icon != blank %}
+                        {% render 'image' image: block.settings.icon %}
+                    {% else %}
+                        {{ 'product-2' | placeholder_svg_tag: 'placeholder_svg' }}
+                    {% endif %} 
+                </div>
+                <div class="image_collage_block">
+                    {% if block.settings.image != blank %}
+                        {% render 'image' image: block.settings.image %}
+                    {% else %}
+                        {{ 'product-2' | placeholder_svg_tag: 'placeholder_svg' }}
+                    {% endif %} 
+                </div>
+            </div>
+        </div>
+        {% when 'multiple-image' %}
+        <div class="multi-images-collage collage_gallery_col"
+         style="
+            --block-padding-top: {{ block.settings.padding_top }}px;
+            --block-padding-bottom: {{ block.settings.padding_bottom }}px;
+            --block-margin-top: {{ block.settings.margin_top }}px;
+            --block-margin-bottom: {{ block.settings.margin_bottom }}px;
+        ">
+            <div class="multiple_image_collage">
+                <div class="image_collage_block">
+                    {% if block.settings.image_1 != blank %}
+                        {% render 'image' image: block.settings.image_1 %}
+                    {% else %}
+                        {{ 'product-2' | placeholder_svg_tag: 'placeholder-svg' }}
+                    {% endif %} 
+                </div>
+                <div class="image_collage_block">
+                    {% if block.settings.image_2 != blank %}
+                        {% render 'image' image: block.settings.image_2 %}
+                    {% else %}
+                        {{ 'product-2' | placeholder_svg_tag: 'placeholder-svg' }}
+                    {% endif %} 
+                </div>
+            </div>
+        </div>
+        {% endcase %}
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Image Gallery Collage",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "head",
+      "label": "Heading",
+      "default": "Image gallery collage"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font-size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description",
+      "default": "<p>Showcase the products from the collection in a grid or slider format.</p>"
+    },
+    {
+      "type": "range",
+      "id": "max-width",
+      "label": "Max width",
+      "min": 45,
+      "max": 100,
+      "default": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "info": "Content alignment works when the Show view all option is below the product.",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button label",
+      "default": "Button Label"
+    },
+    {
+      "type": "url",
+      "id": "btn_link",
+      "label": "Button link"
+    },
+    {
+      "type": "checkbox",
+      "id": "new_tab",
+      "label": "Open link in new tab",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "primary",
+          "label": "Primary"
+        },
+        {
+          "value": "btn-secondary",
+          "label": "Secondary"
+        },
+        {
+          "value": "btn-link",
+          "label": "Link"
+        }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "icon-with-image",
+      "name": "Icon With Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Main Image"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Padding Top",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Padding Bottom",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "margin_top",
+          "min": -250,
+          "max": 100,
+          "step": 5,
+          "label": "Margin Top",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "margin_bottom",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Margin Bottom",
+          "default": 10
+        }
+      ]
+    },
+    {
+      "type": "multiple-image",
+      "name": "Multiple Images",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image_1",
+          "label": "Image 1"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "Image 2"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Padding Top",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Padding Bottom",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "margin_top",
+          "min": -250,
+          "max": 100,
+          "step": 5,
+          "label": "Margin Top",
+          "default": 10
+        },
+        {
+          "type": "range",
+          "id": "margin_bottom",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "label": "Margin Bottom",
+          "default": 10
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image Gallery Collage",
+      "blocks": [
+            {
+            "type": "icon-with-image"
+            },
+            {
+            "type": "multiple-image"
+            },
+            {
+            "type": "multiple-image"
+            }
+        ]
+    }
+  ]
+}
+{% endschema %}

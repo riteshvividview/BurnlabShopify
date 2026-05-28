@@ -1,0 +1,1690 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Header Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  v3 — mobile layout overhaul, drawer JS theming, green toggle,
+       dark/light logo inputs, expanded mobile schema
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-header-' | append: section.id -%}
+
+{%- liquid
+  assign logo            = section.settings.logo
+  assign logo_light      = section.settings.logo_light
+  assign logo_size       = section.settings.logo_size        | default: 48
+  assign logo_size_mob   = section.settings.logo_size_mobile | default: 44
+  assign menu_handle     = section.settings.menu             | default: 'main-menu'
+  assign acct_menu       = section.settings.customer_account_menu | default: 'customer-account-main-menu'
+  assign enable_anims    = section.settings.enable_animations
+  assign default_theme   = section.settings.default_theme    | default: 'dark'
+  assign nav_size        = section.settings.nav_font_size    | default: 13
+  assign header_height   = section.settings.header_height    | default: 72
+  assign hdr_height_mob  = section.settings.header_height_mobile | default: 60
+  assign header_position = section.settings.header_position  | default: 'sticky'
+  assign menu_side       = section.settings.mobile_menu_side | default: 'right'
+  assign mob_icons_gap   = section.settings.mobile_icons_gap | default: 6
+  assign hdr_dark_bg     = section.settings.hdr_dark_bg      | default: '#001a2e'
+  assign hdr_light_bg    = section.settings.hdr_light_bg     | default: '#f5f9fa'
+  assign hdr_dark_text   = section.settings.hdr_dark_text    | default: '#eaf4f5'
+  assign hdr_light_text  = section.settings.hdr_light_text   | default: '#001a2e'
+  assign accent          = section.settings.accent_color     | default: '#07d16e'
+  assign drawer_bg_dark  = section.settings.drawer_bg_dark   | default: '#001a2e'
+  assign drawer_bg_light = section.settings.drawer_bg_light  | default: '#f0f5f8'
+  assign drawer_txt_dark = section.settings.drawer_text_dark | default: '#eaf4f5'
+  assign drawer_txt_light = section.settings.drawer_text_light | default: '#001a2e'
+  assign drawer_accent    = section.settings.drawer_accent    | default: '#07d16e'
+  assign drawer_logo_size = section.settings.drawer_logo_size | default: 40
+-%}
+
+{% style %}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL — Dark / Light mode tokens
+   ═══════════════════════════════════════════════════════════════ */
+
+:root,
+[data-theme="dark"] {
+  --bl-mode-bg:          {{ hdr_dark_bg | color_modify: 'alpha', 0.97 }};
+  --bl-mode-bg-solid:    {{ hdr_dark_bg }};
+  --bl-mode-text:        {{ hdr_dark_text }};
+  --bl-mode-text-muted:  {{ hdr_dark_text | color_modify: 'alpha', 0.50 }};
+  --bl-mode-border:      rgba(51, 104, 112, 0.22);
+  --bl-mode-icon-bg:     rgba(255, 255, 255, 0.06);
+  --bl-mode-icon-hover:  rgba(7, 209, 110, 0.13);
+  --bl-mode-dropdown-bg: #001828;
+  --bl-mode-body-bg:     #000f1c;
+  --bl-mode-shadow:      0 4px 40px rgba(0, 0, 0, 0.42);
+  --bl-mode-accent:      {{ accent }};
+  --bl-drawer-bg:        {{ drawer_bg_dark }};
+  --bl-drawer-text:      {{ drawer_txt_dark }};
+  --bl-drawer-accent:    {{ drawer_accent }};
+  --bl-drawer-border:    rgba(51, 104, 112, 0.25);
+}
+
+[data-theme="light"] {
+  --bl-mode-bg:          {{ hdr_light_bg | color_modify: 'alpha', 0.97 }};
+  --bl-mode-bg-solid:    {{ hdr_light_bg }};
+  --bl-mode-text:        {{ hdr_light_text }};
+  --bl-mode-text-muted:  {{ hdr_light_text | color_modify: 'alpha', 0.50 }};
+  --bl-mode-border:      rgba(0, 26, 46, 0.10);
+  --bl-mode-icon-bg:     rgba(0, 26, 46, 0.05);
+  --bl-mode-icon-hover:  rgba(7, 209, 110, 0.10);
+  --bl-mode-dropdown-bg: #ecf3f5;
+  --bl-mode-body-bg:     #f0f5f8;
+  --bl-mode-shadow:      0 4px 40px rgba(0, 26, 46, 0.10);
+  --bl-mode-accent:      {{ accent }};
+  --bl-drawer-bg:        {{ drawer_bg_light }};
+  --bl-drawer-text:      {{ drawer_txt_light }};
+  --bl-drawer-accent:    {{ drawer_accent }};
+  --bl-drawer-border:    rgba(0, 26, 46, 0.12);
+}
+
+body {
+  background-color: var(--bl-mode-body-bg);
+  color: var(--bl-mode-text);
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE DRAWER — comprehensive theming
+   JS injection handles runtime colours. CSS covers structure,
+   inner containers, logo sizing, and hard-to-reach elements.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── All root drawer containers ── */
+#mobile_menu_drawer,
+.menu-drawer,
+.mobile-menu-drawer,
+[id*="MenuDrawer"],
+[class*="menu-drawer__container"] {
+  background-color: var(--bl-drawer-bg) !important;
+  background: var(--bl-drawer-bg) !important;
+  color: var(--bl-drawer-text) !important;
+}
+
+/* ── Inner panels — these are the main culprit for white backgrounds.
+   They often carry their own background-color that overrides the root. ── */
+#mobile_menu_drawer .menu-drawer__inner-container,
+#mobile_menu_drawer .menu-drawer__navigation,
+#mobile_menu_drawer .menu-drawer__navigation-items,
+#mobile_menu_drawer .menu-drawer__header,
+#mobile_menu_drawer .menu-drawer__content,
+#mobile_menu_drawer > div,
+#mobile_menu_drawer > nav,
+.menu-drawer .menu-drawer__inner-container,
+.menu-drawer .menu-drawer__navigation,
+.menu-drawer .menu-drawer__navigation-items,
+.menu-drawer .menu-drawer__header,
+.menu-drawer .menu-drawer__content,
+.menu-drawer > div,
+.menu-drawer > nav {
+  background-color: var(--bl-drawer-bg) !important;
+  background: var(--bl-drawer-bg) !important;
+  color: var(--bl-drawer-text) !important;
+}
+
+/* ── All text elements inside drawer ── */
+#mobile_menu_drawer a,
+#mobile_menu_drawer summary,
+#mobile_menu_drawer button,
+#mobile_menu_drawer span:not(.visually-hidden),
+#mobile_menu_drawer p,
+#mobile_menu_drawer li,
+#mobile_menu_drawer .header_name-link,
+#mobile_menu_drawer .header_name span,
+.menu-drawer a,
+.menu-drawer summary,
+.menu-drawer button,
+.menu-drawer span:not(.visually-hidden) {
+  color: var(--bl-drawer-text) !important;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.22s ease, padding-left 0.22s ease !important;
+}
+
+/* ── summary / disclosure nav items — explicit sizing for Evolve theme ── */
+#mobile_menu_drawer details > summary,
+#mobile_menu_drawer summary,
+.menu-drawer details > summary,
+.menu-drawer summary {
+  color: var(--bl-drawer-text) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.55rem !important;
+  letter-spacing: 0.015em !important;
+}
+
+/* ── Link list items ── */
+#mobile_menu_drawer .menu-drawer__menu-item > a,
+#mobile_menu_drawer li > a,
+.menu-drawer .menu-drawer__menu-item > a,
+.menu-drawer li > a {
+  color: var(--bl-drawer-text) !important;
+  font-weight: 500 !important;
+  font-size: 1.55rem !important;
+}
+
+#mobile_menu_drawer a:hover,
+#mobile_menu_drawer summary:hover,
+#mobile_menu_drawer li > a:hover,
+.menu-drawer a:hover,
+.menu-drawer summary:hover,
+.menu-drawer li > a:hover {
+  color: var(--bl-drawer-accent) !important;
+  padding-left: 4px !important;
+}
+
+/* ── Close button — green accent ── */
+#mobile_menu_drawer button[aria-label*="lose"] svg,
+#mobile_menu_drawer button[aria-label*="Close"] svg,
+#mobile_menu_drawer [class*="close"] svg,
+#mobile_menu_drawer .menu-drawer__close-button svg,
+.menu-drawer button[aria-label*="lose"] svg,
+.menu-drawer button[aria-label*="Close"] svg,
+.menu-drawer [class*="close"] svg,
+.menu-drawer .menu-drawer__close-button svg {
+  color: var(--bl-drawer-accent) !important;
+  stroke: var(--bl-drawer-accent) !important;
+  fill: none !important;
+}
+#mobile_menu_drawer button[aria-label*="lose"],
+#mobile_menu_drawer button[aria-label*="Close"],
+#mobile_menu_drawer .menu-drawer__close-button,
+.menu-drawer button[aria-label*="lose"],
+.menu-drawer button[aria-label*="Close"],
+.menu-drawer .menu-drawer__close-button {
+  color: var(--bl-drawer-accent) !important;
+  transition: transform 0.22s ease, color 0.22s ease !important;
+}
+#mobile_menu_drawer button[aria-label*="lose"]:hover,
+.menu-drawer button[aria-label*="lose"]:hover {
+  transform: rotate(90deg) scale(1.1);
+  color: var(--bl-drawer-accent) !important;
+}
+
+/* ── Chevron / caret icons in drawer items ── */
+#mobile_menu_drawer .icon-caret,
+#mobile_menu_drawer [class*="caret"] svg,
+.menu-drawer .icon-caret,
+.menu-drawer [class*="caret"] svg {
+  color: var(--bl-drawer-text) !important;
+  transition: transform 0.25s ease !important;
+}
+#mobile_menu_drawer details[open] .icon-caret,
+#mobile_menu_drawer details[open] [class*="caret"] svg,
+.menu-drawer details[open] .icon-caret {
+  transform: rotate(180deg);
+  color: var(--bl-drawer-accent) !important;
+}
+
+/* ── Divider lines ── */
+#mobile_menu_drawer li,
+#mobile_menu_drawer .menu-drawer__menu-item,
+.menu-drawer li {
+  border-bottom-color: var(--bl-drawer-border) !important;
+  border-top-color: var(--bl-drawer-border) !important;
+}
+
+/* ── Close button ── */
+#mobile_menu_drawer button[aria-label*="lose"],
+#mobile_menu_drawer button[aria-label*="Close"],
+#mobile_menu_drawer .menu-drawer__close-button,
+.menu-drawer button[aria-label*="lose"],
+.menu-drawer .menu-drawer__close-button {
+  color: var(--bl-drawer-text) !important;
+  background: transparent !important;
+}
+
+#mobile_menu_drawer button[aria-label*="lose"]:hover,
+.menu-drawer button[aria-label*="lose"]:hover {
+  color: var(--bl-drawer-accent) !important;
+}
+
+/* ── SVG icons and chevrons — color + stroke for stroked icons ── */
+#mobile_menu_drawer svg,
+#mobile_menu_drawer .icon-caret,
+.menu-drawer svg,
+.menu-drawer .icon-caret {
+  color: var(--bl-drawer-text) !important;
+  stroke: var(--bl-drawer-text) !important;
+}
+#mobile_menu_drawer svg path,
+#mobile_menu_drawer svg polyline,
+#mobile_menu_drawer svg line,
+.menu-drawer svg path,
+.menu-drawer svg polyline,
+.menu-drawer svg line {
+  stroke: var(--bl-drawer-text) !important;
+}
+/* Summary accordion chevrons — light color, no fill override (chevrons may be fill-based) */
+#mobile_menu_drawer summary svg,
+#mobile_menu_drawer summary svg path,
+#mobile_menu_drawer summary svg polyline,
+#mobile_menu_drawer details > summary svg,
+.menu-drawer summary svg,
+.menu-drawer summary svg path,
+.menu-drawer summary svg polyline,
+.menu-drawer details > summary svg {
+  color: var(--bl-drawer-text) !important;
+  stroke: var(--bl-drawer-text) !important;
+  fill: currentColor !important;
+}
+#mobile_menu_drawer details[open] > summary svg,
+#mobile_menu_drawer details[open] > summary svg path,
+.menu-drawer details[open] > summary svg,
+.menu-drawer details[open] > summary svg path {
+  stroke: var(--bl-drawer-accent) !important;
+  color: var(--bl-drawer-accent) !important;
+  fill: currentColor !important;
+}
+
+/* ── Accordion expand animation — content slides in when details opens ── */
+#mobile_menu_drawer details > :not(summary),
+.menu-drawer details > :not(summary) {
+  animation: bl-drawer-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes bl-drawer-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+/* Sub-links inside expanded accordions */
+#mobile_menu_drawer details[open] a,
+.menu-drawer details[open] a {
+  color: var(--bl-drawer-text) !important;
+  font-size: 1.4rem !important;
+  padding-left: 1.2rem !important;
+  border-left: 2px solid rgba(7,209,110,0.25) !important;
+  display: block;
+}
+#mobile_menu_drawer details[open] a:hover,
+.menu-drawer details[open] a:hover {
+  color: var(--bl-drawer-accent) !important;
+  border-left-color: var(--bl-drawer-accent) !important;
+}
+/* Stagger animation — applied via JS-added bl-drawer-stagger class */
+.bl-drawer-stagger #mobile_menu_drawer > * > li:nth-child(1),
+.bl-drawer-stagger .menu-drawer li:nth-child(1) { animation-delay: 0.04s; }
+.bl-drawer-stagger #mobile_menu_drawer > * > li:nth-child(2),
+.bl-drawer-stagger .menu-drawer li:nth-child(2) { animation-delay: 0.09s; }
+.bl-drawer-stagger #mobile_menu_drawer > * > li:nth-child(3),
+.bl-drawer-stagger .menu-drawer li:nth-child(3) { animation-delay: 0.14s; }
+.bl-drawer-stagger #mobile_menu_drawer > * > li:nth-child(4),
+.bl-drawer-stagger .menu-drawer li:nth-child(4) { animation-delay: 0.19s; }
+.bl-drawer-stagger #mobile_menu_drawer > * > li:nth-child(5),
+.bl-drawer-stagger .menu-drawer li:nth-child(5) { animation-delay: 0.24s; }
+.bl-drawer-stagger #mobile_menu_drawer li,
+.bl-drawer-stagger .menu-drawer li {
+  animation: bl-drawer-item-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes bl-drawer-item-in {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mobile_menu_drawer details > :not(summary),
+  .menu-drawer details > :not(summary),
+  .bl-drawer-stagger li { animation: none !important; }
+}
+
+/* ── Logo in drawer — schema-controlled height ── */
+#mobile_menu_drawer img,
+#mobile_menu_drawer .header_name-logo-wrapper img,
+#mobile_menu_drawer .menu-drawer__logo img,
+.menu-drawer .menu-drawer__logo img,
+.menu-drawer .header_name-logo-wrapper img,
+.menu-drawer img:not([class*="icon"]) {
+  height: {{ drawer_logo_size }}px !important;
+  max-height: {{ drawer_logo_size }}px !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* ── Hide account icon at bottom of drawer ── */
+{% if section.settings.drawer_hide_account %}
+#mobile_menu_drawer .menu-drawer__utility-links,
+#mobile_menu_drawer [class*="utility-links"],
+#mobile_menu_drawer [class*="customer-account"],
+#mobile_menu_drawer shopify-account,
+#mobile_menu_drawer .customer-account-drawer,
+.menu-drawer .menu-drawer__utility-links,
+.menu-drawer shopify-account {
+  display: none !important;
+}
+{% endif %}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION SCOPED STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Root-level stacking fix ────────────────────────────────────
+   Shopify OS 2.0 wraps the header in a section-group div that the
+   Evolve theme may give transform:translateZ(0) for GPU compositing.
+   That creates a stacking context at z-index:auto (layer 0 in root),
+   which loses to ANY positively z-indexed element — including the
+   ATC bar's z-index:2. We force every ancestor wrapper we can reach
+   to participate in root at z-index:9999 so the dropdown always wins.
+   !important is necessary because Evolve's asset CSS loads before
+   these inline styles and may assign conflicting values.              */
+
+/* Shopify section-group wrapper (OS 2.0 header group) */
+.shopify-section-group-header-group,
+#shopify-section-group-header-group {
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Shopify section wrapper (.shopify-section.header_block) */
+.header_block {
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Custom element wrapper (<header-element>) */
+header-element {
+  display: block;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#{{ section_id }} { position: relative; isolation: isolate; z-index: 9999 !important; }
+
+/* ─── Outer positioning ──────────────────────────────────────── */
+
+#{{ section_id }} .bl-hdr-outer {
+  {% if header_position == 'sticky' %}
+    position: sticky; top: 0;
+  {% elsif header_position == 'fixed' %}
+    position: fixed; top: 0; left: 0; right: 0;
+  {% else %}
+    position: relative;
+  {% endif %}
+  z-index: 200;
+  width: 100%;
+}
+
+{% if header_position == 'fixed' %}
+  #{{ section_id }} .bl-hdr-spacer { display: block; height: {{ header_height }}px; }
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-hdr-spacer { height: {{ hdr_height_mob }}px; }
+  }
+{% else %}
+  #{{ section_id }} .bl-hdr-spacer { display: none; }
+{% endif %}
+
+/* ─── Wrapper — NO overflow:hidden (would clip dropdowns) ────── */
+
+#{{ section_id }} .bl-hdr-wrapper {
+  position: relative;
+  background: var(--bl-mode-bg);
+  border-bottom: 1px solid var(--bl-mode-border);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: var(--bl-mode-shadow);
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  will-change: background, border-color;
+}
+
+{% if section.settings.overlay_header %}
+  #{{ section_id }} .bl-hdr-outer.bl-overlay .bl-hdr-wrapper {
+    background: transparent; border-bottom-color: transparent; box-shadow: none;
+  }
+  #{{ section_id }} .bl-hdr-outer.bl-overlay.bl-scrolled .bl-hdr-wrapper {
+    background: var(--bl-mode-bg);
+    border-bottom-color: var(--bl-mode-border);
+    box-shadow: var(--bl-mode-shadow);
+  }
+{% endif %}
+
+/* ─── Inner flex row ─────────────────────────────────────────── */
+
+#{{ section_id }} .bl-hdr-inner {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 4vw, 4.8rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(1.2rem, 2vw, 2.4rem);
+  height: {{ header_height }}px;
+  position: relative;
+}
+
+/* ─── Logo ───────────────────────────────────────────────────── */
+
+#{{ section_id }} .bl-logo-area { flex-shrink: 0; }
+
+#{{ section_id }} .bl-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--bl-mode-text);
+  transition: opacity 0.2s ease;
+}
+
+#{{ section_id }} .bl-logo-link:hover { opacity: 0.82; }
+
+#{{ section_id }} .bl-logo-img {
+  height: {{ logo_size }}px;
+  width: auto;
+  max-width: 28rem;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Dark/light logo switching */
+#{{ section_id }} .bl-logo-img--dark  { display: block; }
+#{{ section_id }} .bl-logo-img--light { display: none;  }
+[data-theme="light"] #{{ section_id }} .bl-logo-img--dark  { display: none;  }
+[data-theme="light"] #{{ section_id }} .bl-logo-img--light { display: block; }
+
+/* ─── Desktop Navigation ─────────────────────────────────────── */
+
+#{{ section_id }} .bl-nav {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  gap: 0.2rem;
+}
+
+#{{ section_id }} .bl-nav-item {
+  position: relative;
+  will-change: transform;
+}
+
+{% if enable_anims %}
+#{{ section_id }} .bl-nav-item {
+  animation: bl-nav-fall 0.5s var(--bl-ease-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  opacity: 0;
+}
+#{{ section_id }} .bl-nav-item:nth-child(1) { animation-delay: 0.06s; }
+#{{ section_id }} .bl-nav-item:nth-child(2) { animation-delay: 0.12s; }
+#{{ section_id }} .bl-nav-item:nth-child(3) { animation-delay: 0.18s; }
+#{{ section_id }} .bl-nav-item:nth-child(4) { animation-delay: 0.24s; }
+#{{ section_id }} .bl-nav-item:nth-child(5) { animation-delay: 0.30s; }
+#{{ section_id }} .bl-nav-item:nth-child(6) { animation-delay: 0.36s; }
+#{{ section_id }} .bl-nav-item:nth-child(7) { animation-delay: 0.42s; }
+#{{ section_id }} .bl-nav-item:nth-child(8) { animation-delay: 0.48s; }
+
+@keyframes bl-nav-fall {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .bl-nav-item { animation: none; opacity: 1; }
+}
+{% else %}
+#{{ section_id }} .bl-nav-item { opacity: 1; }
+{% endif %}
+
+#{{ section_id }} .bl-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.2rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.1rem, 1.1vw, {{ nav_size }}px);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bl-mode-text);
+  text-decoration: none;
+  border-radius: 8px;
+  position: relative;
+  white-space: nowrap;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+
+#{{ section_id }} .bl-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: var(--bl-mode-accent);
+  border-radius: 2px;
+  transition: width 0.35s var(--bl-ease-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+#{{ section_id }} .bl-nav-link:hover,
+#{{ section_id }} .bl-nav-link[aria-current="page"],
+#{{ section_id }} .bl-nav-link.is-active {
+  color: var(--bl-mode-accent);
+  background: var(--bl-mode-icon-hover);
+}
+
+#{{ section_id }} .bl-nav-link:hover::after,
+#{{ section_id }} .bl-nav-link[aria-current="page"]::after,
+#{{ section_id }} .bl-nav-link.is-active::after {
+  width: calc(100% - 2.4rem);
+}
+
+#{{ section_id }} .bl-nav-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--bl-mode-text-muted);
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+#{{ section_id }} .bl-nav-item:hover .bl-nav-chevron,
+#{{ section_id }} .bl-nav-item:focus-within .bl-nav-chevron {
+  transform: rotate(180deg);
+  color: var(--bl-mode-accent);
+}
+
+/* ─── Dropdown — z-index:300 ensures it floats above page content */
+
+#{{ section_id }} .bl-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  min-width: 19rem;
+  background: var(--bl-mode-dropdown-bg);
+  border: 1px solid var(--bl-mode-border);
+  border-radius: 12px;
+  padding: 0.6rem;
+  list-style: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28), 0 0 0 1px var(--bl-mode-border);
+  z-index: 300;
+  will-change: opacity, transform;
+}
+
+/* Invisible bridge fills the gap so cursor doesn't leave hover zone */
+#{{ section_id }} .bl-nav-dropdown::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 1rem;
+}
+
+#{{ section_id }} .bl-nav-item:hover .bl-nav-dropdown,
+#{{ section_id }} .bl-nav-item:focus-within .bl-nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+
+#{{ section_id }} .bl-nav-dropdown-link {
+  display: block;
+  padding: 0.85rem 1.4rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.2rem, 1.2vw, 1.4rem);
+  color: var(--bl-mode-text);
+  text-decoration: none;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow-wrap: break-word;
+  transition: color 0.2s ease, background 0.2s ease, padding-left 0.25s ease;
+}
+
+#{{ section_id }} .bl-nav-dropdown-link:hover,
+#{{ section_id }} .bl-nav-dropdown-link[aria-current="page"] {
+  color: var(--bl-mode-accent);
+  background: var(--bl-mode-icon-hover);
+  padding-left: 2rem;
+}
+
+/* ─── Right icon group ───────────────────────────────────────── */
+
+#{{ section_id }} .bl-hdr-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .bl-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--bl-mode-border);
+  background: var(--bl-mode-icon-bg);
+  color: var(--bl-mode-text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .bl-icon-btn:hover {
+  background: var(--bl-mode-icon-hover);
+  color: var(--bl-mode-accent);
+  border-color: var(--bl-mode-accent);
+  transform: translateY(-2px);
+}
+
+#{{ section_id }} .bl-icon-btn svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: block;
+  pointer-events: none;
+}
+
+#{{ section_id }} .bl-cart-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  background: var(--bl-mode-accent);
+  color: #001a2e;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+#{{ section_id }} .bl-cart-badge[data-count="0"] { display: none; }
+
+/* ─── Theme Toggle — green circular icon button ─────────────────
+   Moon = dark mode. Sun = light mode.
+   Both icons are BurnLab green on hover; active icon is full green.
+   Icons cross-fade with a spring rotation on toggle.             */
+
+#{{ section_id }} .bl-theme-toggle {
+  position: relative;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: visible;
+  border: 1.5px solid rgba(7, 209, 110, 0.35);
+  background: rgba(7, 209, 110, 0.07);
+  transition: transform 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .bl-theme-toggle:hover {
+  transform: scale(1.12) rotate(12deg);
+  border-color: rgba(7, 209, 110, 0.75);
+  box-shadow: 0 0 18px rgba(7, 209, 110, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .bl-theme-toggle:hover { transform: scale(1.06); }
+}
+
+#{{ section_id }} .bl-toggle-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+#{{ section_id }} .bl-toggle-icon svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  pointer-events: none;
+}
+
+/* Both icons green — matches BurnLab brand accent */
+#{{ section_id }} .bl-toggle-icon--moon { color: var(--bl-mode-accent); }
+#{{ section_id }} .bl-toggle-icon--sun  { color: var(--bl-mode-accent); }
+
+/* Dark mode: moon visible */
+[data-theme="dark"]  #{{ section_id }} .bl-toggle-icon--moon {
+  opacity: 1; transform: rotate(0deg) scale(1);
+}
+[data-theme="dark"]  #{{ section_id }} .bl-toggle-icon--sun {
+  opacity: 0; transform: rotate(80deg) scale(0.3);
+}
+/* Light mode: sun visible */
+[data-theme="light"] #{{ section_id }} .bl-toggle-icon--sun {
+  opacity: 1; transform: rotate(0deg) scale(1);
+}
+[data-theme="light"] #{{ section_id }} .bl-toggle-icon--moon {
+  opacity: 0; transform: rotate(-80deg) scale(0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .bl-toggle-icon { transition: opacity 0.2s ease; }
+  [data-theme="dark"]  #{{ section_id }} .bl-toggle-icon--sun  { transform: none; }
+  [data-theme="light"] #{{ section_id }} .bl-toggle-icon--moon { transform: none; }
+}
+
+/* ─── Mobile Gym Menu Button ─────────────────────────────────── */
+
+#{{ section_id }} .bl-gym-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 4.2rem;
+  height: 4.2rem;
+  background: var(--bl-mode-icon-bg);
+  border: 1px solid var(--bl-mode-border);
+  border-radius: 10px;
+  color: var(--bl-mode-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .bl-gym-menu-btn:hover {
+  background: var(--bl-mode-icon-hover);
+  color: var(--bl-mode-accent);
+  border-color: var(--bl-mode-accent);
+  transform: scale(1.06);
+}
+
+#{{ section_id }} .bl-gym-menu-btn svg {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: block;
+  pointer-events: none;
+}
+
+/* ─── Progress bar ───────────────────────────────────────────── */
+
+#{{ section_id }} .bl-hdr-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: var(--bl-scroll-pct, 0%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--bl-mode-accent) 0%, rgba(7,209,110,0.35) 100%);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.1s linear;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ─── MOBILE LAYOUT ──────────────────────────────────────────────
+   Goal: [LOGO — far left] ............. [icons + hamburger — far right]
+   The .bl-nav has flex:1 on desktop — hidden on mobile so we push
+   .bl-hdr-icons to the right with margin-left:auto instead.       */
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .bl-nav { display: none; }
+  #{{ section_id }} .bl-gym-menu-btn { display: inline-flex; }
+
+  #{{ section_id }} .bl-hdr-inner {
+    height: {{ hdr_height_mob }}px;
+    gap: {{ mob_icons_gap }}px;
+    padding-inline: clamp(1.2rem, 4vw, 2rem);
+  }
+
+  /* Push everything after the logo to the right */
+  #{{ section_id }} .bl-hdr-icons { margin-left: auto; }
+
+  /* Logo sizing on mobile */
+  #{{ section_id }} .bl-logo-img {
+    height: {{ logo_size_mob }}px;
+    max-width: 22rem;
+  }
+
+  /* Icon sizing */
+  #{{ section_id }} .bl-icon-btn     { width: 3.4rem; height: 3.4rem; }
+  #{{ section_id }} .bl-icon-btn svg { width: 1.6rem; height: 1.6rem; }
+  #{{ section_id }} .bl-theme-toggle { width: 3.4rem; height: 3.4rem; }
+  #{{ section_id }} .bl-toggle-icon svg { width: 1.6rem; height: 1.6rem; }
+}
+
+/* Mobile hamburger position */
+{% if menu_side == 'right' %}
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-gym-menu-btn { order: 99; }
+  }
+{% endif %}
+
+/* Hide search on mobile if schema says so */
+{% unless section.settings.mobile_show_search %}
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-icon-btn--search { display: none; }
+  }
+{% endunless %}
+
+/* Hide account on mobile if schema says so */
+{% unless section.settings.mobile_show_account %}
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-icon-btn--account { display: none; }
+  }
+{% endunless %}
+
+/* Hide cart on mobile if schema says so */
+{% unless section.settings.mobile_show_cart %}
+  @media (max-width: 1024px) {
+    #{{ section_id }} .bl-icon-btn--cart { display: none; }
+  }
+{% endunless %}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .bl-hdr-inner { gap: {{ mob_icons_gap | minus: 2 | at_least: 4 }}px; }
+  #{{ section_id }} .bl-icon-btn     { width: 3.2rem; height: 3.2rem; }
+  #{{ section_id }} .bl-icon-btn svg { width: 1.5rem; height: 1.5rem; }
+  #{{ section_id }} .bl-theme-toggle { width: 3.2rem; height: 3.2rem; }
+  #{{ section_id }} .bl-gym-menu-btn { width: 3.6rem; height: 3.6rem; }
+  #{{ section_id }} .bl-gym-menu-btn svg { width: 2.4rem; height: 2.4rem; }
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .bl-hdr-inner { padding-inline: 0.8rem; gap: 4px; }
+}
+
+/* Shopify editor */
+.shopify-design-mode #{{ section_id }} .bl-nav-item { opacity: 1; animation: none; }
+
+{% endstyle %}
+
+{%- comment -%}Anti-FOUC — sets data-theme before first paint{%- endcomment -%}
+<script>
+(function(){
+  var s=localStorage.getItem('bl-theme');
+  var d='{{ default_theme }}';
+  var t;
+  if(s){t=s;}
+  else if(d==='system'){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
+  else{t=d||'dark';}
+  document.documentElement.setAttribute('data-theme',t);
+}());
+</script>
+
+<header-element class="color_scheme color-{{ section.settings.color_scheme }}">
+  <div id="{{ section_id }}">
+
+    {%- if header_position == 'fixed' -%}
+      <div class="bl-hdr-spacer" aria-hidden="true"></div>
+    {%- endif -%}
+
+    <div
+      class="bl-hdr-outer{% if section.settings.overlay_header and template contains 'index' %} bl-overlay{% endif %}"
+      id="bl-hdr-main-{{ section.id }}"
+      role="banner"
+    >
+      <div class="bl-hdr-wrapper">
+        <div class="bl-hdr-inner">
+
+          {%- comment -%}── Mobile: Dumbbell-rows hamburger button ──{%- endcomment -%}
+          <button
+            class="bl-gym-menu-btn drawer_open_btn"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="mobile_menu_drawer"
+            data-drawer="mobile_menu_drawer"
+            type="button"
+          >
+            <svg viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="0"    y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="3"    width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="0"    y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="11.5" width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="0"    y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="20"   width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+            </svg>
+          </button>
+
+          {%- comment -%}── Brand logo image (dark + light variants) ──{%- endcomment -%}
+          <div class="bl-logo-area">
+            {%- if request.page_type == 'index' -%}<h1 style="margin:0;padding:0;line-height:1;">{%- endif -%}
+
+            <a href="{{ routes.root_url }}" class="bl-logo-link" aria-label="{{ shop.name }}">
+
+              {%- comment -%}Dark mode logo{%- endcomment -%}
+              {%- if logo != blank -%}
+                <img
+                  src="{{ logo | image_url: width: 400 }}"
+                  srcset="{{ logo | image_url: width: 200 }} 1x, {{ logo | image_url: width: 400 }} 2x"
+                  alt="{{ logo.alt | default: shop.name | escape }}"
+                  class="bl-logo-img bl-logo-img--dark"
+                  loading="eager"
+                  fetchpriority="high"
+                >
+              {%- endif -%}
+
+              {%- comment -%}Light mode logo — falls back to dark logo if not set{%- endcomment -%}
+              {%- if logo_light != blank -%}
+                <img
+                  src="{{ logo_light | image_url: width: 400 }}"
+                  srcset="{{ logo_light | image_url: width: 200 }} 1x, {{ logo_light | image_url: width: 400 }} 2x"
+                  alt="{{ logo_light.alt | default: shop.name | escape }}"
+                  class="bl-logo-img bl-logo-img--light"
+                  loading="eager"
+                >
+              {%- elsif logo != blank -%}
+                <img
+                  src="{{ logo | image_url: width: 400 }}"
+                  srcset="{{ logo | image_url: width: 200 }} 1x, {{ logo | image_url: width: 400 }} 2x"
+                  alt="{{ logo.alt | default: shop.name | escape }}"
+                  class="bl-logo-img bl-logo-img--light"
+                  loading="eager"
+                >
+              {%- endif -%}
+
+            </a>
+
+            {%- if request.page_type == 'index' -%}</h1>{%- endif -%}
+          </div>
+
+          {%- comment -%}── Desktop Navigation ──{%- endcomment -%}
+          {%- if menu_handle != blank -%}
+            <nav class="bl-nav" role="navigation" aria-label="Main navigation">
+              {%- for link in linklists[menu_handle].links -%}
+                <div class="bl-nav-item">
+                  {%- if link.links != blank -%}
+                    <a
+                      href="{{ link.url }}"
+                      class="bl-nav-link"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                    >
+                      {{- link.title | escape -}}
+                      <svg class="bl-nav-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1.5,3 5,7 8.5,3"/>
+                      </svg>
+                    </a>
+                    <ul class="bl-nav-dropdown" role="list">
+                      {%- for child in link.links -%}
+                        <li>
+                          <a
+                            href="{{ child.url }}"
+                            class="bl-nav-dropdown-link{% if child.active %} is-active{% endif %}"
+                            {% if child.active %}aria-current="page"{% endif %}
+                          >{{- child.title | escape -}}</a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- else -%}
+                    <a
+                      href="{{ link.url }}"
+                      class="bl-nav-link{% if link.active %} is-active{% endif %}"
+                      {% if link.active %}aria-current="page"{% endif %}
+                    >{{- link.title | escape -}}</a>
+                  {%- endif -%}
+                </div>
+              {%- endfor -%}
+            </nav>
+          {%- endif -%}
+
+          {%- comment -%}── Right icons ──{%- endcomment -%}
+          <div class="bl-hdr-icons" role="group" aria-label="Header actions">
+
+            <button
+              class="bl-icon-btn bl-icon-btn--search drawer_open_btn"
+              aria-label="Open search"
+              data-drawer="search--drawer"
+              id="header_search"
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+              </svg>
+            </button>
+
+            <a
+              href="{{ routes.cart_url }}"
+              class="bl-icon-btn bl-icon-btn--cart{% unless template contains 'cart' %}{% if settings.cart_type == 'drawer' %} drawer_open_btn{% endif %}{% endunless %}"
+              id="cart-icon-bubble"
+              aria-label="{{ 'templates.cart.cart' | t }}"
+              {% unless template contains 'cart' %}{% if settings.cart_type == 'drawer' %}data-drawer="cart_drawer"{% endif %}{% endunless %}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+              <span class="bl-cart-badge cc_text" data-count="{{ cart.item_count }}" aria-hidden="true">{{ cart.item_count }}</span>
+              <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
+            </a>
+
+            {%- if shop.customer_accounts_enabled -%}
+              <div class="bl-icon-btn bl-icon-btn--account header_account--icon" style="padding:0;">
+                <shopify-account menu="{{ acct_menu }}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </shopify-account>
+              </div>
+            {%- endif -%}
+
+            {%- comment -%}
+              Theme toggle — green circular button.
+              Shows moon (dark mode) or sun (light mode).
+              Both icons use BurnLab green accent colour.
+            {%- endcomment -%}
+            <button
+              class="bl-theme-toggle"
+              id="bl-theme-toggle-{{ section.id }}"
+              aria-label="Toggle dark and light mode"
+              title="Toggle dark and light mode"
+              type="button"
+            >
+              <span class="bl-toggle-icon bl-toggle-icon--moon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                </svg>
+              </span>
+              <span class="bl-toggle-icon bl-toggle-icon--sun" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4.5"/>
+                  <line x1="12" y1="1.5" x2="12" y2="4.5"/>
+                  <line x1="12" y1="19.5" x2="12" y2="22.5"/>
+                  <line x1="3.44" y1="3.44" x2="5.56" y2="5.56"/>
+                  <line x1="18.44" y1="18.44" x2="20.56" y2="20.56"/>
+                  <line x1="1.5" y1="12" x2="4.5" y2="12"/>
+                  <line x1="19.5" y1="12" x2="22.5" y2="12"/>
+                  <line x1="3.44" y1="20.56" x2="5.56" y2="18.44"/>
+                  <line x1="18.44" y1="5.56" x2="20.56" y2="3.44"/>
+                </svg>
+              </span>
+            </button>
+
+          </div>
+
+        </div>
+
+        {%- if section.settings.show_progress -%}
+          <div class="bl-hdr-progress" id="bl-hdr-progress-{{ section.id }}" aria-hidden="true"></div>
+        {%- endif -%}
+
+      </div>
+    </div>
+  </div>
+</header-element>
+
+{% render 'menu-drawer', menu: section.settings.menu, section: section %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ─── Drawer theming — robust JS injection ──────────────────────
+  // Targets root element + all inner containers so theme-owned
+  // background-color overrides on child panels cannot win.
+  var DRAWER_BG_DARK   = '{{ drawer_bg_dark }}';
+  var DRAWER_BG_LIGHT  = '{{ drawer_bg_light }}';
+  var DRAWER_TXT_DARK  = '{{ drawer_txt_dark }}';
+  var DRAWER_TXT_LIGHT = '{{ drawer_txt_light }}';
+  var DRAWER_ACCENT    = '{{ drawer_accent }}';
+
+  var BL_DRAWER_SEL = '#mobile_menu_drawer, .menu-drawer, [id*="MenuDrawer"]';
+
+  function applyDrawerTheme() {
+    var isDark  = document.documentElement.getAttribute('data-theme') !== 'light';
+    var bg      = isDark ? DRAWER_BG_DARK  : DRAWER_BG_LIGHT;
+    var txt     = isDark ? DRAWER_TXT_DARK : DRAWER_TXT_LIGHT;
+    var border  = isDark ? 'rgba(51,104,112,0.22)' : 'rgba(0,26,46,0.1)';
+
+    document.querySelectorAll(BL_DRAWER_SEL).forEach(function(drawer) {
+      /* Root element */
+      drawer.style.setProperty('background-color', bg, 'important');
+      drawer.style.setProperty('background',       bg, 'important');
+      drawer.style.setProperty('color',            txt, 'important');
+
+      /* Inner containers — main culprit for white-background override */
+      drawer.querySelectorAll(
+        '[class*="inner"], [class*="container"], [class*="navigation"],' +
+        '[class*="header"], [class*="content"], [class*="panel"],' +
+        'nav, div, ul'
+      ).forEach(function(el) {
+        el.style.setProperty('background-color', bg, 'important');
+        el.style.setProperty('background',       bg, 'important');
+      });
+
+      /* All text-bearing elements */
+      drawer.querySelectorAll(
+        'a, summary, button, span, p, h1, h2, h3, h4, h5, label'
+      ).forEach(function(el) {
+        if (!el.classList.contains('visually-hidden')) {
+          el.style.setProperty('color', txt, 'important');
+        }
+      });
+
+      /* Divider lines */
+      drawer.querySelectorAll('li, [class*="item"]').forEach(function(el) {
+        el.style.setProperty('border-bottom-color', border, 'important');
+      });
+
+      /* SVG icons — set both color + stroke so stroked icons are visible */
+      drawer.querySelectorAll('svg').forEach(function(el) {
+        el.style.setProperty('color',  txt, 'important');
+        el.style.setProperty('stroke', txt, 'important');
+      });
+      drawer.querySelectorAll('svg path, svg line, svg polyline, svg circle, svg rect').forEach(function(el) {
+        el.style.setProperty('stroke', txt, 'important');
+      });
+
+      /* Close button (X) — accent green so it's always findable */
+      drawer.querySelectorAll(
+        'button[aria-label*="lose"] svg, button[aria-label*="lose"] svg path,' +
+        'button[aria-label*="lose"] svg line, [class*="close"] svg,' +
+        '[class*="close"] svg path, [class*="close"] svg line,' +
+        '.menu-drawer__close-button svg, .menu-drawer__close-button svg path,' +
+        '.menu-drawer__close-button svg line'
+      ).forEach(function(el) {
+        el.style.setProperty('color',  DRAWER_ACCENT, 'important');
+        el.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+        el.style.setProperty('fill',   'none', 'important');
+      });
+
+      /* Accordion chevrons — set color + stroke but NOT fill (chevrons may be fill-based) */
+      drawer.querySelectorAll(
+        'summary svg, summary svg path, summary svg polyline,' +
+        '[class*="chevron"] svg, [class*="chevron"] svg path,' +
+        '[class*="arrow"] svg, [class*="arrow"] svg path'
+      ).forEach(function(el) {
+        el.style.setProperty('stroke', txt, 'important');
+        el.style.setProperty('color',  txt, 'important');
+        el.style.setProperty('fill',   'currentColor', 'important');
+      });
+    });
+  }
+
+  /* 1. Apply immediately */
+  applyDrawerTheme();
+
+  /* 2. Re-apply when any drawer trigger is clicked — three passes:
+        60ms catches renders that happen right after click;
+        300ms catches themes that re-render the drawer after opening;
+        700ms catches lazy-rendered or animation-delayed content. */
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('[data-drawer]') || e.target.closest('.drawer_open_btn')) {
+      setTimeout(applyDrawerTheme, 60);
+      setTimeout(applyDrawerTheme, 300);
+      setTimeout(applyDrawerTheme, 700);
+      // Stagger animation: remove + re-add class so animation replays on every open
+      document.body.classList.remove('bl-drawer-stagger');
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.body.classList.add('bl-drawer-stagger');
+        });
+      });
+    }
+  });
+
+  /* 3. Watch DOM for the drawer being lazily injected or revealed
+        (open attribute, class changes, aria-hidden toggling) */
+  var blDrawerWatcher = new MutationObserver(function(muts) {
+    var hit = muts.some(function(m) {
+      if (m.type === 'childList') {
+        return Array.from(m.addedNodes).some(function(n) {
+          if (n.nodeType !== 1) return false;
+          var id  = n.id  || '';
+          var cls = (typeof n.className === 'string' ? n.className : '') || '';
+          return id.toLowerCase().includes('drawer') || id.toLowerCase().includes('menu') ||
+                 cls.includes('menu-drawer');
+        });
+      }
+      if (m.type === 'attributes') {
+        var t  = m.target;
+        var id = t.id  || '';
+        var cl = (typeof t.className === 'string' ? t.className : '') || '';
+        return (id.includes('drawer') || id.includes('menu') || cl.includes('menu-drawer')) &&
+               (m.attributeName === 'open' || m.attributeName === 'class' ||
+                m.attributeName === 'aria-hidden');
+      }
+      return false;
+    });
+    if (hit) setTimeout(applyDrawerTheme, 40);
+  });
+  blDrawerWatcher.observe(document.body, {
+    childList: true, subtree: true,
+    attributes: true, attributeFilter: ['open', 'class', 'aria-hidden']
+  });
+
+  /* 4. Re-apply whenever data-theme changes */
+  var themeObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.attributeName === 'data-theme') applyDrawerTheme();
+    });
+  });
+  themeObserver.observe(document.documentElement, { attributes: true });
+
+  // ─── Theme toggle ──────────────────────────────────────────────
+  var toggleBtn = document.getElementById('bl-theme-toggle-{{ section.id }}');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      var html    = document.documentElement;
+      var current = html.getAttribute('data-theme') || 'dark';
+      var next    = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('bl-theme', next);
+    });
+  }
+
+  // ─── Scroll: overlay fade + scrolled class ─────────────────────
+  var hdrOuter = document.getElementById('bl-hdr-main-{{ section.id }}');
+  if (hdrOuter) {
+    var ticking = false;
+    var onScroll = function () {
+      if (!ticking) {
+        requestAnimationFrame(function () {
+          hdrOuter.classList.toggle('bl-scrolled', window.scrollY > 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  {% if section.settings.show_progress %}
+  // ─── Progress bar ──────────────────────────────────────────────
+  var progressBar = document.getElementById('bl-hdr-progress-{{ section.id }}');
+  if (progressBar) {
+    window.addEventListener('scroll', function () {
+      var doc   = document.documentElement;
+      var total = doc.scrollHeight - window.innerHeight;
+      var pct   = total > 0 ? Math.min(window.scrollY / total, 1) * 100 : 0;
+      progressBar.style.setProperty('--bl-scroll-pct', pct + '%');
+    }, { passive: true });
+  }
+  {% endif %}
+
+  // ─── Dropdown: close on outside click ──────────────────────────
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#{{ section_id }} .bl-nav-item')) {
+      document.querySelectorAll('#{{ section_id }} .bl-nav-link[aria-expanded="true"]')
+        .forEach(function (el) { el.setAttribute('aria-expanded', 'false'); });
+    }
+  });
+
+  // ─── Dropdown: keyboard aria-expanded ──────────────────────────
+  document.querySelectorAll('#{{ section_id }} .bl-nav-link[aria-haspopup="true"]')
+    .forEach(function (link) {
+      link.addEventListener('click', function () {
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+      });
+    });
+
+});
+</script>
+
+{% schema %}
+{
+  "name": "Header",
+  "class": "header_block",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Brand Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo for dark mode",
+      "info": "Your brand image shown on dark backgrounds. Upload a version with white or light-coloured text and icon."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_light",
+      "label": "Logo for light mode",
+      "info": "Your brand image shown on light backgrounds. Upload a version with dark-coloured text and icon. Falls back to the dark logo if not set."
+    },
+    {
+      "type": "range",
+      "id": "logo_size",
+      "label": "Logo height (desktop)",
+      "min": 24,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 48,
+      "info": "Height in pixels. Width scales automatically to preserve aspect ratio."
+    },
+    {
+      "type": "range",
+      "id": "logo_size_mobile",
+      "label": "Logo height (mobile)",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 44,
+      "info": "Height on screens 1024px and below."
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Select menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "range",
+      "id": "nav_font_size",
+      "label": "Navigation font size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "default": 13
+    },
+    {
+      "type": "link_list",
+      "id": "customer_account_menu",
+      "label": "Customer account menu",
+      "default": "customer-account-main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Header Size"
+    },
+    {
+      "type": "range",
+      "id": "header_height",
+      "label": "Header height (desktop)",
+      "min": 48,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "header_height_mobile",
+      "label": "Header height (mobile)",
+      "min": 48,
+      "max": 96,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "header",
+      "content": "Header Position and Behavior"
+    },
+    {
+      "type": "select",
+      "id": "header_position",
+      "label": "Header position",
+      "options": [
+        { "value": "sticky",   "label": "Sticky — sticks to top on scroll" },
+        { "value": "fixed",    "label": "Fixed — always floats above page" },
+        { "value": "relative", "label": "Static — scrolls away with the page" }
+      ],
+      "default": "sticky"
+    },
+    {
+      "type": "checkbox",
+      "id": "overlay_header",
+      "label": "Transparent overlay on homepage",
+      "default": false,
+      "info": "Header is transparent over the hero on the home page. Turns solid on scroll."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_progress",
+      "label": "Show scroll progress bar",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Mobile — Layout"
+    },
+    {
+      "type": "select",
+      "id": "mobile_menu_side",
+      "label": "Hamburger button position",
+      "options": [
+        { "value": "right", "label": "Right (after icons)" },
+        { "value": "left",  "label": "Left (before logo)" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "range",
+      "id": "mobile_icons_gap",
+      "label": "Gap between icons",
+      "min": 2,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 6,
+      "info": "Pixel gap between header icon buttons on mobile."
+    },
+    {
+      "type": "header",
+      "content": "Mobile — Visible Icons"
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_show_search",
+      "label": "Show search icon on mobile",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_show_cart",
+      "label": "Show cart icon on mobile",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_show_account",
+      "label": "Show account icon on mobile",
+      "default": false,
+      "info": "Account icon is hidden by default on mobile to keep the header compact."
+    },
+    {
+      "type": "header",
+      "content": "Mobile Menu Drawer"
+    },
+    {
+      "type": "color",
+      "id": "drawer_bg_dark",
+      "label": "Drawer background (dark mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "drawer_bg_light",
+      "label": "Drawer background (light mode)",
+      "default": "#f0f5f8"
+    },
+    {
+      "type": "color",
+      "id": "drawer_text_dark",
+      "label": "Drawer text (dark mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "drawer_text_light",
+      "label": "Drawer text (light mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "drawer_accent",
+      "label": "Drawer accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "checkbox",
+      "id": "drawer_hide_account",
+      "label": "Hide account icon in drawer",
+      "default": true,
+      "info": "Removes the account or contact icon that some themes show at the bottom of the mobile drawer."
+    },
+    {
+      "type": "range",
+      "id": "drawer_logo_size",
+      "label": "Logo height in drawer",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 40,
+      "info": "Height of the brand logo shown at the top of the mobile menu drawer. Width scales automatically."
+    },
+    {
+      "type": "header",
+      "content": "Dark and Light Mode"
+    },
+    {
+      "type": "select",
+      "id": "default_theme",
+      "label": "Default theme",
+      "options": [
+        { "value": "dark",   "label": "Dark" },
+        { "value": "light",  "label": "Light" },
+        { "value": "system", "label": "Follow visitor system preference" }
+      ],
+      "default": "dark",
+      "info": "Visitor manual toggle overrides this once they interact."
+    },
+    {
+      "type": "color",
+      "id": "hdr_dark_bg",
+      "label": "Header background (dark mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "hdr_light_bg",
+      "label": "Header background (light mode)",
+      "default": "#f5f9fa"
+    },
+    {
+      "type": "color",
+      "id": "hdr_dark_text",
+      "label": "Header text (dark mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "hdr_light_text",
+      "label": "Header text (light mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "header",
+      "content": "Color Scheme"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Animations"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable nav stagger animation",
+      "default": true,
+      "info": "Nav items fade in with a stagger on page load. Automatically disabled for visitors with reduced motion preference."
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Mega menu",
+      "type": "mega_menu",
+      "settings": [
+        {
+          "type": "text",
+          "id": "megamenu_target",
+          "label": "Target menu item",
+          "info": "Enter the menu item label in lowercase with spaces replaced by hyphens."
+        },
+        {
+          "type": "header",
+          "content": "Featured image 1"
+        },
+        {
+          "type": "image_picker",
+          "id": "image1",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "heading1",
+          "label": "Heading"
+        },
+        {
+          "type": "url",
+          "id": "link1",
+          "label": "Link"
+        },
+        {
+          "type": "header",
+          "content": "Featured image 2"
+        },
+        {
+          "type": "image_picker",
+          "id": "image2",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "heading2",
+          "label": "Heading"
+        },
+        {
+          "type": "url",
+          "id": "link2",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Header",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}

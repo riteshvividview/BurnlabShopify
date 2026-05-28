@@ -1,0 +1,1140 @@
+{% comment %}
+  ============================================================
+  BURNLAB — FAQ Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Forge Drop — staggered weight-drop cascade reveal
+             + spring-bounce accordion open/close
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-faq-' | append: section.id -%}
+
+{%- liquid
+  assign show_eyebrow   = section.settings.show_eyebrow
+  assign eyebrow        = section.settings.eyebrow             | default: 'FAQ'
+  assign heading        = section.settings.heading             | default: 'Frequently Asked Questions'
+  assign subheading     = section.settings.subheading
+  assign heading_size   = section.settings.heading_size        | default: 44
+  assign layout         = section.settings.layout              | default: 'full'
+  assign faq_columns    = section.settings.faq_columns         | default: '1'
+  assign allow_multiple = section.settings.allow_multiple
+  assign show_numbers   = section.settings.show_numbers
+  assign side_image     = section.settings.side_image
+  assign image_radius   = section.settings.image_radius        | default: 20
+  assign image_width    = section.settings.image_width         | default: 45
+  assign bg_dark        = section.settings.bg_color_dark       | default: '#001a2e'
+  assign text_dark      = section.settings.text_color_dark     | default: '#eaf4f5'
+  assign accent_dark    = section.settings.accent_color_dark   | default: '#07d16e'
+  assign item_bg_dark   = section.settings.item_bg_dark        | default: '#001828'
+  assign border_dark    = section.settings.border_dark         | default: '#1a3a50'
+  assign bg_light       = section.settings.bg_color_light      | default: '#f0f5f8'
+  assign text_light     = section.settings.text_color_light    | default: '#001a2e'
+  assign accent_light   = section.settings.accent_color_light  | default: '#07d16e'
+  assign item_bg_light  = section.settings.item_bg_light       | default: '#ffffff'
+  assign border_light   = section.settings.border_light        | default: '#d6e3ea'
+  assign enable_anims   = section.settings.enable_animations
+  assign padding_top    = section.settings.padding_top         | default: 80
+  assign padding_bottom = section.settings.padding_bottom      | default: 80
+  assign pt_mob         = section.settings.padding_top_mobile  | default: 48
+  assign pb_mob         = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+{% style %}
+
+/* ── Scoped reset ── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark / light mode tokens (scoped — never leak out) ── */
+#{{ section_id }} {
+  --faq-bg:          {{ bg_dark }};
+  --faq-text:        {{ text_dark }};
+  --faq-accent:      {{ accent_dark }};
+  --faq-item-bg:     {{ item_bg_dark }};
+  --faq-border:      {{ border_dark }};
+  --faq-text-muted:  {{ text_dark | color_modify: 'alpha', 0.55 }};
+  --faq-glow:        rgba(7, 209, 110, 0.09);
+  --faq-shadow:      0 8px 40px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --faq-bg:          {{ bg_light }};
+  --faq-text:        {{ text_light }};
+  --faq-accent:      {{ accent_light }};
+  --faq-item-bg:     {{ item_bg_light }};
+  --faq-border:      {{ border_light }};
+  --faq-text-muted:  {{ text_light | color_modify: 'alpha', 0.55 }};
+  --faq-glow:        rgba(7, 209, 110, 0.06);
+  --faq-shadow:      0 8px 40px rgba(0, 26, 46, 0.10);
+}
+
+/* ── Section root ── */
+#{{ section_id }} {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--faq-bg);
+  color: var(--faq-text);
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Ambient glow blob (z:1) ── */
+#{{ section_id }} .faq-glow {
+  position: absolute;
+  width: 64rem;
+  height: 64rem;
+  background: radial-gradient(ellipse at center, var(--faq-glow) 0%, transparent 68%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  top: -20%;
+  right: -18%;
+}
+
+/* ── Container ── */
+#{{ section_id }} .faq-container {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  position: relative;
+  z-index: 10;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION HEADER
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-header {
+  text-align: center;
+  margin-bottom: clamp(3rem, 5vw, 5.6rem);
+}
+
+#{{ section_id }} .faq-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faq-accent);
+  margin-bottom: 1.4rem;
+}
+
+#{{ section_id }} .faq-eyebrow::before {
+  content: '';
+  display: block;
+  width: 2.4rem;
+  height: 2px;
+  background: var(--faq-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .faq-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, {{ heading_size }}px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--faq-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 1.4rem;
+}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .faq-heading { font-size: clamp(2rem, 8vw, 3rem); }
+}
+
+#{{ section_id }} .faq-subheading {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.5vw, 1.6rem);
+  line-height: 1.72;
+  color: var(--faq-text-muted);
+  max-width: 58rem;
+  margin-inline: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ══════════════════════════════════════════════════════
+   BODY LAYOUT — split (image + faqs) or full-width
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-body {
+  display: flex;
+  gap: clamp(3rem, 5vw, 6rem);
+  align-items: flex-start;
+  {% if layout == 'image-left' or layout == 'image-right' %}
+    flex-direction: row;
+  {% else %}
+    flex-direction: column;
+  {% endif %}
+}
+
+/* ── Image column ── */
+#{{ section_id }} .faq-image-col {
+  flex-shrink: 0;
+  {% if layout != 'full' %}
+    width: {{ image_width }}%;
+    position: sticky;
+    top: 9rem;
+    align-self: flex-start;
+  {% else %}
+    width: 100%;
+  {% endif %}
+  {% if layout == 'image-right' %}
+    order: 2;
+  {% else %}
+    order: 0;
+  {% endif %}
+}
+
+#{{ section_id }} .faq-image-wrap {
+  position: relative;
+  border-radius: {{ image_radius }}px;
+  overflow: hidden;
+}
+
+#{{ section_id }} .faq-image-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: {{ image_radius }}px;
+  transition: transform 0.65s ease;
+  will-change: transform;
+}
+
+{% if enable_anims %}
+#{{ section_id }} .faq-image-wrap:hover img { transform: scale(1.04); }
+{% endif %}
+
+/* Green glow behind side image */
+#{{ section_id }} .faq-image-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  background: radial-gradient(ellipse at 40% 90%, rgba(7, 209, 110, 0.22) 0%, transparent 65%);
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* ── List column ── */
+#{{ section_id }} .faq-list-col {
+  flex: 1;
+  min-width: 0;
+  {% if layout == 'image-right' %}
+    order: 1;
+  {% else %}
+    order: 1;
+  {% endif %}
+}
+
+/* ══════════════════════════════════════════════════════
+   FAQ GRID — 1 or 2 columns (desktop only)
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-grid {
+  display: grid;
+  grid-template-columns: {% if faq_columns == '2' %}repeat(2, 1fr){% else %}1fr{% endif %};
+  gap: clamp(0.8rem, 1.5vw, 1.2rem);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .faq-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════
+   FAQ ITEM CARD
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-item {
+  position: relative;
+  background: var(--faq-item-bg);
+  border: 1px solid var(--faq-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+/* Green left-edge line — draws in from bottom when open */
+#{{ section_id }} .faq-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--faq-accent) 0%, rgba(7, 209, 110, 0.3) 100%);
+  border-radius: 3px 0 0 3px;
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#{{ section_id }} .faq-item:hover {
+  border-color: rgba(7, 209, 110, 0.28);
+  box-shadow: 0 4px 32px rgba(7, 209, 110, 0.07);
+}
+
+#{{ section_id }} .faq-item.is-open {
+  border-color: rgba(7, 209, 110, 0.4);
+  box-shadow: 0 8px 40px rgba(7, 209, 110, 0.10);
+}
+
+#{{ section_id }} .faq-item.is-open::before { transform: scaleY(1); }
+
+/* ══════════════════════════════════════════════════════
+   QUESTION TRIGGER BUTTON
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-trigger {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 1.5vw, 1.4rem);
+  width: 100%;
+  padding: clamp(1.4rem, 2vw, 2rem) clamp(1.6rem, 2.5vw, 2.4rem);
+  background: transparent;
+  border: none;
+  color: var(--faq-text);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.25s ease;
+}
+
+#{{ section_id }} .faq-trigger:focus-visible {
+  outline: 2px solid var(--faq-accent);
+  outline-offset: -3px;
+  border-radius: 14px;
+}
+
+#{{ section_id }} .faq-trigger:hover { color: var(--faq-accent); }
+#{{ section_id }} .faq-item.is-open > .faq-trigger { color: var(--faq-accent); }
+
+/* ── Number badge ── */
+#{{ section_id }} .faq-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: rgba(7, 209, 110, 0.1);
+  border: 1.5px solid rgba(7, 209, 110, 0.28);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.9rem, 1vw, 1.05rem);
+  font-weight: 700;
+  color: var(--faq-accent);
+  line-height: 1;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+#{{ section_id }} .faq-item.is-open .faq-number,
+#{{ section_id }} .faq-trigger:hover .faq-number {
+  background: rgba(7, 209, 110, 0.18);
+  border-color: rgba(7, 209, 110, 0.6);
+}
+
+/* ── Question text ── */
+#{{ section_id }} .faq-question {
+  flex: 1;
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.35rem, 1.6vw, 1.7rem);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-align: left;
+}
+
+/* ── Category tag ── */
+#{{ section_id }} .faq-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.8rem, 0.85vw, 0.95rem);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(51, 104, 112, 0.18);
+  border: 1px solid rgba(51, 104, 112, 0.35);
+  border-radius: 99px;
+  color: var(--faq-text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) { #{{ section_id }} .faq-tag { display: none; } }
+
+/* ══════════════════════════════════════════════════════
+   TOGGLE ICON — "+" rotates 45deg into "x" on open
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-icon {
+  flex-shrink: 0;
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--faq-border);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.3s ease,
+              background 0.3s ease;
+  will-change: transform;
+}
+
+[data-theme="light"] #{{ section_id }} .faq-icon { background: rgba(0, 0, 0, 0.03); }
+
+#{{ section_id }} .faq-trigger:hover .faq-icon,
+#{{ section_id }} .faq-item.is-open > .faq-trigger .faq-icon {
+  border-color: rgba(7, 209, 110, 0.55);
+  background: rgba(7, 209, 110, 0.10);
+}
+
+/* Rotate whole icon 45deg: "+" becomes "x" */
+#{{ section_id }} .faq-item.is-open > .faq-trigger .faq-icon {
+  transform: rotate(45deg);
+}
+
+#{{ section_id }} .faq-icon-bar {
+  position: absolute;
+  background: var(--faq-text);
+  border-radius: 2px;
+  transition: background 0.25s ease;
+  pointer-events: none;
+}
+
+#{{ section_id }} .faq-trigger:hover .faq-icon-bar,
+#{{ section_id }} .faq-item.is-open > .faq-trigger .faq-icon-bar {
+  background: var(--faq-accent);
+}
+
+#{{ section_id }} .faq-icon-bar--h { width: 1.3rem; height: 2px; }
+#{{ section_id }} .faq-icon-bar--v { width: 2px; height: 1.3rem; }
+
+/* ══════════════════════════════════════════════════════
+   ANSWER — spring expand via grid-template-rows
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .faq-answer-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#{{ section_id }} .faq-item.is-open .faq-answer-wrapper {
+  grid-template-rows: 1fr;
+}
+
+#{{ section_id }} .faq-answer-inner { overflow: hidden; }
+
+#{{ section_id }} .faq-answer {
+  padding: 0
+    clamp(1.6rem, 2.5vw, 2.4rem)
+    clamp(1.6rem, 2.5vw, 2.4rem)
+    {% if show_numbers %}
+      calc(clamp(1.6rem, 2.5vw, 2.4rem) + 2.8rem + clamp(0.8rem, 1.5vw, 1.4rem))
+    {% else %}
+      clamp(1.6rem, 2.5vw, 2.4rem)
+    {% endif %};
+}
+
+/* ── Answer rich text styles ── */
+#{{ section_id }} .faq-answer-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.5vw, 1.6rem);
+  line-height: 1.72;
+  color: var(--faq-text-muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#{{ section_id }} .faq-answer-text p              { margin-bottom: 0.85em; }
+#{{ section_id }} .faq-answer-text p:last-child   { margin-bottom: 0; }
+#{{ section_id }} .faq-answer-text a              { color: var(--faq-accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+#{{ section_id }} .faq-answer-text a:hover        { opacity: 0.82; }
+#{{ section_id }} .faq-answer-text ul,
+#{{ section_id }} .faq-answer-text ol             { padding-left: 1.8em; margin-bottom: 0.85em; }
+#{{ section_id }} .faq-answer-text li             { margin-bottom: 0.4em; }
+#{{ section_id }} .faq-answer-text strong         { color: var(--faq-text); font-weight: 600; }
+#{{ section_id }} .faq-answer-text h3,
+#{{ section_id }} .faq-answer-text h4 {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.3rem, 1.4vw, 1.55rem);
+  color: var(--faq-text);
+  margin: 1em 0 0.4em;
+  letter-spacing: -0.01em;
+}
+
+/* ── Per-FAQ image inside answer ── */
+#{{ section_id }} .faq-answer-image {
+  margin-top: 1.6rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#{{ section_id }} .faq-answer-image img {
+  width: 100%;
+  height: auto;
+  max-height: 32rem;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  transition: transform 0.55s ease;
+  will-change: transform;
+}
+
+{% if enable_anims %}
+#{{ section_id }} .faq-item.is-open .faq-answer-image img { transform: scale(1.015); }
+{% endif %}
+
+/* ══════════════════════════════════════════════════════
+   FORGE DROP — scroll reveal animation
+   Items "drop" from above with a spring bounce (staggered).
+   Header elements fade up. Both driven by IntersectionObserver.
+══════════════════════════════════════════════════════ */
+{% if enable_anims %}
+
+#{{ section_id }} .faq-item {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.984);
+  transition: opacity 0.5s ease,
+              transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+#{{ section_id }} .faq-item.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+#{{ section_id }} [data-faq-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#{{ section_id }} [data-faq-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .faq-item,
+  #{{ section_id }} [data-faq-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+}
+
+{% else %}
+
+#{{ section_id }} .faq-item        { opacity: 1; transform: none; }
+#{{ section_id }} [data-faq-reveal] { opacity: 1; transform: none; }
+
+{% endif %}
+
+/* Shopify editor: always show */
+.shopify-design-mode #{{ section_id }} .faq-item,
+.shopify-design-mode #{{ section_id }} [data-faq-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  #{{ section_id }} .faq-body         { flex-direction: column !important; }
+  #{{ section_id }} .faq-image-col    { width: 100% !important; position: static !important; order: 0 !important; }
+  #{{ section_id }} .faq-list-col     { order: 1 !important; }
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} .faq-header { margin-bottom: clamp(2rem, 4vw, 3rem); }
+  #{{ section_id }} .faq-icon   { width: 2.8rem; height: 2.8rem; }
+}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .faq-trigger  { gap: 0.8rem; padding: 1.4rem; }
+  #{{ section_id }} .faq-answer   { padding: 0 1.4rem 1.6rem 1.4rem !important; }
+  #{{ section_id }} .faq-item     { border-radius: 12px; }
+  #{{ section_id }} .faq-number   { width: 2.4rem; height: 2.4rem; font-size: 0.9rem; }
+  #{{ section_id }} .faq-icon     { width: 2.6rem; height: 2.6rem; }
+  #{{ section_id }} .faq-icon-bar--h { width: 1.1rem; }
+  #{{ section_id }} .faq-icon-bar--v { height: 1.1rem; }
+  #{{ section_id }} .faq-answer-image img { max-height: 22rem; }
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .faq-container { padding-inline: 1rem; }
+  #{{ section_id }} .faq-trigger   { padding: 1.2rem 1rem; gap: 0.6rem; }
+}
+
+{% endstyle %}
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-faq color_scheme color-{{ section.settings.color_scheme }}"
+  aria-label="Frequently Asked Questions"
+>
+  <div class="faq-glow" aria-hidden="true"></div>
+
+  <div class="faq-container">
+
+    {%- if heading != blank or subheading != blank -%}
+      <header class="faq-header">
+        {%- if show_eyebrow and eyebrow != blank -%}
+          <div class="faq-eyebrow" data-faq-reveal>{{- eyebrow | escape -}}</div>
+        {%- endif -%}
+
+        {%- if heading != blank -%}
+          <h2 class="faq-heading" data-faq-reveal>{{- heading -}}</h2>
+        {%- endif -%}
+
+        {%- if subheading != blank -%}
+          <div class="faq-subheading" data-faq-reveal>{{- subheading -}}</div>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div class="faq-body">
+
+      {%- if side_image != blank and layout != 'full' -%}
+        <div class="faq-image-col" data-faq-reveal>
+          <div class="faq-image-wrap">
+            <img
+              src="{{ side_image | image_url: width: 900 }}"
+              srcset="{{ side_image | image_url: width: 450 }} 450w,
+                      {{ side_image | image_url: width: 900 }} 900w,
+                      {{ side_image | image_url: width: 1400 }} 1400w"
+              sizes="(max-width: 1024px) 100vw, {{ image_width }}vw"
+              alt="{{ side_image.alt | default: heading | escape }}"
+              loading="lazy"
+              width="{{ side_image.width }}"
+              height="{{ side_image.height }}"
+            >
+          </div>
+        </div>
+      {%- endif -%}
+
+      <div class="faq-list-col">
+        <div class="faq-grid">
+
+          {%- if section.blocks.size > 0 -%}
+            {%- for block in section.blocks -%}
+              {%- assign q            = block.settings.question    | default: 'Question' -%}
+              {%- assign a            = block.settings.answer -%}
+              {%- assign faq_img      = block.settings.faq_image -%}
+              {%- assign tag_label    = block.settings.tag_label -%}
+              {%- assign default_open = block.settings.default_open -%}
+              {%- assign idx          = forloop.index -%}
+
+              <div
+                class="faq-item{% if default_open %} is-open is-visible{% endif %}"
+                data-faq-item
+                {{ block.shopify_attributes }}
+              >
+                <button
+                  class="faq-trigger"
+                  aria-expanded="{{ default_open | default: false }}"
+                  aria-controls="{{ section_id }}-answer-{{ idx }}"
+                  type="button"
+                >
+                  {%- if show_numbers -%}
+                    <span class="faq-number" aria-hidden="true">{{ idx }}</span>
+                  {%- endif -%}
+
+                  <span class="faq-question">{{- q | escape -}}</span>
+
+                  {%- if tag_label != blank -%}
+                    <span class="faq-tag" aria-hidden="true">{{- tag_label | escape -}}</span>
+                  {%- endif -%}
+
+                  <span class="faq-icon" aria-hidden="true">
+                    <span class="faq-icon-bar faq-icon-bar--h"></span>
+                    <span class="faq-icon-bar faq-icon-bar--v"></span>
+                  </span>
+                </button>
+
+                <div
+                  class="faq-answer-wrapper"
+                  id="{{ section_id }}-answer-{{ idx }}"
+                  role="region"
+                >
+                  <div class="faq-answer-inner">
+                    <div class="faq-answer">
+                      {%- if a != blank -%}
+                        <div class="faq-answer-text">{{- a -}}</div>
+                      {%- endif -%}
+
+                      {%- if faq_img != blank -%}
+                        <div class="faq-answer-image">
+                          <img
+                            src="{{ faq_img | image_url: width: 900 }}"
+                            srcset="{{ faq_img | image_url: width: 450 }} 450w,
+                                    {{ faq_img | image_url: width: 900 }} 900w"
+                            sizes="(max-width: 768px) 100vw, 55vw"
+                            alt="{{ faq_img.alt | default: q | escape }}"
+                            loading="lazy"
+                            width="{{ faq_img.width }}"
+                            height="{{ faq_img.height }}"
+                          >
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            {%- endfor -%}
+
+          {%- else -%}
+            <p style="grid-column:1/-1;text-align:center;font-family:'DM Sans',sans-serif;opacity:0.45;padding:2.4rem 0;">
+              Add FAQ items using the Add block button in the customizer.
+            </p>
+          {%- endif -%}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var SECTION = document.getElementById('{{ section_id }}');
+  if (!SECTION) return;
+
+  var ALLOW_MULTIPLE = {{ allow_multiple | json }};
+
+  function openItem(item) {
+    item.classList.add('is-open');
+    var btn = item.querySelector('.faq-trigger');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeItem(item) {
+    item.classList.remove('is-open');
+    var btn = item.querySelector('.faq-trigger');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  /* ── Accordion click handler ── */
+  SECTION.querySelectorAll('[data-faq-item]').forEach(function (item) {
+    var trigger = item.querySelector('.faq-trigger');
+    if (!trigger) return;
+
+    trigger.addEventListener('click', function () {
+      var isOpen = item.classList.contains('is-open');
+
+      if (!ALLOW_MULTIPLE) {
+        SECTION.querySelectorAll('[data-faq-item].is-open').forEach(function (other) {
+          if (other !== item) closeItem(other);
+        });
+      }
+
+      isOpen ? closeItem(item) : openItem(item);
+    });
+
+    trigger.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeItem(item);
+    });
+  });
+
+  {% if section.settings.enable_animations %}
+
+  /* ── Forge Drop: IntersectionObserver reveal ── */
+  var revealObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  /* Stagger each FAQ item with transition-delay */
+  SECTION.querySelectorAll('[data-faq-item]').forEach(function (item, i) {
+    if (!item.classList.contains('is-open')) {
+      item.style.transitionDelay = (i * 0.08) + 's';
+      revealObs.observe(item);
+    }
+  });
+
+  /* Header reveal elements */
+  SECTION.querySelectorAll('[data-faq-reveal]').forEach(function (el, i) {
+    el.style.transitionDelay = (i * 0.1) + 's';
+    revealObs.observe(el);
+  });
+
+  /* Side image */
+  var imgCol = SECTION.querySelector('.faq-image-col');
+  if (imgCol) revealObs.observe(imgCol);
+
+  {% endif %}
+});
+</script>
+
+{% schema %}
+{
+  "name": "FAQ Section",
+  "class": "burnlab-faq-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "Show eyebrow label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow label",
+      "default": "FAQ"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Frequently Asked Questions"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading",
+      "info": "Optional supporting text shown below the heading."
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size (desktop)",
+      "min": 28,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 44
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Section layout",
+      "options": [
+        { "value": "full",        "label": "Full width" },
+        { "value": "image-left",  "label": "Image left, FAQs right" },
+        { "value": "image-right", "label": "FAQs left, image right" }
+      ],
+      "default": "full",
+      "info": "Split layouts require a Section Image to be set below."
+    },
+    {
+      "type": "select",
+      "id": "faq_columns",
+      "label": "FAQ columns (desktop)",
+      "options": [
+        { "value": "1", "label": "Single column" },
+        { "value": "2", "label": "Two columns" }
+      ],
+      "default": "1",
+      "info": "Two columns works best with short questions and answers. Collapses to one column on tablet and mobile."
+    },
+    {
+      "type": "checkbox",
+      "id": "allow_multiple",
+      "label": "Allow multiple items open at once",
+      "default": false,
+      "info": "When off, opening one item closes all others."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_numbers",
+      "label": "Show FAQ numbers",
+      "default": true,
+      "info": "Displays a numbered badge before each question."
+    },
+    {
+      "type": "header",
+      "content": "Section Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "side_image",
+      "label": "Side image",
+      "info": "Shown alongside FAQs in split layout modes."
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "label": "Image column width",
+      "min": 25,
+      "max": 55,
+      "step": 5,
+      "unit": "%",
+      "default": 45,
+      "info": "Percentage of the row width taken by the image column on desktop."
+    },
+    {
+      "type": "range",
+      "id": "image_radius",
+      "label": "Image border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "item_bg_dark",
+      "label": "FAQ item background",
+      "default": "#001828"
+    },
+    {
+      "type": "color",
+      "id": "border_dark",
+      "label": "FAQ item border",
+      "default": "#1a3a50"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Background",
+      "default": "#f0f5f8"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "item_bg_light",
+      "label": "FAQ item background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "border_light",
+      "label": "FAQ item border",
+      "default": "#d6e3ea"
+    },
+    {
+      "type": "header",
+      "content": "Color Scheme"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Animations"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true,
+      "info": "Forge Drop reveal — each FAQ item drops in with a staggered spring cascade on scroll. Automatically disabled for visitors with reduced motion preference."
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "FAQ Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question",
+          "default": "What makes BurnLab equipment worth it?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>BurnLab equipment is engineered for serious training. Every piece is built with commercial-grade materials, precision engineering, and a design that performs as hard as you do.</p>"
+        },
+        {
+          "type": "text",
+          "id": "tag_label",
+          "label": "Category tag",
+          "info": "Optional short label shown as a pill badge (e.g. Shipping, Products, Warranty). Hidden on mobile."
+        },
+        {
+          "type": "image_picker",
+          "id": "faq_image",
+          "label": "Image",
+          "info": "Optional image shown inside the answer when the item is expanded."
+        },
+        {
+          "type": "checkbox",
+          "id": "default_open",
+          "label": "Open by default",
+          "default": false,
+          "info": "This FAQ item will be expanded when the page loads."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab FAQ",
+      "blocks": [
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "What makes BurnLab equipment worth it?",
+            "answer": "<p>BurnLab equipment is engineered for serious training. Every piece is built with commercial-grade materials, precision engineering, and a design that performs as hard as you do.</p>",
+            "tag_label": "Products",
+            "default_open": true
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How long does delivery take?",
+            "answer": "<p>Standard delivery takes 3-5 business days. Larger equipment such as full rack systems may require 7-10 days for freight delivery. You will receive tracking information once your order ships.</p>",
+            "tag_label": "Shipping"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "What warranty do you offer?",
+            "answer": "<p>All BurnLab products carry a minimum 2-year structural warranty. Premium equipment lines are covered for 5 years on frames and 1 year on moving parts. Contact support to make a claim.</p>",
+            "tag_label": "Warranty"
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I return or exchange my order?",
+            "answer": "<p>Yes. We accept returns within 30 days of delivery on unused items in original packaging. Custom or built-to-order equipment is non-returnable. See our full Returns Policy for details.</p>",
+            "tag_label": "Returns"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,1545 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Scroll Testimonial Images
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Layout: 3-column sticky scroll — left images col / center
+          hero + headline / right testimonial cards col
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-scroll-testimonial-' | append: section.id -%}
+
+{%- liquid
+  assign section_eyebrow     = section.settings.eyebrow          | default: 'What Our Athletes Say'
+  assign section_heading     = section.settings.heading           | default: 'Real Results. Real People.'
+  assign section_subheading  = section.settings.subheading        | default: 'Built for those who push limits every single day.'
+  assign center_image        = section.settings.center_image
+  assign center_badge_image  = section.settings.center_badge_image
+  assign center_badge_text   = section.settings.center_badge_text | default: '5000+ Happy Athletes'
+  assign cta_label           = section.settings.cta_label         | default: 'Shop Equipment'
+  assign cta_url             = section.settings.cta_url           | default: '#'
+  assign bg_type             = section.settings.bg_type           | default: 'color'
+  assign bg_image            = section.settings.bg_image
+  assign bg_video_url        = section.settings.bg_video_url      | default: ''
+  assign bg_overlay          = section.settings.bg_overlay        | default: true
+  assign enable_anims        = section.settings.enable_animations
+  assign enable_parallax     = section.settings.enable_parallax
+
+  assign heading_size        = section.settings.heading_size       | default: 56
+  assign heading_size_mob    = heading_size | times: 0.6 | round
+  assign sub_size            = section.settings.sub_size           | default: 18
+  assign sub_size_mob        = sub_size | times: 0.85 | round
+
+  assign bg_dark             = section.settings.bg_color_dark      | default: '#001a2e'
+  assign text_dark           = section.settings.text_color_dark    | default: '#eaf4f5'
+  assign accent_dark         = section.settings.accent_color_dark  | default: '#07d16e'
+  assign card_bg_dark        = section.settings.card_bg_dark       | default: '#0a2236'
+  assign card_border_dark    = section.settings.card_border_dark   | default: '#1a3a50'
+
+  assign bg_light            = section.settings.bg_color_light     | default: '#eaf4f5'
+  assign text_light          = section.settings.text_color_light   | default: '#001a2e'
+  assign accent_light        = section.settings.accent_color_light | default: '#07d16e'
+  assign card_bg_light       = section.settings.card_bg_light      | default: '#ffffff'
+  assign card_border_light   = section.settings.card_border_light  | default: '#c8dde5'
+
+  assign muted_dark          = text_dark  | color_modify: 'alpha', 0.55
+  assign muted_light         = text_light | color_modify: 'alpha', 0.60
+
+  assign pt_desk             = section.settings.padding_top         | default: 80
+  assign pb_desk             = section.settings.padding_bottom       | default: 80
+  assign pt_mob              = section.settings.padding_top_mobile   | default: 48
+  assign pb_mob              = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+<style>
+/* ── Scoped reset ───────────────────────────────────────── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Section root ───────────────────────────────────────── */
+#{{ section_id }} {
+  --sti-bg:           {{ bg_dark }};
+  --sti-text:         {{ text_dark }};
+  --sti-accent:       {{ accent_dark }};
+  --sti-muted:        {{ muted_dark }};
+  --sti-card-bg:      {{ card_bg_dark }};
+  --sti-card-border:  {{ card_border_dark }};
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--sti-bg);
+  color: var(--sti-text);
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ── Light theme override (CSS layer — JS inline wins) ── */
+[data-theme="light"] #{{ section_id }} {
+  --sti-bg:           {{ bg_light }};
+  --sti-text:         {{ text_light }};
+  --sti-accent:       {{ accent_light }};
+  --sti-muted:        {{ muted_light }};
+  --sti-card-bg:      {{ card_bg_light }};
+  --sti-card-border:  {{ card_border_light }};
+}
+
+/* ── Background media layers ────────────────────────────── */
+#{{ section_id }} .sti-bg-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+#{{ section_id }} .sti-bg-media img,
+#{{ section_id }} .sti-bg-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+#{{ section_id }} .sti-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,26,46,0.82) 0%, rgba(0,10,20,0.65) 100%);
+  z-index: 1;
+}
+
+/* ── Glow blobs ─────────────────────────────────────────── */
+#{{ section_id }} .sti-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform;
+}
+#{{ section_id }} .sti-glow--green {
+  width: clamp(22rem, 35vw, 48rem);
+  height: clamp(22rem, 35vw, 48rem);
+  background: radial-gradient(circle, #07d16e 0%, transparent 70%);
+  top: -8rem;
+  left: -10rem;
+}
+#{{ section_id }} .sti-glow--teal {
+  width: clamp(18rem, 28vw, 38rem);
+  height: clamp(18rem, 28vw, 38rem);
+  background: radial-gradient(circle, #336870 0%, transparent 70%);
+  bottom: -6rem;
+  right: -6rem;
+}
+
+/* ── Inner wrapper ──────────────────────────────────────── */
+#{{ section_id }} .sti-wrap {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+}
+
+/* ── Section header (center aligned, above columns) ─────── */
+#{{ section_id }} .sti-header {
+  text-align: center;
+  margin-bottom: clamp(4rem, 6vw, 7rem);
+}
+#{{ section_id }} .sti-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sti-accent);
+  margin-bottom: 1.4rem;
+}
+#{{ section_id }} .sti-eyebrow::before {
+  content: '';
+  display: block;
+  width: 2.4rem;
+  height: 0.2rem;
+  background: var(--sti-accent);
+  border-radius: 99px;
+}
+#{{ section_id }} .sti-heading {
+  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, {{ heading_size }}px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--sti-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 1.2rem;
+}
+#{{ section_id }} .sti-heading em {
+  font-style: normal;
+  color: var(--sti-accent);
+}
+#{{ section_id }} .sti-subheading {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.3rem, 1.8vw, {{ sub_size }}px);
+  color: var(--sti-muted);
+  line-height: 1.65;
+  max-width: 56ch;
+  margin-inline: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── 3-column scroll layout ─────────────────────────────── */
+#{{ section_id }} .sti-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: clamp(2rem, 3vw, 4rem);
+  align-items: start;
+}
+
+/* ── Scroll columns (left & right) ─────────────────────── */
+#{{ section_id }} .sti-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.6rem, 2.5vw, 2.8rem);
+  will-change: transform;
+}
+
+/* ── Center column ──────────────────────────────────────── */
+#{{ section_id }} .sti-col--center {
+  position: sticky;
+  top: clamp(6rem, 10vw, 10rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  will-change: transform;
+}
+#{{ section_id }} .sti-center-img-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--bl-radius-lg, 24px);
+  overflow: hidden;
+  aspect-ratio: 3/4;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+}
+#{{ section_id }} .sti-center-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+#{{ section_id }} .sti-center-img-wrap:hover img {
+  transform: scale(1.04);
+}
+#{{ section_id }} .sti-center-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,26,46,0.6) 0%, transparent 50%);
+  pointer-events: none;
+}
+#{{ section_id }} .sti-center-cta {
+  text-align: center;
+  width: 100%;
+}
+
+/* ── Badge (floating circle) ──────────────────────────── */
+#{{ section_id }} .sti-badge-circle {
+  position: absolute;
+  bottom: -2.4rem;
+  right: -1.8rem;
+  width: clamp(7rem, 10vw, 11rem);
+  height: clamp(7rem, 10vw, 11rem);
+  border-radius: 50%;
+  border: 3px solid var(--sti-accent);
+  overflow: hidden;
+  box-shadow: 0 0 0 6px rgba(7,209,110,0.12);
+  z-index: 15;
+  background: var(--sti-card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+#{{ section_id }} .sti-badge-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#{{ section_id }} .sti-badge-circle .sti-badge-fallback {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.65rem, 0.9vw, 0.85rem);
+  font-weight: 700;
+  color: var(--sti-accent);
+  text-align: center;
+  padding: 0.6rem;
+  line-height: 1.25;
+}
+
+/* ── Image card ─────────────────────────────────────────── */
+#{{ section_id }} .sti-img-card {
+  position: relative;
+  border-radius: var(--bl-radius-md, 16px);
+  overflow: hidden;
+  will-change: transform;
+  transition: transform 0.4s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1)),
+              box-shadow 0.4s ease;
+}
+#{{ section_id }} .sti-img-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+#{{ section_id }} .sti-img-card--tall img { aspect-ratio: 3/4; }
+#{{ section_id }} .sti-img-card--wide img { aspect-ratio: 4/3; }
+#{{ section_id }} .sti-img-card--square img { aspect-ratio: 1/1; }
+#{{ section_id }} .sti-img-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+}
+
+/* ── Testimonial card ───────────────────────────────────── */
+#{{ section_id }} .sti-card {
+  background: var(--sti-card-bg);
+  border: 1px solid var(--sti-card-border);
+  border-radius: var(--bl-radius-md, 16px);
+  padding: clamp(1.6rem, 2.5vw, 2.4rem);
+  will-change: transform;
+  transition: background 0.35s ease, border-color 0.35s ease,
+              transform 0.4s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1)),
+              box-shadow 0.4s ease;
+}
+#{{ section_id }} .sti-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+}
+#{{ section_id }} .sti-card-stars {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+#{{ section_id }} .sti-card-stars svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: var(--sti-accent);
+}
+#{{ section_id }} .sti-card-quote {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.3rem, 1.4vw, 1.55rem);
+  line-height: 1.65;
+  color: var(--sti-text);
+  margin-bottom: 1.4rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+#{{ section_id }} .sti-card-author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+#{{ section_id }} .sti-card-avatar {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--sti-card-border);
+}
+#{{ section_id }} .sti-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#{{ section_id }} .sti-card-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--sti-accent), #336870);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #001a2e;
+}
+#{{ section_id }} .sti-card-name {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--sti-text);
+  line-height: 1.2;
+}
+#{{ section_id }} .sti-card-meta {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1rem, 1.1vw, 1.2rem);
+  color: var(--sti-muted);
+  line-height: 1.3;
+}
+#{{ section_id }} .sti-card-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.9rem;
+  border-radius: 99px;
+  background: rgba(7,209,110,0.12);
+  color: var(--sti-accent);
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.9rem, 1vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+/* ── Reveal animations ──────────────────────────────────── */
+#{{ section_id }} .sti-reveal {
+  opacity: 0;
+  transform: translateY(36px) scale(0.97);
+  will-change: transform, opacity;
+  transition: opacity 0.7s ease, transform 0.7s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1));
+}
+#{{ section_id }} .sti-reveal--left {
+  opacity: 0;
+  transform: translateX(-40px) translateY(16px);
+  will-change: transform, opacity;
+  transition: opacity 0.7s ease, transform 0.7s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1));
+}
+#{{ section_id }} .sti-reveal--right {
+  opacity: 0;
+  transform: translateX(40px) translateY(16px);
+  will-change: transform, opacity;
+  transition: opacity 0.7s ease, transform 0.7s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1));
+}
+#{{ section_id }} .sti-reveal.is-visible,
+#{{ section_id }} .sti-reveal--left.is-visible,
+#{{ section_id }} .sti-reveal--right.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger delays */
+#{{ section_id }} .sti-col > *:nth-child(1) { transition-delay: 0s; }
+#{{ section_id }} .sti-col > *:nth-child(2) { transition-delay: 0.1s; }
+#{{ section_id }} .sti-col > *:nth-child(3) { transition-delay: 0.2s; }
+#{{ section_id }} .sti-col > *:nth-child(4) { transition-delay: 0.3s; }
+#{{ section_id }} .sti-col > *:nth-child(5) { transition-delay: 0.4s; }
+#{{ section_id }} .sti-col > *:nth-child(6) { transition-delay: 0.5s; }
+
+/* Shopify editor override */
+#{{ section_id }}.is-visible .sti-reveal,
+#{{ section_id }}.is-visible .sti-reveal--left,
+#{{ section_id }}.is-visible .sti-reveal--right,
+.shopify-design-mode #{{ section_id }} .sti-reveal,
+.shopify-design-mode #{{ section_id }} .sti-reveal--left,
+.shopify-design-mode #{{ section_id }} .sti-reveal--right {
+  opacity: 1;
+  transform: none;
+}
+
+/* Badge spin anim */
+@keyframes sti-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+#{{ section_id }} .sti-badge-circle {
+  animation: sti-spin-slow 18s linear infinite;
+}
+#{{ section_id }} .sti-badge-circle img,
+#{{ section_id }} .sti-badge-circle .sti-badge-fallback {
+  animation: sti-spin-slow 18s linear infinite reverse;
+}
+
+/* ── Mobile padding override ────────────────────────────── */
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Tablet layout (max 1024px) ─────────────────────────── */
+@media (max-width: 1024px) {
+  #{{ section_id }} .sti-layout {
+    grid-template-columns: 1fr 1.1fr;
+  }
+  #{{ section_id }} .sti-col--right {
+    display: none;
+  }
+}
+
+/* ── Mobile layout (max 768px) ──────────────────────────── */
+@media (max-width: 768px) {
+  #{{ section_id }} .sti-layout {
+    grid-template-columns: 1fr;
+    gap: 2.4rem;
+  }
+  #{{ section_id }} .sti-col--right {
+    display: flex;
+  }
+  #{{ section_id }} .sti-col--center {
+    position: static;
+    order: -1;
+  }
+  #{{ section_id }} .sti-col--left {
+    order: 1;
+  }
+  #{{ section_id }} .sti-col--right {
+    order: 2;
+  }
+  #{{ section_id }} .sti-center-img-wrap {
+    aspect-ratio: 4/3;
+  }
+}
+
+/* ── Small mobile (max 480px) ───────────────────────────── */
+@media (max-width: 480px) {
+  #{{ section_id }} .sti-heading {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+  #{{ section_id }} .sti-badge-circle {
+    width: 6rem;
+    height: 6rem;
+    bottom: -1.8rem;
+    right: -1rem;
+  }
+  #{{ section_id }} .sti-center-cta a {
+    width: 100%;
+    display: block;
+    text-align: center;
+  }
+}
+
+/* ── Image hover testimonial overlay ────────────────────── */
+#{{ section_id }} .sti-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 14, 28, 0.80);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+  display: flex;
+  padding: clamp(1.2rem, 2vw, 1.8rem);
+  z-index: 5;
+}
+#{{ section_id }} .sti-img-overlay--top    { align-items: flex-start; }
+#{{ section_id }} .sti-img-overlay--center { align-items: center; }
+#{{ section_id }} .sti-img-overlay--bottom { align-items: flex-end; }
+
+#{{ section_id }} .sti-img-card:hover .sti-img-overlay,
+#{{ section_id }} .sti-center-img-wrap:hover .sti-img-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Touch devices: overlay always at partial opacity so content is accessible */
+@media (hover: none) {
+  #{{ section_id }} .sti-img-overlay {
+    opacity: 0.88;
+    visibility: visible;
+  }
+}
+
+#{{ section_id }} .sti-overlay-inner { width: 100%; }
+
+#{{ section_id }} .sti-overlay-stars {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+#{{ section_id }} .sti-overlay-stars svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: #07d16e;
+}
+
+#{{ section_id }} .sti-overlay-quote {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.2rem, 1.35vw, 1.45rem);
+  line-height: 1.6;
+  color: #eaf4f5;
+  margin-bottom: 1rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#{{ section_id }} .sti-overlay-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#{{ section_id }} .sti-overlay-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #07d16e;
+}
+#{{ section_id }} .sti-overlay-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#{{ section_id }} .sti-overlay-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #07d16e, #336870);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #001a2e;
+}
+
+#{{ section_id }} .sti-overlay-name {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1.2vw, 1.3rem);
+  color: #eaf4f5;
+  line-height: 1.2;
+}
+#{{ section_id }} .sti-overlay-meta {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(0.95rem, 1.05vw, 1.15rem);
+  color: rgba(234,244,245,0.65);
+  line-height: 1.3;
+}
+
+/* ── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .sti-reveal,
+  #{{ section_id }} .sti-reveal--left,
+  #{{ section_id }} .sti-reveal--right,
+  #{{ section_id }} .sti-img-card,
+  #{{ section_id }} .sti-card,
+  #{{ section_id }} .sti-center-img-wrap img {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  #{{ section_id }} .sti-badge-circle {
+    animation: none;
+  }
+  #{{ section_id }} .sti-badge-circle img,
+  #{{ section_id }} .sti-badge-circle .sti-badge-fallback {
+    animation: none;
+  }
+}
+</style>
+
+<!-- ── Section root ─────────────────────────────────────── -->
+<section
+  id="{{ section_id }}"
+  style="padding-top: {{ pt_desk }}px; padding-bottom: {{ pb_desk }}px;"
+>
+
+  <!-- Background media -->
+  {% if bg_type == 'image' and bg_image %}
+    <div class="sti-bg-media">
+      {{ bg_image | image_url: width: 2000 | image_tag: loading: 'lazy', alt: '' }}
+      {% if bg_overlay %}<div class="sti-bg-overlay"></div>{% endif %}
+    </div>
+  {% elsif bg_type == 'video' and bg_video_url != '' %}
+    <div class="sti-bg-media">
+      <video autoplay muted loop playsinline aria-hidden="true">
+        <source src="{{ bg_video_url }}" type="video/mp4">
+      </video>
+      {% if bg_overlay %}<div class="sti-bg-overlay"></div>{% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Decorative glow blobs -->
+  <div class="sti-glow sti-glow--green" aria-hidden="true"></div>
+  <div class="sti-glow sti-glow--teal"  aria-hidden="true"></div>
+
+  <!-- Content wrapper -->
+  <div class="sti-wrap">
+
+    <!-- Section header -->
+    <header class="sti-header sti-reveal">
+      {% if section_eyebrow != blank %}
+        <p class="sti-eyebrow">{{ section_eyebrow }}</p>
+      {% endif %}
+      {% if section_heading != blank %}
+        <h2 class="sti-heading">{{ section_heading }}</h2>
+      {% endif %}
+      {% if section_subheading != blank %}
+        <p class="sti-subheading">{{ section_subheading }}</p>
+      {% endif %}
+    </header>
+
+    <!-- 3-column layout -->
+    <div class="sti-layout" id="{{ section_id }}-layout">
+
+      <!-- ── Left column ──────────────────────────────── -->
+      <div class="sti-col sti-col--left" id="{{ section_id }}-col-left">
+        {% for block in section.blocks %}
+          {% if block.type == 'left_image' %}
+            <div class="sti-img-card sti-img-card--{{ block.settings.image_ratio | default: 'tall' }} sti-reveal--left" {{ block.shopify_attributes }}>
+              {% if block.settings.image %}
+                {{ block.settings.image | image_url: width: 800 | image_tag: loading: 'lazy', alt: block.settings.image.alt | default: '' }}
+              {% else %}
+                <div style="background: linear-gradient(135deg,#0a2236,#336870); aspect-ratio:3/4; width:100%;"></div>
+              {% endif %}
+              {% if block.settings.enable_hover_testimonial %}
+                <div class="sti-img-overlay sti-img-overlay--{{ block.settings.hover_position | default: 'bottom' }}" aria-hidden="true">
+                  <div class="sti-overlay-inner">
+                    {% if block.settings.hover_rating > 0 %}
+                      <div class="sti-overlay-stars" aria-label="{{ block.settings.hover_rating }} out of 5 stars">
+                        {% for i in (1..block.settings.hover_rating) %}
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                    {% if block.settings.hover_quote != blank %}
+                      <p class="sti-overlay-quote">{{ block.settings.hover_quote }}</p>
+                    {% endif %}
+                    {% if block.settings.hover_name != blank or block.settings.hover_avatar %}
+                      <div class="sti-overlay-author">
+                        <div class="sti-overlay-avatar">
+                          {% if block.settings.hover_avatar %}
+                            {{ block.settings.hover_avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: block.settings.hover_name }}
+                          {% else %}
+                            <div class="sti-overlay-avatar-fallback">{{ block.settings.hover_name | slice: 0 | upcase }}</div>
+                          {% endif %}
+                        </div>
+                        <div>
+                          {% if block.settings.hover_name != blank %}<p class="sti-overlay-name">{{ block.settings.hover_name }}</p>{% endif %}
+                          {% if block.settings.hover_meta != blank %}<p class="sti-overlay-meta">{{ block.settings.hover_meta }}</p>{% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          {% elsif block.type == 'left_testimonial' %}
+            <div class="sti-card sti-reveal--left" {{ block.shopify_attributes }}>
+              {% if block.settings.tag != blank %}
+                <span class="sti-card-tag">{{ block.settings.tag }}</span>
+              {% endif %}
+              <div class="sti-card-stars" aria-label="{{ block.settings.rating | default: 5 }} out of 5 stars">
+                {% assign stars = block.settings.rating | default: 5 %}
+                {% for i in (1..5) %}
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {% endfor %}
+              </div>
+              <p class="sti-card-quote">{{ block.settings.quote | default: '"BurnLab completely changed my training. Best investment I have made."' }}</p>
+              <div class="sti-card-author">
+                <div class="sti-card-avatar">
+                  {% if block.settings.avatar %}
+                    {{ block.settings.avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: block.settings.author_name }}
+                  {% else %}
+                    <div class="sti-card-avatar-fallback">{{ block.settings.author_name | default: 'A' | slice: 0 }}</div>
+                  {% endif %}
+                </div>
+                <div>
+                  <p class="sti-card-name">{{ block.settings.author_name | default: 'Alex R.' }}</p>
+                  <p class="sti-card-meta">{{ block.settings.author_meta | default: 'Home Gym Athlete' }}</p>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- ── Center column ────────────────────────────── -->
+      <div class="sti-col sti-col--center">
+        <div class="sti-center-img-wrap sti-reveal">
+          {% if center_image %}
+            {{ center_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: center_image.alt | default: section_heading }}
+          {% else %}
+            <div style="background: linear-gradient(160deg, #001a2e 0%, #336870 100%); width:100%; height:100%; min-height:50rem;"></div>
+          {% endif %}
+          <div class="sti-center-gradient"></div>
+
+          {% if section.settings.center_enable_hover_testimonial %}
+            <div class="sti-img-overlay sti-img-overlay--{{ section.settings.center_hover_position | default: 'bottom' }}" aria-hidden="true">
+              <div class="sti-overlay-inner">
+                {% if section.settings.center_hover_rating > 0 %}
+                  <div class="sti-overlay-stars" aria-label="{{ section.settings.center_hover_rating }} out of 5 stars">
+                    {% for i in (1..section.settings.center_hover_rating) %}
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {% if section.settings.center_hover_quote != blank %}
+                  <p class="sti-overlay-quote">{{ section.settings.center_hover_quote }}</p>
+                {% endif %}
+                {% if section.settings.center_hover_name != blank or section.settings.center_hover_avatar %}
+                  <div class="sti-overlay-author">
+                    <div class="sti-overlay-avatar">
+                      {% if section.settings.center_hover_avatar %}
+                        {{ section.settings.center_hover_avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: section.settings.center_hover_name }}
+                      {% else %}
+                        <div class="sti-overlay-avatar-fallback">{{ section.settings.center_hover_name | slice: 0 | upcase }}</div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      {% if section.settings.center_hover_name != blank %}<p class="sti-overlay-name">{{ section.settings.center_hover_name }}</p>{% endif %}
+                      {% if section.settings.center_hover_meta != blank %}<p class="sti-overlay-meta">{{ section.settings.center_hover_meta }}</p>{% endif %}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Floating badge -->
+          <div class="sti-badge-circle">
+            {% if center_badge_image %}
+              {{ center_badge_image | image_url: width: 220 | image_tag: loading: 'lazy', alt: center_badge_text }}
+            {% else %}
+              <span class="sti-badge-fallback">{{ center_badge_text }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- CTA -->
+        {% if cta_label != blank %}
+          <div class="sti-center-cta sti-reveal">
+            <a href="{{ cta_url }}" class="bl-btn-pill bl-btn-pill--green">{{ cta_label }}</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ── Right column ──────────────────────────────── -->
+      <div class="sti-col sti-col--right" id="{{ section_id }}-col-right">
+        {% for block in section.blocks %}
+          {% if block.type == 'right_image' %}
+            <div class="sti-img-card sti-img-card--{{ block.settings.image_ratio | default: 'wide' }} sti-reveal--right" {{ block.shopify_attributes }}>
+              {% if block.settings.image %}
+                {{ block.settings.image | image_url: width: 800 | image_tag: loading: 'lazy', alt: block.settings.image.alt | default: '' }}
+              {% else %}
+                <div style="background: linear-gradient(135deg,#336870,#0a2236); aspect-ratio:4/3; width:100%;"></div>
+              {% endif %}
+              {% if block.settings.enable_hover_testimonial %}
+                <div class="sti-img-overlay sti-img-overlay--{{ block.settings.hover_position | default: 'bottom' }}" aria-hidden="true">
+                  <div class="sti-overlay-inner">
+                    {% if block.settings.hover_rating > 0 %}
+                      <div class="sti-overlay-stars" aria-label="{{ block.settings.hover_rating }} out of 5 stars">
+                        {% for i in (1..block.settings.hover_rating) %}
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                    {% if block.settings.hover_quote != blank %}
+                      <p class="sti-overlay-quote">{{ block.settings.hover_quote }}</p>
+                    {% endif %}
+                    {% if block.settings.hover_name != blank or block.settings.hover_avatar %}
+                      <div class="sti-overlay-author">
+                        <div class="sti-overlay-avatar">
+                          {% if block.settings.hover_avatar %}
+                            {{ block.settings.hover_avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: block.settings.hover_name }}
+                          {% else %}
+                            <div class="sti-overlay-avatar-fallback">{{ block.settings.hover_name | slice: 0 | upcase }}</div>
+                          {% endif %}
+                        </div>
+                        <div>
+                          {% if block.settings.hover_name != blank %}<p class="sti-overlay-name">{{ block.settings.hover_name }}</p>{% endif %}
+                          {% if block.settings.hover_meta != blank %}<p class="sti-overlay-meta">{{ block.settings.hover_meta }}</p>{% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          {% elsif block.type == 'right_testimonial' %}
+            <div class="sti-card sti-reveal--right" {{ block.shopify_attributes }}>
+              {% if block.settings.tag != blank %}
+                <span class="sti-card-tag">{{ block.settings.tag }}</span>
+              {% endif %}
+              <div class="sti-card-stars" aria-label="{{ block.settings.rating | default: 5 }} out of 5 stars">
+                {% assign stars = block.settings.rating | default: 5 %}
+                {% for i in (1..5) %}
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {% endfor %}
+              </div>
+              <p class="sti-card-quote">{{ block.settings.quote | default: '"The quality is unmatched. My home gym is now my favourite place."' }}</p>
+              <div class="sti-card-author">
+                <div class="sti-card-avatar">
+                  {% if block.settings.avatar %}
+                    {{ block.settings.avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: block.settings.author_name }}
+                  {% else %}
+                    <div class="sti-card-avatar-fallback">{{ block.settings.author_name | default: 'J' | slice: 0 }}</div>
+                  {% endif %}
+                </div>
+                <div>
+                  <p class="sti-card-name">{{ block.settings.author_name | default: 'Jordan M.' }}</p>
+                  <p class="sti-card-meta">{{ block.settings.author_meta | default: 'Powerlifter' }}</p>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+    </div><!-- /.sti-layout -->
+  </div><!-- /.sti-wrap -->
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+(function () {
+  var SECTION = document.getElementById('{{ section_id }}');
+  if (!SECTION) return;
+
+  /* ── Theme color maps ─────────────────────────────────── */
+  var STI_DARK = {
+    bg:          '{{ bg_dark }}',
+    text:        '{{ text_dark }}',
+    accent:      '{{ accent_dark }}',
+    muted:       '{{ muted_dark }}',
+    cardBg:      '{{ card_bg_dark }}',
+    cardBorder:  '{{ card_border_dark }}'
+  };
+  var STI_LIGHT = {
+    bg:          '{{ bg_light }}',
+    text:        '{{ text_light }}',
+    accent:      '{{ accent_light }}',
+    muted:       '{{ muted_light }}',
+    cardBg:      '{{ card_bg_light }}',
+    cardBorder:  '{{ card_border_light }}'
+  };
+
+  function applyTheme() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var c = isLight ? STI_LIGHT : STI_DARK;
+    SECTION.style.setProperty('--sti-bg',          c.bg);
+    SECTION.style.setProperty('--sti-text',        c.text);
+    SECTION.style.setProperty('--sti-accent',      c.accent);
+    SECTION.style.setProperty('--sti-muted',       c.muted);
+    SECTION.style.setProperty('--sti-card-bg',     c.cardBg);
+    SECTION.style.setProperty('--sti-card-border', c.cardBorder);
+    SECTION.style.backgroundColor = c.bg;
+    SECTION.style.color = c.text;
+  }
+
+  applyTheme();
+  var themeObs = new MutationObserver(applyTheme);
+  themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ── Scroll-reveal IntersectionObserver ───────────────── */
+  var revealObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  SECTION.querySelectorAll('.sti-reveal, .sti-reveal--left, .sti-reveal--right').forEach(function(el) {
+    revealObs.observe(el);
+  });
+
+  /* ── Parallax — left col drifts up, right col drifts down */
+  {% if section.settings.enable_parallax %}
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReducedMotion) {
+    var colLeft  = document.getElementById('{{ section_id }}-col-left');
+    var colRight = document.getElementById('{{ section_id }}-col-right');
+    var layout   = document.getElementById('{{ section_id }}-layout');
+    var ticking  = false;
+    var STRENGTH = 0.12;
+
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(function() {
+          if (!layout) { ticking = false; return; }
+          var rect   = layout.getBoundingClientRect();
+          var vH     = window.innerHeight;
+          var center = rect.top + rect.height / 2;
+          var progress = (vH / 2 - center) / (vH / 2 + rect.height / 2);
+          var shift  = progress * rect.height * STRENGTH;
+          if (colLeft)  colLeft.style.transform  = 'translateY(' + (-shift) + 'px)';
+          if (colRight) colRight.style.transform = 'translateY(' + ( shift) + 'px)';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+  {% endif %}
+
+  /* ── Badge pulse on center image hover ───────────────── */
+  var badge = SECTION.querySelector('.sti-badge-circle');
+  var centerWrap = SECTION.querySelector('.sti-center-img-wrap');
+  if (badge && centerWrap) {
+    centerWrap.addEventListener('mouseenter', function() {
+      badge.style.boxShadow = '0 0 0 10px rgba(7,209,110,0.18), 0 0 32px rgba(7,209,110,0.25)';
+    });
+    centerWrap.addEventListener('mouseleave', function() {
+      badge.style.boxShadow = '0 0 0 6px rgba(7,209,110,0.12)';
+    });
+  }
+
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Scroll Testimonial Images",
+  "tag": "section",
+  "class": "burnlab-scroll-testimonial-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow Label",
+      "default": "What Our Athletes Say"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Real Results. Real People."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Built for those who push limits every single day."
+    },
+    {
+      "type": "header",
+      "content": "Center Column"
+    },
+    {
+      "type": "image_picker",
+      "id": "center_image",
+      "label": "Center Hero Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "center_badge_image",
+      "label": "Badge Circle Image"
+    },
+    {
+      "type": "text",
+      "id": "center_badge_text",
+      "label": "Badge Text (if no image)",
+      "default": "5000+ Happy Athletes"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Button Label",
+      "default": "Shop Equipment"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Button URL"
+    },
+    {
+      "type": "header",
+      "content": "Center Image Hover Testimonial"
+    },
+    {
+      "type": "checkbox",
+      "id": "center_enable_hover_testimonial",
+      "label": "Enable Hover Testimonial on Center Image",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "center_hover_position",
+      "label": "Testimonial Position",
+      "options": [
+        { "value": "top",    "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "bottom"
+    },
+    {
+      "type": "range",
+      "id": "center_hover_rating",
+      "label": "Star Rating",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 5,
+      "info": "Set to 0 to hide stars"
+    },
+    {
+      "type": "textarea",
+      "id": "center_hover_quote",
+      "label": "Testimonial Quote",
+    },
+    {
+      "type": "image_picker",
+      "id": "center_hover_avatar",
+      "label": "User Avatar"
+    },
+    {
+      "type": "text",
+      "id": "center_hover_name",
+      "label": "User Name",
+    },
+    {
+      "type": "text",
+      "id": "center_hover_meta",
+      "label": "User Role or Location",
+    },
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "Background Type",
+      "options": [
+        { "value": "color", "label": "Solid Color" },
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "color"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "Background Image"
+    },
+    {
+      "type": "text",
+      "id": "bg_video_url",
+      "label": "Background Video URL (MP4)",
+      "info": "Direct .mp4 URL. Used only when Background Type is Video."
+    },
+    {
+      "type": "checkbox",
+      "id": "bg_overlay",
+      "label": "Show Dark Overlay on Background Media",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colors - Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Card Background",
+      "default": "#0a2236"
+    },
+    {
+      "type": "color",
+      "id": "card_border_dark",
+      "label": "Card Border",
+      "default": "#1a3a50"
+    },
+    {
+      "type": "header",
+      "content": "Colors - Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Card Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "card_border_light",
+      "label": "Card Border",
+      "default": "#c8dde5"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading Size",
+      "min": 28,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "sub_size",
+      "label": "Subheading Size",
+      "min": 14,
+      "max": 28,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable Parallax Scroll Effect",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "left_image",
+      "name": "Left Column - Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "image_ratio",
+          "label": "Image Ratio",
+          "options": [
+            { "value": "tall",   "label": "Tall (3:4)" },
+            { "value": "wide",   "label": "Wide (4:3)" },
+            { "value": "square", "label": "Square (1:1)" }
+          ],
+          "default": "tall"
+        },
+        {
+          "type": "header",
+          "content": "Hover Testimonial"
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_hover_testimonial",
+          "label": "Enable Hover Testimonial",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "hover_position",
+          "label": "Testimonial Position",
+          "options": [
+            { "value": "top",    "label": "Top" },
+            { "value": "center", "label": "Center" },
+            { "value": "bottom", "label": "Bottom" }
+          ],
+          "default": "bottom"
+        },
+        {
+          "type": "range",
+          "id": "hover_rating",
+          "label": "Star Rating",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "info": "Set to 0 to hide stars"
+        },
+        {
+          "type": "textarea",
+          "id": "hover_quote",
+          "label": "Testimonial Quote",
+        },
+        {
+          "type": "image_picker",
+          "id": "hover_avatar",
+          "label": "User Avatar"
+        },
+        {
+          "type": "text",
+          "id": "hover_name",
+          "label": "User Name",
+        },
+        {
+          "type": "text",
+          "id": "hover_meta",
+          "label": "User Role or Location",
+        }
+      ]
+    },
+    {
+      "type": "left_testimonial",
+      "name": "Left Column - Testimonial",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Tag Label",
+          "default": "Verified Purchase"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Star Rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "Quote",
+          "default": "BurnLab completely changed my training. Best investment I have made."
+        },
+        {
+          "type": "image_picker",
+          "id": "avatar",
+          "label": "Author Avatar"
+        },
+        {
+          "type": "text",
+          "id": "author_name",
+          "label": "Author Name",
+          "default": "Alex R."
+        },
+        {
+          "type": "text",
+          "id": "author_meta",
+          "label": "Author Role or Location",
+          "default": "Home Gym Athlete"
+        }
+      ]
+    },
+    {
+      "type": "right_image",
+      "name": "Right Column - Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "image_ratio",
+          "label": "Image Ratio",
+          "options": [
+            { "value": "tall",   "label": "Tall (3:4)" },
+            { "value": "wide",   "label": "Wide (4:3)" },
+            { "value": "square", "label": "Square (1:1)" }
+          ],
+          "default": "wide"
+        },
+        {
+          "type": "header",
+          "content": "Hover Testimonial"
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_hover_testimonial",
+          "label": "Enable Hover Testimonial",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "hover_position",
+          "label": "Testimonial Position",
+          "options": [
+            { "value": "top",    "label": "Top" },
+            { "value": "center", "label": "Center" },
+            { "value": "bottom", "label": "Bottom" }
+          ],
+          "default": "bottom"
+        },
+        {
+          "type": "range",
+          "id": "hover_rating",
+          "label": "Star Rating",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "info": "Set to 0 to hide stars"
+        },
+        {
+          "type": "textarea",
+          "id": "hover_quote",
+          "label": "Testimonial Quote",
+        },
+        {
+          "type": "image_picker",
+          "id": "hover_avatar",
+          "label": "User Avatar"
+        },
+        {
+          "type": "text",
+          "id": "hover_name",
+          "label": "User Name",
+        },
+        {
+          "type": "text",
+          "id": "hover_meta",
+          "label": "User Role or Location",
+        }
+      ]
+    },
+    {
+      "type": "right_testimonial",
+      "name": "Right Col - Testimonial",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Tag Label",
+          "default": "Top Reviewer"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Star Rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "Quote",
+          "default": "The quality is unmatched. My home gym is now my favourite place."
+        },
+        {
+          "type": "image_picker",
+          "id": "avatar",
+          "label": "Author Avatar"
+        },
+        {
+          "type": "text",
+          "id": "author_name",
+          "label": "Author Name",
+          "default": "Jordan M."
+        },
+        {
+          "type": "text",
+          "id": "author_meta",
+          "label": "Author Role or Location",
+          "default": "Powerlifter"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scroll Testimonial Images",
+      "blocks": [
+        { "type": "left_image" },
+        { "type": "left_testimonial" },
+        { "type": "left_image" },
+        { "type": "right_testimonial" },
+        { "type": "right_image" },
+        { "type": "right_testimonial" }
+      ]
+    }
+  ]
+}
+{% endschema %}

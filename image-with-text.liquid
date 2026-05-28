@@ -1,0 +1,1538 @@
+{% comment %}
+  ============================================================
+  BURNLAB — IMAGE WITH TEXT
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id       = 'burnlab-iwt-' | append: section.id
+  assign main_image       = section.settings.main_image
+  assign eyebrow          = section.settings.eyebrow          | default: 'Built for Performance'
+  assign heading          = section.settings.heading          | default: '<p>Engineered For Real Results.</p>'
+  assign body_text        = section.settings.body_text        | default: '<p>Premium home gym equipment that delivers professional performance. Every product is designed with precision, built to last, and priced for real people.</p>'
+  assign subtext          = section.settings.subtext          | default: ''
+  assign cta1_label       = section.settings.cta1_label       | default: 'Shop Now'
+  assign cta1_url         = section.settings.cta1_url
+  assign cta1_style       = section.settings.cta1_style       | default: 'primary'
+  assign show_cta2        = section.settings.show_cta2
+  assign cta2_label       = section.settings.cta2_label       | default: 'Learn More'
+  assign cta2_url         = section.settings.cta2_url
+  assign cta2_style       = section.settings.cta2_style       | default: 'outline'
+  assign image_position   = section.settings.image_position   | default: 'left'
+  assign layout_type      = section.settings.layout_type      | default: 'boxed'
+  assign img_width_pct    = section.settings.img_width_pct    | default: 50
+  assign section_min_h    = section.settings.section_min_height | default: 560
+  assign img_mobile_h     = section.settings.img_mobile_height  | default: 320
+  assign img_radius       = section.settings.img_radius       | default: 16
+  assign img_frame_style  = section.settings.img_frame_style  | default: 'none'
+  assign img_fit          = section.settings.img_fit          | default: 'cover'
+  assign enable_parallax  = section.settings.enable_parallax
+  assign parallax_speed   = section.settings.parallax_speed   | default: 40
+  assign enable_curtain   = section.settings.enable_curtain
+  assign curtain_color    = section.settings.curtain_color    | default: '#07d16e'
+  assign show_float_badge = section.settings.show_float_badge
+  assign float_badge_num  = section.settings.float_badge_num  | default: '5K+'
+  assign float_badge_text = section.settings.float_badge_text | default: 'Happy Customers'
+  assign float_badge_pos  = section.settings.float_badge_pos  | default: 'bottom-right'
+  assign content_align    = section.settings.content_align    | default: 'left'
+  assign bg_type          = section.settings.bg_type          | default: 'navy'
+  assign bg_custom        = section.settings.bg_custom        | default: '#001a2e'
+  assign text_color       = section.settings.text_color       | default: '#eaf4f5'
+  assign accent_color     = section.settings.accent_color     | default: '#07d16e'
+  assign heading_size     = section.settings.heading_size     | default: 52
+  assign body_size        = section.settings.body_size        | default: 16
+  assign enable_grain     = section.settings.enable_grain
+  assign enable_glows     = section.settings.enable_glows
+  assign enable_anim         = section.settings.enable_animations
+  assign media_type          = section.settings.media_type | default: 'image'
+  assign main_video          = section.settings.main_video
+  assign video_poster        = section.settings.video_poster
+  assign enable_video_scroll = section.settings.enable_video_scroll
+  assign video_smoothness    = section.settings.video_smoothness | default: 5
+
+  assign can_parallax = true
+  if media_type == 'video' and enable_video_scroll
+    assign can_parallax = false
+  endif
+
+  assign parallax_extra   = parallax_speed | times: 2
+
+  if bg_type == 'pale'
+    assign resolved_bg = '#eaf4f5'
+  elsif bg_type == 'teal'
+    assign resolved_bg = '#336870'
+  elsif bg_type == 'custom'
+    assign resolved_bg = bg_custom
+  else
+    assign resolved_bg = '#001a2e'
+  endif
+
+  assign section_pt = section.settings.padding_top
+  assign section_pb = section.settings.padding_bottom
+  if layout_type == 'full'
+    assign section_pt = 0
+    assign section_pb = 0
+  endif
+-%}
+
+<style>
+  /* ── CSS VARIABLES ─────────────────────────────────────── */
+  #{{ section_id }} {
+    --bl-green:        {{ accent_color }};
+    --bl-navy:         #001a2e;
+    --bl-pale:         #eaf4f5;
+    --bl-teal:         #336870;
+    --font-primary:    'Archivo Black', sans-serif;
+    --font-secondary:  'DM Sans', sans-serif;
+    --ease-expo:       cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-back:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --section-bg:      {{ resolved_bg }};
+    --section-text:    {{ text_color }};
+    --section-accent:  {{ accent_color }};
+    --img-radius:      {{ img_radius }}px;
+    --curtain-color:   {{ curtain_color }};
+    --section-min-h:   {{ section_min_h }}px;
+    --img-fit:         {{ img_fit }};
+  }
+
+  /* ── RESET ─────────────────────────────────────────────── */
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  /* ── SECTION SHELL ──────────────────────────────────────── */
+  #{{ section_id }} {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--section-bg);
+    color: var(--section-text);
+    isolation: isolate;
+  }
+
+  /* ── GRAIN ──────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 220px;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── GLOWS ──────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+  }
+  #{{ section_id }} .iwt-glow--a {
+    width: clamp(200px, 40vw, 500px);
+    height: clamp(200px, 40vw, 500px);
+    background: var(--section-accent);
+    opacity: 0.08;
+    top: -15%;
+    {%- if image_position == 'left' -%}left: 0;{%- else -%}right: 0;{%- endif -%}
+    animation: iwtGlowA 13s ease-in-out infinite alternate;
+  }
+  #{{ section_id }} .iwt-glow--b {
+    width: clamp(150px, 28vw, 360px);
+    height: clamp(150px, 28vw, 360px);
+    background: var(--bl-teal);
+    opacity: 0.10;
+    bottom: -10%;
+    {%- if image_position == 'left' -%}right: 5%;{%- else -%}left: 5%;{%- endif -%}
+    animation: iwtGlowB 16s ease-in-out infinite alternate;
+  }
+  @keyframes iwtGlowA {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(30px,-20px) scale(1.1); }
+  }
+  @keyframes iwtGlowB {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(-20px,25px) scale(1.08); }
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-layout {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    min-height: var(--section-min-h);
+    align-items: stretch;
+  }
+
+  /* Image LEFT */
+  #{{ section_id }} .iwt-layout[data-img-pos="left"] {
+    grid-template-columns: {{ img_width_pct }}% 1fr;
+  }
+  /* Image RIGHT */
+  #{{ section_id }} .iwt-layout[data-img-pos="right"] {
+    grid-template-columns: 1fr {{ img_width_pct }}%;
+  }
+  #{{ section_id }} .iwt-layout[data-img-pos="right"] .iwt-img-col {
+    order: 2;
+  }
+  #{{ section_id }} .iwt-layout[data-img-pos="right"] .iwt-text-col {
+    order: 1;
+  }
+
+  /* Boxed: constrain to max-width */
+  #{{ section_id }} .iwt-layout--boxed {
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
+  }
+
+  /* Full-width: remove outer padding so image bleeds edge-to-edge */
+  #{{ section_id }} .iwt-layout--full {
+    width: 100%;
+  }
+
+  /* ── IMAGE COLUMN ───────────────────────────────────────── */
+  #{{ section_id }} .iwt-img-col {
+    position: relative;
+    overflow: hidden;
+    min-height: var(--section-min-h);
+  }
+
+  /* Frame style variants */
+  #{{ section_id }} .iwt-img-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  /* Boxed: apply radius to frame */
+  #{{ section_id }} .iwt-layout--boxed .iwt-img-frame {
+    border-radius: var(--img-radius);
+  }
+
+  /* Frame style: border */
+  #{{ section_id }} .iwt-img-frame--border {
+    border: 2px solid rgba(7,209,110,0.30);
+  }
+  /* Frame style: glow */
+  #{{ section_id }} .iwt-img-frame--glow {
+    box-shadow: 0 0 40px rgba(7,209,110,0.20), 0 0 80px rgba(7,209,110,0.08);
+  }
+  /* Frame style: shadow */
+  #{{ section_id }} .iwt-img-frame--shadow {
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  /* Parallax container — slightly taller to allow vertical travel */
+  #{{ section_id }} .iwt-img-inner {
+    position: absolute;
+    inset: 0;
+    top: -{{ parallax_speed }}px;
+    bottom: -{{ parallax_speed }}px;
+    will-change: transform;
+  }
+
+  #{{ section_id }} .iwt-img {
+    width: 100%;
+    height: 100%;
+    object-fit: var(--img-fit);
+    object-position: center;
+    display: block;
+  }
+
+  /* Placeholder when no image uploaded */
+  #{{ section_id }} .iwt-img-placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: var(--section-min-h);
+    background: rgba(7,209,110,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--section-accent);
+    opacity: 0.4;
+  }
+  #{{ section_id }} .iwt-img-placeholder svg {
+    width: clamp(48px, 8vw, 72px);
+    height: clamp(48px, 8vw, 72px);
+  }
+
+  /* ── CURTAIN REVEAL ─────────────────────────────────────── */
+  #{{ section_id }} .iwt-curtain {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: var(--curtain-color);
+    transform-origin: right center;
+    transition: transform 1s var(--ease-expo) 0.15s;
+    will-change: transform;
+    pointer-events: none;
+  }
+  /* Image on right: curtain slides left instead */
+  #{{ section_id }} .iwt-layout[data-img-pos="right"] .iwt-curtain {
+    transform-origin: left center;
+  }
+  /* Curtain sweeps away when frame enters viewport */
+  #{{ section_id }} .iwt-img-frame.is-visible .iwt-curtain {
+    transform: scaleX(0);
+  }
+
+  /* ── FLOATING BADGE ─────────────────────────────────────── */
+  #{{ section_id }} .iwt-float-badge {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: clamp(14px, 2vw, 20px) clamp(16px, 2.2vw, 24px);
+    background: rgba(0,26,46,0.72);
+    border: 1px solid rgba(7,209,110,0.28);
+    border-radius: 14px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    min-width: clamp(110px, 14vw, 160px);
+  }
+  #{{ section_id }} .iwt-float-badge--bottom-right { bottom: clamp(16px, 3vw, 28px); right: clamp(16px, 3vw, 28px); }
+  #{{ section_id }} .iwt-float-badge--bottom-left  { bottom: clamp(16px, 3vw, 28px); left:  clamp(16px, 3vw, 28px); }
+  #{{ section_id }} .iwt-float-badge--top-right    { top: clamp(16px, 3vw, 28px);    right: clamp(16px, 3vw, 28px); }
+  #{{ section_id }} .iwt-float-badge--top-left     { top: clamp(16px, 3vw, 28px);    left:  clamp(16px, 3vw, 28px); }
+
+  #{{ section_id }} .iwt-float-badge__num {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 2.4vw, 2.8rem);
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+    color: var(--section-accent);
+  }
+  #{{ section_id }} .iwt-float-badge__text {
+    font-family: var(--font-secondary);
+    font-size: clamp(1rem, 0.9vw, 1.1rem);
+    font-weight: 400;
+    color: rgba(234,244,245,0.70);
+    letter-spacing: 0.03em;
+    overflow-wrap: break-word;
+  }
+  /* Pulse dot on badge */
+  #{{ section_id }} .iwt-float-badge::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--section-accent);
+    animation: iwtBadgePulse 2.2s ease-in-out infinite;
+  }
+  @keyframes iwtBadgePulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(7,209,110,0.5); }
+    50%      { box-shadow: 0 0 0 6px rgba(7,209,110,0); }
+  }
+
+  /* ── TEXT COLUMN ────────────────────────────────────────── */
+  #{{ section_id }} .iwt-text-col {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Full-width: text column needs its own horizontal padding */
+  #{{ section_id }} .iwt-layout--full .iwt-text-col {
+    padding-inline: clamp(3rem, 6vw, 10rem);
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  /* Boxed: text column just needs a gap from the image */
+  #{{ section_id }} .iwt-layout--boxed[data-img-pos="left"]  .iwt-text-col { padding-left:  clamp(2.4rem, 5vw, 7rem); }
+  #{{ section_id }} .iwt-layout--boxed[data-img-pos="right"] .iwt-text-col { padding-right: clamp(2.4rem, 5vw, 7rem); }
+
+  #{{ section_id }} .iwt-text-inner {
+    width: 100%;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.4rem, 2vw, 2rem);
+  }
+
+  /* Center-aligned text */
+  #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-text-inner {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+  #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-eyebrow {
+    justify-content: center;
+  }
+  #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-cta-row {
+    justify-content: center;
+  }
+
+  /* ── EYEBROW ────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-eyebrow {
+    font-family: var(--font-secondary);
+    font-size: clamp(0.9rem, 1.1vw, 1.2rem);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--section-accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #{{ section_id }} .iwt-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 2px;
+    background: var(--section-accent);
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  /* ── HEADING ────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-heading {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    font-size: clamp(2rem, 4.5vw, {{ heading_size }}px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--section-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .iwt-heading p,
+  #{{ section_id }} .iwt-heading span,
+  #{{ section_id }} .iwt-heading strong { font-family: inherit; font-weight: inherit; }
+  #{{ section_id }} .iwt-heading em {
+    font-style: normal;
+    color: var(--section-accent);
+  }
+
+  /* ── ACCENT DIVIDER ─────────────────────────────────────── */
+  #{{ section_id }} .iwt-divider {
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--section-accent), transparent);
+    border-radius: 2px;
+    transition: width 0.9s var(--ease-expo) 0.3s;
+    will-change: width;
+  }
+  #{{ section_id }} .iwt-divider.is-visible { width: clamp(48px, 6vw, 80px); }
+  #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-divider {
+    background: linear-gradient(90deg, transparent, var(--section-accent), transparent);
+    align-self: center;
+  }
+  #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-divider.is-visible {
+    width: clamp(60px, 8vw, 100px);
+  }
+
+  /* ── BODY TEXT ──────────────────────────────────────────── */
+  #{{ section_id }} .iwt-body {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.3rem, 1.5vw, {{ body_size }}px);
+    font-weight: 400;
+    line-height: 1.72;
+    color: var(--section-text);
+    opacity: 0.80;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .iwt-body p { margin-bottom: 0.75em; }
+  #{{ section_id }} .iwt-body p:last-child { margin-bottom: 0; }
+
+  /* ── SUBTEXT ────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-subtext {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.1rem, 1.2vw, 1.3rem);
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--section-text);
+    opacity: 0.55;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* ── FEATURE LIST ───────────────────────────────────────── */
+  #{{ section_id }} .iwt-features {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.8rem, 1.2vw, 1.2rem);
+    list-style: none;
+  }
+  #{{ section_id }} .iwt-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  #{{ section_id }} .iwt-feature-dot {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(7,209,110,0.15);
+    border: 1.5px solid rgba(7,209,110,0.40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  #{{ section_id }} .iwt-feature-dot::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--section-accent);
+  }
+  #{{ section_id }} .iwt-feature-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  #{{ section_id }} .iwt-feature-heading {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.3rem, 1.4vw, 1.5rem);
+    font-weight: 600;
+    color: var(--section-text);
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .iwt-feature-text {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+    font-weight: 400;
+    color: var(--section-text);
+    opacity: 0.65;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* ── CTA ROW ────────────────────────────────────────────── */
+  #{{ section_id }} .iwt-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    margin-top: 0.4rem;
+  }
+
+  #{{ section_id }} .iwt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: clamp(12px, 1.4vw, 16px) clamp(22px, 2.5vw, 32px);
+    border-radius: 100px;
+    font-family: var(--font-secondary);
+    font-size: clamp(1.2rem, 1.1vw, 1.4rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: transform 0.28s var(--ease-back), box-shadow 0.28s ease, background 0.25s ease;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    overflow-wrap: break-word;
+    cursor: pointer;
+  }
+  #{{ section_id }} .iwt-btn:hover { transform: translateY(-3px) scale(1.02); }
+  #{{ section_id }} .iwt-btn:active { transform: translateY(0) scale(0.98); }
+
+  #{{ section_id }} .iwt-btn--primary {
+    background: var(--section-accent);
+    color: var(--bl-navy);
+    box-shadow: 0 8px 28px rgba(7,209,110,0.30);
+  }
+  #{{ section_id }} .iwt-btn--primary:hover {
+    box-shadow: 0 16px 40px rgba(7,209,110,0.40);
+  }
+  #{{ section_id }} .iwt-btn--outline {
+    background: transparent;
+    color: var(--section-text);
+    border: 1.5px solid rgba(234,244,245,0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #{{ section_id }} .iwt-btn--outline:hover {
+    border-color: var(--section-accent);
+    box-shadow: 0 0 0 1px var(--section-accent), 0 8px 24px rgba(7,209,110,0.12);
+  }
+  #{{ section_id }} .iwt-btn--navy {
+    background: var(--bl-navy);
+    color: var(--bl-pale);
+    border: 1.5px solid rgba(234,244,245,0.15);
+  }
+  #{{ section_id }} .iwt-btn--navy:hover {
+    box-shadow: 0 12px 32px rgba(0,0,0,0.30);
+  }
+  #{{ section_id }} .iwt-btn--teal {
+    background: var(--bl-teal);
+    color: var(--bl-pale);
+  }
+  #{{ section_id }} .iwt-btn--teal:hover {
+    box-shadow: 0 12px 32px rgba(51,104,112,0.40);
+  }
+
+  /* ── REVEAL ANIMATIONS ──────────────────────────────────── */
+  #{{ section_id }} .iwt-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    will-change: transform;
+    transition: opacity 0.75s var(--ease-expo), transform 0.75s var(--ease-expo);
+  }
+  #{{ section_id }} .iwt-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Floating badge reveal — scale in from small */
+  #{{ section_id }} .iwt-float-badge {
+    opacity: 0;
+    transform: scale(0.82) translateY(12px);
+    will-change: transform;
+    transition: opacity 0.65s var(--ease-back) 0.9s, transform 0.65s var(--ease-back) 0.9s;
+  }
+  #{{ section_id }} .iwt-img-frame.is-visible .iwt-float-badge {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  /* Shopify editor override */
+  #{{ section_id }}.is-visible .iwt-reveal,
+  .shopify-design-mode #{{ section_id }} .iwt-reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .shopify-design-mode #{{ section_id }} .iwt-divider {
+    width: clamp(48px, 6vw, 80px);
+  }
+  .shopify-design-mode #{{ section_id }} .iwt-img-frame .iwt-curtain {
+    transform: scaleX(0);
+  }
+  .shopify-design-mode #{{ section_id }} .iwt-float-badge {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .iwt-reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    #{{ section_id }} .iwt-divider { width: clamp(48px, 6vw, 80px); transition: none; }
+    #{{ section_id }} .iwt-curtain { transform: scaleX(0); transition: none; }
+    #{{ section_id }} .iwt-float-badge { opacity: 1; transform: none; transition: none; }
+    #{{ section_id }} .iwt-glow--a,
+    #{{ section_id }} .iwt-glow--b { animation: none; }
+    #{{ section_id }} .iwt-float-badge::before { animation: none; }
+    #{{ section_id }} .iwt-btn { transition: none; }
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    }
+    #{{ section_id }} .iwt-layout,
+    #{{ section_id }} .iwt-layout[data-img-pos="left"],
+    #{{ section_id }} .iwt-layout[data-img-pos="right"] {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+    #{{ section_id }} .iwt-img-col {
+      order: 1 !important;
+      min-height: {{ img_mobile_h }}px;
+    }
+    #{{ section_id }} .iwt-text-col {
+      order: 2 !important;
+      padding-inline: clamp(1.6rem, 5vw, 4rem) !important;
+      padding-top: clamp(2rem, 5vw, 3rem) !important;
+      padding-bottom: clamp(2rem, 5vw, 3rem) !important;
+    }
+    #{{ section_id }} .iwt-layout--full .iwt-text-col {
+      padding-top: clamp(2rem, 5vw, 3rem) !important;
+      padding-bottom: clamp(2rem, 5vw, 3rem) !important;
+    }
+    #{{ section_id }} .iwt-layout--boxed {
+      padding-inline: clamp(1.6rem, 5vw, 4rem);
+    }
+    #{{ section_id }} .iwt-layout--boxed .iwt-text-col {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    #{{ section_id }} .iwt-heading {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+    #{{ section_id }} .iwt-cta-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    #{{ section_id }} .iwt-btn {
+      justify-content: center;
+      width: 100%;
+    }
+    #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-text-inner {
+      text-align: left;
+      align-items: flex-start;
+    }
+    #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-eyebrow { justify-content: flex-start; }
+    #{{ section_id }} .iwt-text-col[data-align="center"] .iwt-cta-row { justify-content: flex-start; }
+  }
+
+  @media (max-width: 480px) {
+    #{{ section_id }} .iwt-heading {
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+    #{{ section_id }} .iwt-float-badge { display: none; }
+  }
+
+  /* ── VIDEO STYLES ───────────────────────────────────────── */
+  #{{ section_id }} .iwt-video {
+    width: 100%;
+    height: 100%;
+    object-fit: var(--img-fit);
+    object-position: center;
+    display: block;
+  }
+  #{{ section_id }} .iwt-video-progress-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    z-index: 5;
+    pointer-events: none;
+  }
+  #{{ section_id }} .iwt-video-progress-fill {
+    height: 100%;
+    background: var(--section-accent);
+    transform-origin: left center;
+    transform: scaleX(0);
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .iwt-video-progress-fill { transition: none; }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-iwt"
+  data-section-id="{{ section.id }}"
+  style="padding-top: {{ section_pt }}px; padding-bottom: {{ section_pb }}px;"
+>
+
+  {%- if enable_grain -%}
+  <div class="iwt-grain" aria-hidden="true"></div>
+  {%- endif -%}
+
+  {%- if enable_glows -%}
+  <div class="iwt-glow iwt-glow--a" aria-hidden="true"></div>
+  <div class="iwt-glow iwt-glow--b" aria-hidden="true"></div>
+  {%- endif -%}
+
+  <div class="iwt-layout iwt-layout--{{ layout_type }}" data-img-pos="{{ image_position }}">
+
+    <!-- ── IMAGE COLUMN ──────────────────────────────────── -->
+    <div class="iwt-img-col">
+      <div class="iwt-img-frame iwt-img-frame--{{ img_frame_style }}">
+
+        {%- if enable_curtain -%}
+        <div class="iwt-curtain" aria-hidden="true"></div>
+        {%- endif -%}
+
+        <div class="iwt-img-inner">
+          {%- if media_type == 'video' -%}
+            {%- if main_video != blank -%}
+              <video
+                class="iwt-video"
+                muted
+                playsinline
+                preload="auto"
+                aria-hidden="true"
+                {%- unless enable_video_scroll -%}autoplay loop{%- endunless -%}
+                {%- if video_poster != blank -%}
+                  poster="{{ video_poster | image_url: width: 1400 }}"
+                {%- endif -%}
+              >
+                {%- for source in main_video.sources -%}
+                  <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                {%- endfor -%}
+              </video>
+            {%- else -%}
+              <div class="iwt-img-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/>
+                  <path d="M24 20L48 32L24 44V20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            {%- endif -%}
+            {%- if enable_video_scroll -%}
+              <div class="iwt-video-progress-bar" aria-hidden="true">
+                <div class="iwt-video-progress-fill"></div>
+              </div>
+            {%- endif -%}
+          {%- else -%}
+            {%- if main_image != blank -%}
+            {%- assign image_sizes = '(max-width: 768px) 100vw, ' | append: img_width_pct | append: 'vw' -%}
+                {{ main_image | image_url: width: 1400 | image_tag:
+                  loading: 'eager',
+                  fetchpriority: 'high',
+                  alt: main_image.alt,
+                  class: 'iwt-img',
+                  widths: '600, 900, 1200, 1400',
+                  sizes: image_sizes
+                }}
+            {%- else -%}
+              <div class="iwt-img-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="22" cy="24" r="5" stroke="currentColor" stroke-width="2"/>
+                  <path d="M8 44L20 30L30 40L40 28L56 44" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+
+        {%- if show_float_badge -%}
+        <div class="iwt-float-badge iwt-float-badge--{{ float_badge_pos }}" aria-hidden="true">
+          <span class="iwt-float-badge__num">{{ float_badge_num }}</span>
+          <span class="iwt-float-badge__text">{{ float_badge_text }}</span>
+        </div>
+        {%- endif -%}
+
+      </div>
+    </div>
+
+    <!-- ── TEXT COLUMN ───────────────────────────────────── -->
+    <div class="iwt-text-col" data-align="{{ content_align }}">
+      <div class="iwt-text-inner">
+
+        {%- if eyebrow != blank -%}
+        <p class="iwt-eyebrow iwt-reveal">{{ eyebrow }}</p>
+        {%- endif -%}
+
+        {%- if heading != blank -%}
+        <div class="iwt-heading iwt-reveal">{{ heading }}</div>
+        {%- endif -%}
+
+        <div class="iwt-divider iwt-reveal" aria-hidden="true"></div>
+
+        {%- if body_text != blank -%}
+        <div class="iwt-body iwt-reveal">{{ body_text }}</div>
+        {%- endif -%}
+
+        {%- if subtext != blank -%}
+        <p class="iwt-subtext iwt-reveal">{{ subtext }}</p>
+        {%- endif -%}
+
+        {%- if section.blocks.size > 0 -%}
+        <ul class="iwt-features">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'feature' -%}
+            <li class="iwt-feature-item iwt-reveal" {{ block.shopify_attributes }}>
+              <div class="iwt-feature-dot" aria-hidden="true"></div>
+              <div class="iwt-feature-content">
+                {%- if block.settings.feature_heading != blank -%}
+                <span class="iwt-feature-heading">{{ block.settings.feature_heading }}</span>
+                {%- endif -%}
+                {%- if block.settings.feature_text != blank -%}
+                <span class="iwt-feature-text">{{ block.settings.feature_text }}</span>
+                {%- endif -%}
+              </div>
+            </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+        {%- endif -%}
+
+        <div class="iwt-cta-row iwt-reveal">
+          {%- if cta1_label != blank -%}
+          <a href="{{ cta1_url | default: '#' }}" class="iwt-btn iwt-btn--{{ cta1_style }}">
+            {{ cta1_label }}
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M1.5 6.5H11.5M11.5 6.5L7 2M11.5 6.5L7 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          {%- endif -%}
+          {%- if show_cta2 and cta2_label != blank -%}
+          <a href="{{ cta2_url | default: '#' }}" class="iwt-btn iwt-btn--{{ cta2_style }}">
+            {{ cta2_label }}
+          </a>
+          {%- endif -%}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% if section.settings.enable_animations %}
+<script>
+(function () {
+  'use strict';
+
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── 1. TEXT STAGGER REVEAL ─────────────────────────────── */
+  var revealEls = root.querySelectorAll('.iwt-reveal');
+  revealEls.forEach(function (el, i) {
+    if (!reducedMotion) {
+      el.style.transitionDelay = (i * 0.09) + 's';
+    }
+  });
+
+  var textObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        entry.target.addEventListener('transitionend', function cleanup() {
+          entry.target.style.transitionDelay = '';
+          entry.target.removeEventListener('transitionend', cleanup);
+        });
+        textObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(function (el) { textObserver.observe(el); });
+
+  /* ── 2. CURTAIN REVEAL on image ─────────────────────────── */
+  var imgFrame = root.querySelector('.iwt-img-frame');
+  if (imgFrame) {
+    var frameObserver = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) {
+        imgFrame.classList.add('is-visible');
+        frameObserver.disconnect();
+      }
+    }, { threshold: 0.15 });
+    frameObserver.observe(imgFrame);
+  }
+
+  /* ── 3. SCROLL PARALLAX on image ────────────────────────── */
+  {%- if enable_parallax and can_parallax -%}
+  if (!reducedMotion && imgFrame) {
+    var imgInner  = root.querySelector('.iwt-img-inner');
+    var SPEED     = {{ parallax_speed }};
+
+    function updateParallax() {
+      var rect    = imgFrame.getBoundingClientRect();
+      var viewH   = window.innerHeight;
+      var prog    = (viewH - rect.top) / (viewH + rect.height);
+      prog        = Math.max(0, Math.min(1, prog));
+      var offset  = (prog - 0.5) * SPEED * 2;
+      if (imgInner) {
+        imgInner.style.transform = 'translateY(' + offset + 'px)';
+      }
+    }
+
+    window.addEventListener('scroll', updateParallax, { passive: true });
+    updateParallax();
+  }
+  {%- endif -%}
+
+  /* ── 4. VIDEO SCROLL SCRUB ──────────────────────────────── */
+  {%- if media_type == 'video' and enable_video_scroll -%}
+  (function () {
+    var vidEl           = root.querySelector('.iwt-video');
+    var vidProgressFill = root.querySelector('.iwt-video-progress-fill');
+    var vidImgCol       = root.querySelector('.iwt-img-col');
+    if (!vidEl || !vidImgCol || reducedMotion) return;
+
+    /*
+     * Lerp on PROGRESS (0–1), never on raw time.
+     * Smoothness 1 = direct snap (lerpFactor 1.0)
+     * Smoothness 10 = cinematic slow catch-up (lerpFactor ~0.05)
+     */
+    var SMOOTHNESS     = {{ video_smoothness }};
+    var lerpFactor     = (SMOOTHNESS <= 1) ? 1.0
+                       : 1 - ((SMOOTHNESS - 1) / 9) * 0.95;
+
+    var displayProgress = 0;   /* what the video is currently showing (0–1) */
+    var targetProgress  = 0;   /* where scroll currently is (0–1)          */
+    var rafId           = null;
+    var lastSeekTime    = -1;
+    /* Skip seeks smaller than half a frame at 60fps to reduce decoder load */
+    var SEEK_THRESHOLD  = 1 / 120;
+
+    function getProgress() {
+      var r  = vidImgCol.getBoundingClientRect();
+      var vh = window.innerHeight;
+      return Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
+    }
+
+    function rafLoop() {
+      rafId = null;
+      if (!vidEl.duration || isNaN(vidEl.duration)) return;
+
+      /* Advance display progress toward scroll target */
+      if (lerpFactor >= 1) {
+        displayProgress = targetProgress;
+      } else {
+        displayProgress += (targetProgress - displayProgress) * lerpFactor;
+        if (Math.abs(targetProgress - displayProgress) < 0.00005) {
+          displayProgress = targetProgress;
+        }
+      }
+
+      var seekTo = displayProgress * vidEl.duration;
+
+      /*
+       * Only issue a seek when the change is at least SEEK_THRESHOLD.
+       * This is the key fix: avoids hammering the decoder with tiny seeks
+       * that queue up and cause the stutter cascade.
+       */
+      if (Math.abs(seekTo - lastSeekTime) >= SEEK_THRESHOLD) {
+        try { vidEl.currentTime = seekTo; } catch (e) {}
+        lastSeekTime = seekTo;
+      }
+
+      if (vidProgressFill) {
+        vidProgressFill.style.transform = 'scaleX(' + displayProgress + ')';
+      }
+
+      /* Keep the loop alive only while not yet converged */
+      if (Math.abs(targetProgress - displayProgress) > 0.00005) {
+        rafId = requestAnimationFrame(rafLoop);
+      }
+    }
+
+    function onScroll() {
+      targetProgress = getProgress();
+      if (!rafId) rafId = requestAnimationFrame(rafLoop);
+    }
+
+    function onReady() {
+      vidEl.pause();   /* ensure no auto-play attempt ever competes with scrub */
+      displayProgress = getProgress();
+      targetProgress  = displayProgress;
+      lastSeekTime    = displayProgress * vidEl.duration;
+      try { vidEl.currentTime = lastSeekTime; } catch (e) {}
+    }
+
+    /* Handle both "metadata already loaded" and "not yet loaded" */
+    vidEl.pause();
+    if (vidEl.readyState >= 1) {
+      onReady();
+    } else {
+      vidEl.addEventListener('loadedmetadata', onReady, { once: true });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+  }());
+  {%- endif -%}
+
+  /* ── 5. CLEANUP ─────────────────────────────────────────── */
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      textObserver.disconnect();
+    }
+  });
+
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Image With Text",
+  "tag": "section",
+  "class": "burnlab-iwt-section",
+  "max_blocks": 8,
+  "blocks": [
+    {
+      "type": "feature",
+      "name": "Feature Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "feature_heading",
+          "label": "Feature Heading",
+          "default": "Premium Quality"
+        },
+        {
+          "type": "text",
+          "id": "feature_text",
+          "label": "Feature Description",
+          "default": "Engineered for durability and performance."
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "select",
+      "id": "media_type",
+      "label": "Media Type",
+      "options": [
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "image"
+    },
+    {
+      "type": "image_picker",
+      "id": "main_image",
+      "label": "Section Image",
+      "info": "Used when Media Type is Image"
+    },
+    {
+      "type": "select",
+      "id": "img_fit",
+      "label": "Image Fit",
+      "options": [
+        { "value": "cover",      "label": "Cover (fills frame)"       },
+        { "value": "contain",    "label": "Contain (fits inside)"     },
+        { "value": "scale-down", "label": "Scale Down (no upscaling)" }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "range",
+      "id": "img_radius",
+      "label": "Image Corner Radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 16,
+      "info": "Applied in Boxed layout. Full-width layout has no border radius."
+    },
+    {
+      "type": "select",
+      "id": "img_frame_style",
+      "label": "Image Frame Style",
+      "options": [
+        { "value": "none",   "label": "None"          },
+        { "value": "border", "label": "Green Border"  },
+        { "value": "glow",   "label": "Green Glow"    },
+        { "value": "shadow", "label": "Drop Shadow"   }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "img_mobile_height",
+      "label": "Image Height on Mobile",
+      "min": 200,
+      "max": 600,
+      "step": 20,
+      "unit": "px",
+      "default": 320
+    },
+
+    {
+      "type": "header",
+      "content": "Video"
+    },
+    {
+      "type": "video",
+      "id": "main_video",
+      "label": "Video File",
+      "info": "Upload an MP4 via Shopify Files. Only used when Media Type is Video."
+    },
+    {
+      "type": "image_picker",
+      "id": "video_poster",
+      "label": "Video Poster Image",
+      "info": "Shown before the video loads. Only used when Media Type is Video."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_video_scroll",
+      "label": "Enable Scroll Effect",
+      "default": true,
+      "info": "Video scrubs forward and backward in sync with page scroll. When off, video autoplays and loops silently."
+    },
+    {
+      "type": "range",
+      "id": "video_smoothness",
+      "label": "Scroll Smoothness",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 5,
+      "info": "Higher values add a smoother delayed catch-up effect. Lower values are snappier. Only applies when Scroll Effect is enabled."
+    },
+
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow Label",
+      "default": "Built for Performance"
+    },
+    {
+      "type": "richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "<p>Engineered For Real Results.</p>",
+      "info": "Wrap words in em tags to apply accent color."
+    },
+    {
+      "type": "richtext",
+      "id": "body_text",
+      "label": "Body Text",
+      "default": "<p>Premium home gym equipment that delivers professional performance. Every product is designed with precision, built to last, and priced for real people.</p>"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Sub Text",
+      "info": "Optional smaller text below the body. Leave empty to hide."
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "label": "Content Alignment",
+      "options": [
+        { "value": "left",   "label": "Left"   },
+        { "value": "center", "label": "Center" }
+      ],
+      "default": "left"
+    },
+
+    {
+      "type": "header",
+      "content": "Primary CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta1_label",
+      "label": "Button Label",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "cta1_url",
+      "label": "Button URL"
+    },
+    {
+      "type": "select",
+      "id": "cta1_style",
+      "label": "Button Style",
+      "options": [
+        { "value": "primary", "label": "Primary (Green)"   },
+        { "value": "outline", "label": "Outline"           },
+        { "value": "navy",    "label": "Navy"              },
+        { "value": "teal",    "label": "Teal"              }
+      ],
+      "default": "primary"
+    },
+
+    {
+      "type": "header",
+      "content": "Secondary CTA"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta2",
+      "label": "Show Secondary Button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta2_label",
+      "label": "Button Label",
+      "default": "Learn More"
+    },
+    {
+      "type": "url",
+      "id": "cta2_url",
+      "label": "Button URL"
+    },
+    {
+      "type": "select",
+      "id": "cta2_style",
+      "label": "Button Style",
+      "options": [
+        { "value": "primary", "label": "Primary (Green)" },
+        { "value": "outline", "label": "Outline"         },
+        { "value": "navy",    "label": "Navy"            },
+        { "value": "teal",    "label": "Teal"            }
+      ],
+      "default": "outline"
+    },
+
+    {
+      "type": "header",
+      "content": "Floating Badge"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_float_badge",
+      "label": "Show Floating Badge on Image",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "float_badge_num",
+      "label": "Badge Number or Stat",
+      "default": "5K+"
+    },
+    {
+      "type": "text",
+      "id": "float_badge_text",
+      "label": "Badge Label",
+      "default": "Happy Customers"
+    },
+    {
+      "type": "select",
+      "id": "float_badge_pos",
+      "label": "Badge Position",
+      "options": [
+        { "value": "bottom-right", "label": "Bottom Right" },
+        { "value": "bottom-left",  "label": "Bottom Left"  },
+        { "value": "top-right",    "label": "Top Right"    },
+        { "value": "top-left",     "label": "Top Left"     }
+      ],
+      "default": "bottom-right"
+    },
+
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "layout_type",
+      "label": "Layout Type",
+      "options": [
+        { "value": "boxed", "label": "Boxed (max-width container)" },
+        { "value": "full",  "label": "Full Width (image bleeds to edge)" }
+      ],
+      "default": "boxed"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image Position",
+      "options": [
+        { "value": "left",  "label": "Left"  },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "img_width_pct",
+      "label": "Image Column Width",
+      "min": 30,
+      "max": 65,
+      "step": 5,
+      "unit": "%",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "section_min_height",
+      "label": "Minimum Section Height",
+      "min": 300,
+      "max": 900,
+      "step": 20,
+      "unit": "px",
+      "default": 560
+    },
+
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "Background Type",
+      "options": [
+        { "value": "navy",   "label": "Navy (Dark)"  },
+        { "value": "pale",   "label": "Pale (Light)" },
+        { "value": "teal",   "label": "Teal"         },
+        { "value": "custom", "label": "Custom Color" }
+      ],
+      "default": "navy"
+    },
+    {
+      "type": "color",
+      "id": "bg_custom",
+      "label": "Custom Background Color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grain",
+      "label": "Enable Grain Overlay",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glows",
+      "label": "Enable Ambient Glow Blobs",
+      "default": true
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading Size",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 52
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "label": "Body Text Size",
+      "min": 12,
+      "max": 22,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_curtain",
+      "label": "Enable Curtain Reveal on Image",
+      "default": true,
+      "info": "A colored curtain sweeps away to reveal the image when it enters the viewport."
+    },
+    {
+      "type": "color",
+      "id": "curtain_color",
+      "label": "Curtain Color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable Scroll Parallax on Image",
+      "default": true,
+      "info": "Image moves at a slightly different speed to the page scroll, creating depth."
+    },
+    {
+      "type": "range",
+      "id": "parallax_speed",
+      "label": "Parallax Intensity",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "default": 40,
+      "info": "Higher value means more movement. 40 is a natural, subtle depth effect."
+    },
+
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image With Text",
+      "category": "Image",
+      "blocks": [
+        { "type": "feature", "settings": { "feature_heading": "Premium Materials", "feature_text": "Aircraft-grade steel and reinforced composites." } },
+        { "type": "feature", "settings": { "feature_heading": "2-Year Warranty",   "feature_text": "Every product backed by our full warranty." } },
+        { "type": "feature", "settings": { "feature_heading": "Free Shipping",      "feature_text": "On all orders above Rs. 999 across India." } }
+      ]
+    }
+  ]
+}
+{% endschema %}
