@@ -101,6 +101,15 @@ body {
   background-color: var(--bl-drawer-bg) !important;
   background: var(--bl-drawer-bg) !important;
   color: var(--bl-drawer-text) !important;
+  z-index: 99999 !important;
+}
+
+/* ── Drawer overlay/backdrop — sits above page but below drawer ── */
+.menu-drawer__overlay,
+[class*="drawer__overlay"],
+[class*="overlay--drawer"],
+#mobile_menu_overlay {
+  z-index: 99998 !important;
 }
 
 /* ── Inner panels — these are the main culprit for white backgrounds.

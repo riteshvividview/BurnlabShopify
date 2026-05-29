@@ -1,0 +1,1734 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Customer Register
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Power Up Sequence — orbital bolt icon + split-field
+             slide-in + password strength meter + stripe drift +
+             energy-ring brand panel + field validation marks
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-register-' | append: section.id -%}
+
+{%- liquid
+  assign heading             = section.settings.heading             | default: 'Create Account'
+  assign subheading          = section.settings.subheading          | default: 'Already have an account?'
+  assign login_link_label    = section.settings.login_link_label    | default: 'Sign in'
+  assign eyebrow_text        = section.settings.eyebrow_text        | default: 'Join BurnLab'
+  assign brand_heading_main  = section.settings.brand_heading_main  | default: 'Build your best self.'
+  assign brand_heading_accent = section.settings.brand_heading_accent | default: 'Start today.'
+  assign brand_tagline       = section.settings.brand_tagline       | default: 'Join thousands of athletes training smarter with BurnLab.'
+  assign stat_1_value        = section.settings.stat_1_value        | default: '10,000+'
+  assign stat_1_label        = section.settings.stat_1_label        | default: 'Members'
+  assign stat_2_value        = section.settings.stat_2_value        | default: '50+'
+  assign stat_2_label        = section.settings.stat_2_label        | default: 'Products'
+  assign stat_3_value        = section.settings.stat_3_value        | default: '5-Star'
+  assign stat_3_label        = section.settings.stat_3_label        | default: 'Rated'
+  assign logo_dark           = section.settings.logo_dark
+  assign logo_light          = section.settings.logo_light
+  assign side_image          = section.settings.side_image
+  assign image_side          = section.settings.image_side          | default: 'right'
+  assign show_brand_panel    = section.settings.show_brand_panel
+  assign card_radius         = section.settings.card_radius         | default: 24
+
+  assign bg_dark             = section.settings.bg_color_dark       | default: '#000d18'
+  assign card_bg_dark        = section.settings.card_bg_dark        | default: '#001428'
+  assign text_dark           = section.settings.text_color_dark     | default: '#eaf4f5'
+  assign accent_dark         = section.settings.accent_color_dark   | default: '#07d16e'
+  assign border_dark         = section.settings.border_color_dark   | default: '#183448'
+  assign muted_dark          = text_dark | color_modify: 'alpha', 0.55
+
+  assign bg_light            = section.settings.bg_color_light      | default: '#f0f5f8'
+  assign card_bg_light       = section.settings.card_bg_light       | default: '#ffffff'
+  assign text_light          = section.settings.text_color_light    | default: '#001a2e'
+  assign accent_light        = section.settings.accent_color_light  | default: '#07d16e'
+  assign border_light        = section.settings.border_color_light  | default: '#bdd6e0'
+  assign muted_light         = text_light | color_modify: 'alpha', 0.58
+
+  assign enable_anims        = section.settings.enable_animations
+  assign enable_stripes      = section.settings.enable_stripes
+  assign enable_particles    = section.settings.enable_particles
+  assign show_strength       = section.settings.show_password_strength
+
+  assign padding_top         = section.settings.padding_top         | default: 80
+  assign padding_bottom      = section.settings.padding_bottom       | default: 80
+  assign pt_mob              = section.settings.padding_top_mobile  | default: 48
+  assign pb_mob              = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+{% style %}
+
+/* ── Reset ── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark mode tokens ── */
+#{{ section_id }} {
+  --rg-bg:          {{ bg_dark }};
+  --rg-card:        {{ card_bg_dark }};
+  --rg-text:        {{ text_dark }};
+  --rg-muted:       {{ muted_dark }};
+  --rg-accent:      {{ accent_dark }};
+  --rg-border:      {{ border_dark }};
+  --rg-glow:        rgba(7, 209, 110, 0.10);
+  --rg-ring:        rgba(7, 209, 110, 0.22);
+  --rg-input-bg:    rgba(255, 255, 255, 0.04);
+  --rg-error:       #ff5f5f;
+  --rg-warn:        #f5a623;
+  --rg-radius:      {{ card_radius }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --rg-bg:          {{ bg_light }};
+  --rg-card:        {{ card_bg_light }};
+  --rg-text:        {{ text_light }};
+  --rg-muted:       {{ muted_light }};
+  --rg-accent:      {{ accent_light }};
+  --rg-border:      {{ border_light }};
+  --rg-glow:        rgba(7, 209, 110, 0.06);
+  --rg-ring:        rgba(7, 209, 110, 0.16);
+  --rg-input-bg:    rgba(0, 26, 46, 0.04);
+}
+
+/* ── Section root ── */
+#{{ section_id }} {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--rg-bg);
+  color: var(--rg-text);
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Background layer ── */
+#{{ section_id }} .rg-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Glow blobs */
+#{{ section_id }} .rg-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+#{{ section_id }} .rg-blob--1 {
+  width: 90rem;
+  height: 90rem;
+  background: radial-gradient(ellipse, rgba(7, 209, 110, 0.06) 0%, transparent 60%);
+  top: -30%;
+  {% if image_side == 'right' %}left: -5%;{% else %}right: -5%;{% endif %}
+}
+
+#{{ section_id }} .rg-blob--2 {
+  width: 60rem;
+  height: 60rem;
+  background: radial-gradient(ellipse, rgba(51, 104, 112, 0.09) 0%, transparent 60%);
+  bottom: -25%;
+  {% if image_side == 'right' %}right: 5%;{% else %}left: 5%;{% endif %}
+}
+
+/* Diagonal stripe background */
+{% if enable_stripes %}
+#{{ section_id }} .rg-stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -52deg,
+    rgba(7, 209, 110, 0.022) 0px,
+    rgba(7, 209, 110, 0.022) 1px,
+    transparent 1px,
+    transparent 30px
+  );
+  will-change: background-position;
+}
+{% endif %}
+
+/* Floating particles host */
+#{{ section_id }} .rg-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--rg-accent);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ══════════════════════════════════════════════════
+   CONTAINER + GRID
+══════════════════════════════════════════════════ */
+#{{ section_id }} .rg-container {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+#{{ section_id }} .rg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  border-radius: var(--rg-radius);
+  overflow: hidden;
+  will-change: box-shadow;
+}
+
+{% if image_side == 'right' %}
+#{{ section_id }} .rg-brand-panel { order: 2; }
+#{{ section_id }} .rg-form-panel  { order: 1; }
+{% endif %}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .rg-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+#{{ section_id }} .rg-solo {
+  max-width: 56rem;
+  margin-inline: auto;
+  border-radius: var(--rg-radius);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════
+   BRAND PANEL
+══════════════════════════════════════════════════ */
+#{{ section_id }} .rg-brand-panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(3.2rem, 5vw, 6rem) clamp(2.4rem, 4vw, 5.2rem);
+  min-height: clamp(44rem, 60vw, 90rem);
+  background: #000d18;
+}
+
+#{{ section_id }} .rg-brand-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+#{{ section_id }} .rg-brand-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+#{{ section_id }} .rg-brand-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 10, 22, 0.42) 0%,
+    rgba(0, 20, 40, 0.90) 100%
+  );
+}
+
+/* Energy ring decoration */
+#{{ section_id }} .rg-rings {
+  position: absolute;
+  top: 50%;
+  {% if image_side == 'right' %}right: -8%;{% else %}left: -8%;{% endif %}
+  transform: translateY(-50%);
+  width: 70%;
+  aspect-ratio: 1;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.18;
+  overflow: visible;
+  will-change: transform;
+}
+
+#{{ section_id }} .rg-brand-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Eyebrow */
+#{{ section_id }} .rg-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.9rem, 1.0vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rg-accent);
+  margin-bottom: clamp(1.6rem, 2.5vw, 2.4rem);
+}
+
+#{{ section_id }} .rg-eyebrow::before {
+  content: '';
+  display: block;
+  width: 2.6rem;
+  height: 2px;
+  background: var(--rg-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Brand heading */
+#{{ section_id }} .rg-brand-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4vw, 5.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: #eaf4f5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: clamp(1.2rem, 2vw, 1.8rem);
+}
+
+#{{ section_id }} .rg-brand-heading .rg-accent-word {
+  color: var(--rg-accent);
+}
+
+/* Tagline */
+#{{ section_id }} .rg-brand-tagline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.4vw, 1.55rem);
+  line-height: 1.7;
+  color: rgba(234, 244, 245, 0.68);
+  max-width: 38rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: clamp(2.8rem, 4vw, 4rem);
+}
+
+/* Stat counters */
+#{{ section_id }} .rg-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.6rem, 3vw, 2.8rem);
+  list-style: none;
+}
+
+#{{ section_id }} .rg-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+#{{ section_id }} .rg-stat-value {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--rg-accent);
+  will-change: transform;
+}
+
+#{{ section_id }} .rg-stat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.1rem, 1.15vw, 1.3rem);
+  color: rgba(234, 244, 245, 0.6);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Vertical divider between stats */
+#{{ section_id }} .rg-stat + .rg-stat {
+  padding-left: clamp(1.6rem, 3vw, 2.8rem);
+  border-left: 1px solid rgba(7, 209, 110, 0.18);
+}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .rg-brand-panel { display: none; }
+}
+
+/* ══════════════════════════════════════════════════
+   FORM PANEL
+══════════════════════════════════════════════════ */
+#{{ section_id }} .rg-form-panel {
+  background: var(--rg-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(3.2rem, 5vw, 5.6rem) clamp(2.4rem, 5vw, 5.2rem);
+  position: relative;
+  transition: background 0.35s ease;
+}
+
+/* Top accent bar */
+#{{ section_id }} .rg-form-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--rg-accent) 30%, rgba(7, 209, 110, 0.4) 70%, transparent);
+  z-index: 2;
+}
+
+/* Orbital bolt wrapper */
+#{{ section_id }} .rg-bolt-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.2rem;
+  height: 5.2rem;
+  margin-bottom: clamp(1.8rem, 2.8vw, 2.6rem);
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .rg-bolt-icon {
+  color: var(--rg-accent);
+  position: relative;
+  z-index: 1;
+}
+
+#{{ section_id }} .rg-bolt-icon svg {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: block;
+}
+
+/* Logo (replaces bolt icon when uploaded) */
+#{{ section_id }} .rg-logo-wrap {
+  margin-bottom: clamp(1.8rem, 2.8vw, 2.6rem);
+  display: block;
+}
+
+#{{ section_id }} .rg-logo {
+  height: 48px;
+  width: auto;
+  max-width: 200px;
+  display: block;
+  object-fit: contain;
+}
+
+#{{ section_id }} .rg-logo--dark  { display: block; }
+#{{ section_id }} .rg-logo--light { display: none; }
+
+[data-theme="light"] #{{ section_id }} .rg-logo--dark  { display: none; }
+[data-theme="light"] #{{ section_id }} .rg-logo--light { display: block; }
+
+/* Orbital spinning ring */
+#{{ section_id }} .rg-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  border-top-color: var(--rg-accent);
+  border-right-color: rgba(7, 209, 110, 0.25);
+  will-change: transform;
+}
+
+#{{ section_id }} .rg-orbit-outer {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(7, 209, 110, 0.12);
+  border-bottom-color: rgba(7, 209, 110, 0.35);
+  will-change: transform;
+}
+
+/* Form heading */
+#{{ section_id }} .rg-form-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 3.5vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--rg-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 0.8rem;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .rg-form-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--rg-muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.6;
+  margin-bottom: clamp(2.4rem, 3.5vw, 3.2rem);
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .rg-form-sub a {
+  color: var(--rg-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#{{ section_id }} .rg-form-sub a:hover { text-decoration: underline; }
+
+/* ── Error / alert box ── */
+#{{ section_id }} .rg-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.6rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 95, 95, 0.3);
+  background: rgba(255, 95, 95, 0.07);
+}
+
+#{{ section_id }} .rg-alert svg { flex-shrink: 0; margin-top: 0.1rem; }
+
+#{{ section_id }} .rg-alert p,
+#{{ section_id }} .rg-alert ul,
+#{{ section_id }} .rg-alert li,
+#{{ section_id }} .rg-alert a {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--rg-error);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Name fields — 2-column row ── */
+#{{ section_id }} .rg-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 1.5vw, 1.6rem);
+  margin-bottom: clamp(1.6rem, 2.5vw, 2rem);
+}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .rg-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Field (float label + validation check) ── */
+#{{ section_id }} .rg-field {
+  position: relative;
+  margin-bottom: clamp(1.6rem, 2.5vw, 2rem);
+}
+
+/* Fields inside a row have no extra bottom margin */
+#{{ section_id }} .rg-field-row .rg-field {
+  margin-bottom: 0;
+}
+
+#{{ section_id }} .rg-field-label {
+  position: absolute;
+  top: 50%;
+  left: 1.6rem;
+  transform: translateY(-50%);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--rg-muted);
+  pointer-events: none;
+  transition:
+    top 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    font-size 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease;
+  z-index: 1;
+  padding-inline: 0.4rem;
+  background: transparent;
+  line-height: 1;
+}
+
+#{{ section_id }} .rg-field-input:focus ~ .rg-field-label,
+#{{ section_id }} .rg-field-input:not(:placeholder-shown) ~ .rg-field-label,
+#{{ section_id }} .rg-field.rg-filled .rg-field-label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: clamp(1rem, 1.05vw, 1.15rem);
+  color: var(--rg-accent);
+  background: var(--rg-card);
+}
+
+#{{ section_id }} .rg-field-input {
+  width: 100%;
+  background: var(--rg-input-bg);
+  border: 1.5px solid var(--rg-border);
+  border-radius: 12px;
+  padding: 1.4rem 4.2rem 1.4rem 1.6rem; /* right padding leaves room for check icon */
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--rg-text);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .rg-field-input::placeholder { color: transparent; }
+
+#{{ section_id }} .rg-field-input:focus {
+  border-color: var(--rg-accent);
+  box-shadow: 0 0 0 4px var(--rg-ring), 0 0 22px rgba(7, 209, 110, 0.10);
+}
+
+/* Valid state */
+#{{ section_id }} .rg-field.rg-valid .rg-field-input {
+  border-color: rgba(7, 209, 110, 0.55);
+}
+
+/* Validation checkmark */
+#{{ section_id }} .rg-check {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  color: var(--rg-accent);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+#{{ section_id }} .rg-field.rg-valid .rg-check {
+  transform: translateY(-50%) scale(1);
+  opacity: 1;
+}
+
+#{{ section_id }} .rg-check svg {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: block;
+}
+
+/* Password field has show/hide toggle, shift check left */
+#{{ section_id }} .rg-field--pw .rg-field-input {
+  padding-right: 5rem;
+}
+
+#{{ section_id }} .rg-field--pw .rg-check {
+  right: 4.2rem;
+}
+
+/* Password toggle */
+#{{ section_id }} .rg-pw-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--rg-muted);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+#{{ section_id }} .rg-pw-toggle:hover { color: var(--rg-accent); }
+
+#{{ section_id }} .rg-pw-toggle svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: block;
+  pointer-events: none;
+}
+
+#{{ section_id }} .rg-pw-toggle .rg-icon-eye-off { display: none; }
+#{{ section_id }} .rg-pw-toggle.is-shown .rg-icon-eye     { display: none; }
+#{{ section_id }} .rg-pw-toggle.is-shown .rg-icon-eye-off { display: block; }
+
+/* Password strength meter */
+{% if show_strength %}
+#{{ section_id }} .rg-strength {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#{{ section_id }} .rg-strength-track {
+  flex: 1;
+  height: 3px;
+  background: var(--rg-border);
+  border-radius: 99px;
+  overflow: hidden;
+  transition: background 0.35s ease;
+}
+
+#{{ section_id }} .rg-strength-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: var(--rg-accent);
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1), background 0.35s ease;
+  will-change: width;
+}
+
+#{{ section_id }} .rg-strength-fill[data-score="1"] { width: 25%; background: var(--rg-error); }
+#{{ section_id }} .rg-strength-fill[data-score="2"] { width: 50%; background: var(--rg-warn); }
+#{{ section_id }} .rg-strength-fill[data-score="3"] { width: 75%; background: #8fc43a; }
+#{{ section_id }} .rg-strength-fill[data-score="4"] { width: 100%; background: var(--rg-accent); }
+
+#{{ section_id }} .rg-strength-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.05rem, 1.1vw, 1.2rem);
+  color: var(--rg-muted);
+  white-space: nowrap;
+  transition: color 0.35s ease;
+  min-width: 4rem;
+  text-align: right;
+}
+{% endif %}
+
+/* ── Primary button ── */
+#{{ section_id }} .rg-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1.4rem 2.4rem;
+  background: var(--rg-accent);
+  color: #001a2e;
+  border: none;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+/* Shimmer sweep */
+#{{ section_id }} .rg-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#{{ section_id }} .rg-btn:hover {
+  background: rgba(7, 209, 110, 0.88);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(7, 209, 110, 0.40);
+}
+
+#{{ section_id }} .rg-btn:hover::after { transform: translateX(100%); }
+#{{ section_id }} .rg-btn:active { transform: translateY(0) scale(0.98); }
+
+#{{ section_id }} .rg-btn svg {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Beacon rings — pulsing circles from submit button (wrapper) */
+#{{ section_id }} .rg-btn-wrap {
+  position: relative;
+  margin-top: clamp(2rem, 3vw, 2.8rem);
+}
+
+/* Return to store */
+#{{ section_id }} .rg-return {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.25vw, 1.4rem);
+  color: var(--rg-muted);
+  text-decoration: none;
+  margin-top: clamp(2rem, 3vw, 2.8rem);
+  width: 100%;
+  transition: color 0.22s ease;
+}
+
+#{{ section_id }} .rg-return:hover { color: var(--rg-accent); }
+#{{ section_id }} .rg-return svg { width: 1.4rem; height: 1.4rem; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════ */
+{% if enable_anims %}
+
+@keyframes rg-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes rg-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rg-slide-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes rg-slide-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes rg-blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  35%       { transform: translate(22px, -18px) scale(1.05); }
+  70%       { transform: translate(-16px, 10px) scale(0.96); }
+}
+
+@keyframes rg-stripe-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 60px 60px; }
+}
+
+@keyframes rg-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rg-orbit-counter {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes rg-ring-scale {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.18; }
+  50%       { transform: rotate(180deg) scale(1.04); opacity: 0.24; }
+}
+
+@keyframes rg-beacon {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes rg-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(7,209,110,0.06), 0 40px 100px rgba(0,0,0,0.48); }
+  50%       { box-shadow: 0 0 0 2px rgba(7,209,110,0.18), 0 0 70px rgba(7,209,110,0.05), 0 40px 100px rgba(0,0,0,0.48); }
+}
+
+@keyframes rg-stat-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes rg-particle-float {
+  0%   { transform: translateY(0) scale(1);   opacity: var(--p-base, 0.3); }
+  50%  { transform: translateY(-26px) scale(1.3); opacity: calc(var(--p-base, 0.3) * 2); }
+  100% { transform: translateY(0) scale(1);   opacity: var(--p-base, 0.3); }
+}
+
+/* Blob drift */
+#{{ section_id }} .rg-blob--1 { animation: rg-blob-drift 18s ease-in-out infinite; }
+#{{ section_id }} .rg-blob--2 { animation: rg-blob-drift 22s ease-in-out infinite; animation-delay: -9s; }
+
+/* Stripe drift */
+{% if enable_stripes %}
+#{{ section_id }} .rg-stripes { animation: rg-stripe-drift 22s linear infinite; }
+{% endif %}
+
+/* Card entrance */
+#{{ section_id }} .rg-grid,
+#{{ section_id }} .rg-solo {
+  animation: rg-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) both,
+             rg-glow-pulse 5s ease-in-out 1.2s infinite;
+}
+
+/* Orbital spinner */
+#{{ section_id }} .rg-orbit      { animation: rg-orbit-spin 2.4s linear infinite; }
+#{{ section_id }} .rg-orbit-outer { animation: rg-orbit-counter 4s linear infinite; }
+
+/* Energy rings in brand panel */
+#{{ section_id }} .rg-rings { animation: rg-ring-scale 8s ease-in-out infinite; }
+
+/* Form stagger: bolt first, then heading, sub, fields */
+#{{ section_id }} .rg-bolt-wrap,
+#{{ section_id }} .rg-logo-wrap     { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.18s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-form-heading  { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.24s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-form-sub      { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.30s both; will-change: transform, opacity; }
+
+/* Split-row: first name from left, last name from right */
+#{{ section_id }} .rg-field-row .rg-field:nth-child(1) { animation: rg-slide-left  0.55s cubic-bezier(0.16,1,0.3,1) 0.36s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-field-row .rg-field:nth-child(2) { animation: rg-slide-right 0.55s cubic-bezier(0.16,1,0.3,1) 0.40s both; will-change: transform, opacity; }
+
+/* Stacked fields below the row */
+#{{ section_id }} .rg-form > .rg-field:nth-child(1) { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.44s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-form > .rg-field:nth-child(2) { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.50s both; will-change: transform, opacity; }
+
+#{{ section_id }} .rg-btn-wrap { animation: rg-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.56s both; will-change: transform, opacity; }
+
+/* Brand panel stagger */
+#{{ section_id }} .rg-brand-content .rg-eyebrow   { animation: rg-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.20s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-brand-content .rg-brand-heading { animation: rg-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.28s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-brand-content .rg-brand-tagline { animation: rg-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.34s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-stat:nth-child(1) { animation: rg-stat-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.42s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-stat:nth-child(2) { animation: rg-stat-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.50s both; will-change: transform, opacity; }
+#{{ section_id }} .rg-stat:nth-child(3) { animation: rg-stat-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.58s both; will-change: transform, opacity; }
+
+/* Particles */
+#{{ section_id }} .rg-particle { animation: rg-particle-float linear infinite; }
+
+/* Beacon rings on submit hover */
+#{{ section_id }} .rg-beacon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 99px;
+  transform: translate(-50%, -50%) scale(1);
+  background: transparent;
+  border: 2px solid rgba(7, 209, 110, 0.45);
+  pointer-events: none;
+  opacity: 0;
+}
+
+#{{ section_id }} .rg-btn-wrap:hover .rg-beacon {
+  animation: rg-beacon 1.2s ease-out infinite;
+}
+
+#{{ section_id }} .rg-beacon:nth-child(2) { animation-delay: 0.4s !important; }
+#{{ section_id }} .rg-beacon:nth-child(3) { animation-delay: 0.8s !important; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .rg-grid,
+  #{{ section_id }} .rg-solo,
+  #{{ section_id }} .rg-bolt-wrap,
+  #{{ section_id }} .rg-form-heading,
+  #{{ section_id }} .rg-form-sub,
+  #{{ section_id }} .rg-field,
+  #{{ section_id }} .rg-field-row .rg-field,
+  #{{ section_id }} .rg-btn-wrap,
+  #{{ section_id }} .rg-brand-content .rg-eyebrow,
+  #{{ section_id }} .rg-brand-content .rg-brand-heading,
+  #{{ section_id }} .rg-brand-content .rg-brand-tagline,
+  #{{ section_id }} .rg-stat,
+  #{{ section_id }} .rg-blob--1,
+  #{{ section_id }} .rg-blob--2,
+  #{{ section_id }} .rg-stripes,
+  #{{ section_id }} .rg-rings,
+  #{{ section_id }} .rg-orbit,
+  #{{ section_id }} .rg-orbit-outer,
+  #{{ section_id }} .rg-particle {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+{% else %}
+
+/* No animations — keep orbits static */
+#{{ section_id }} .rg-orbit,
+#{{ section_id }} .rg-orbit-outer { animation: none; }
+
+{% endif %}
+
+/* Shopify editor override */
+.shopify-design-mode #{{ section_id }} .rg-grid,
+.shopify-design-mode #{{ section_id }} .rg-solo,
+.shopify-design-mode #{{ section_id }} .rg-bolt-wrap,
+.shopify-design-mode #{{ section_id }} .rg-logo-wrap,
+.shopify-design-mode #{{ section_id }} .rg-form-heading,
+.shopify-design-mode #{{ section_id }} .rg-form-sub,
+.shopify-design-mode #{{ section_id }} .rg-field,
+.shopify-design-mode #{{ section_id }} .rg-field-row .rg-field,
+.shopify-design-mode #{{ section_id }} .rg-btn-wrap,
+.shopify-design-mode #{{ section_id }} .rg-brand-content .rg-eyebrow,
+.shopify-design-mode #{{ section_id }} .rg-brand-content .rg-brand-heading,
+.shopify-design-mode #{{ section_id }} .rg-brand-content .rg-brand-tagline,
+.shopify-design-mode #{{ section_id }} .rg-stat {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.48) !important;
+}
+
+/* ── Theme transitions ── */
+#{{ section_id }} .rg-form-panel,
+#{{ section_id }} .rg-field-input,
+#{{ section_id }} .rg-field-label,
+#{{ section_id }} .rg-form-heading,
+#{{ section_id }} .rg-form-sub {
+  transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  #{{ section_id }} .rg-form-heading {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+  }
+  #{{ section_id }} .rg-form-panel {
+    padding: clamp(2.4rem, 6vw, 3.2rem) clamp(1.6rem, 5vw, 2.4rem);
+  }
+  #{{ section_id }} .rg-grid,
+  #{{ section_id }} .rg-solo {
+    border-radius: clamp(12px, 3vw, 20px);
+  }
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .rg-container { padding-inline: 1rem; }
+  #{{ section_id }} .rg-form-panel { padding: 2rem 1.2rem; }
+}
+
+{% endstyle %}
+
+<section
+  id="{{ section_id }}"
+  aria-label="Create account"
+>
+
+  <!-- Background -->
+  <div class="rg-bg" aria-hidden="true">
+    {% if enable_stripes %}<div class="rg-stripes"></div>{% endif %}
+    <div class="rg-blob rg-blob--1"></div>
+    <div class="rg-blob rg-blob--2"></div>
+    {% if enable_particles %}<div class="rg-particles-host"></div>{% endif %}
+  </div>
+
+  <div class="rg-container">
+
+    {% if show_brand_panel %}
+      <div class="rg-grid">
+    {% else %}
+      <div class="rg-solo">
+    {% endif %}
+
+      {% if show_brand_panel %}
+        <!-- Brand panel -->
+        <div class="rg-brand-panel">
+
+          {% if side_image %}
+            <div class="rg-brand-img">
+              <img
+                src="{{ side_image | image_url: width: 1200 }}"
+                srcset="{{ side_image | image_url: width: 800 }} 800w,
+                        {{ side_image | image_url: width: 1200 }} 1200w"
+                sizes="50vw"
+                alt=""
+                loading="eager"
+                decoding="async"
+                width="{{ side_image.width }}"
+                height="{{ side_image.height }}"
+              >
+            </div>
+          {% endif %}
+
+          <div class="rg-brand-overlay"></div>
+
+          <!-- Energy ring decoration -->
+          <svg class="rg-rings" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="100" cy="100" r="95"  stroke="#07d16e" stroke-width="0.6"/>
+            <circle cx="100" cy="100" r="75"  stroke="#07d16e" stroke-width="0.8"/>
+            <circle cx="100" cy="100" r="55"  stroke="#07d16e" stroke-width="1.0"/>
+            <circle cx="100" cy="100" r="35"  stroke="#07d16e" stroke-width="1.2"/>
+            <circle cx="100" cy="100" r="6"   fill="#07d16e"/>
+            <!-- Orbit dot on outer ring -->
+            <circle cx="100" cy="5"   r="4"   fill="#07d16e" opacity="0.7"/>
+            <!-- Orbit dot on middle ring -->
+            <circle cx="155" cy="100" r="3"   fill="#07d16e" opacity="0.5"/>
+            <!-- Small dashes on rings -->
+            <line x1="100" y1="25"  x2="100" y2="35"  stroke="#07d16e" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="175" y1="100" x2="165" y2="100" stroke="#07d16e" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="100" y1="175" x2="100" y2="165" stroke="#07d16e" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="25"  y1="100" x2="35"  y2="100" stroke="#07d16e" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+
+          <!-- Brand content -->
+          <div class="rg-brand-content">
+
+            {% if eyebrow_text != blank %}
+              <div class="rg-eyebrow">{{ eyebrow_text | escape }}</div>
+            {% endif %}
+
+            <h2 class="rg-brand-heading">
+              {{ brand_heading_main | escape }}
+              <span class="rg-accent-word">{{ brand_heading_accent | escape }}</span>
+            </h2>
+
+            {% if brand_tagline != blank %}
+              <p class="rg-brand-tagline">{{ brand_tagline | escape }}</p>
+            {% endif %}
+
+            {%- assign has_stats = false -%}
+            {%- if stat_1_value != blank or stat_2_value != blank or stat_3_value != blank -%}
+              {%- assign has_stats = true -%}
+            {%- endif -%}
+
+            {% if has_stats %}
+              <ul class="rg-stats">
+                {% if stat_1_value != blank %}
+                  <li class="rg-stat">
+                    <span class="rg-stat-value">{{ stat_1_value | escape }}</span>
+                    <span class="rg-stat-label">{{ stat_1_label | escape }}</span>
+                  </li>
+                {% endif %}
+                {% if stat_2_value != blank %}
+                  <li class="rg-stat">
+                    <span class="rg-stat-value">{{ stat_2_value | escape }}</span>
+                    <span class="rg-stat-label">{{ stat_2_label | escape }}</span>
+                  </li>
+                {% endif %}
+                {% if stat_3_value != blank %}
+                  <li class="rg-stat">
+                    <span class="rg-stat-value">{{ stat_3_value | escape }}</span>
+                    <span class="rg-stat-label">{{ stat_3_label | escape }}</span>
+                  </li>
+                {% endif %}
+              </ul>
+            {% endif %}
+
+          </div>
+
+        </div>
+      {% endif %}
+
+      <!-- Form panel -->
+      <div class="rg-form-panel">
+
+        <!-- Logo / Orbital bolt icon -->
+        {%- if logo_dark or logo_light -%}
+          <div class="rg-logo-wrap">
+            {%- if logo_dark and logo_light -%}
+              <img class="rg-logo rg-logo--dark"  src="{{ logo_dark  | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+              <img class="rg-logo rg-logo--light" src="{{ logo_light | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- elsif logo_dark -%}
+              <img class="rg-logo" src="{{ logo_dark  | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- else -%}
+              <img class="rg-logo" src="{{ logo_light | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <div class="rg-bolt-wrap" aria-hidden="true">
+            <div class="rg-bolt-icon">
+              <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 2L6 18h11L15 30 28 14H17L18 2z"/>
+              </svg>
+            </div>
+            <div class="rg-orbit"></div>
+            <div class="rg-orbit-outer"></div>
+          </div>
+        {%- endif -%}
+
+        <h1 class="rg-form-heading">{{ heading | escape }}</h1>
+        <p class="rg-form-sub">
+          {{ subheading | escape }}
+          &nbsp;
+          <a href="{{ routes.account_login_url }}">{{ login_link_label | escape }}</a>
+        </p>
+
+        {% form 'create_customer', id: 'rg-form-{{ section.id }}' %}
+
+          {%- if form.errors -%}
+            <div class="rg-alert" role="alert" tabindex="-1">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <circle cx="9" cy="9" r="7.5" stroke="#ff5f5f" stroke-width="1.4"/>
+                <line x1="9" y1="5" x2="9" y2="10.5" stroke="#ff5f5f" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="9" cy="13" r="0.9" fill="#ff5f5f"/>
+              </svg>
+              <div>{{ form.errors | default_errors }}</div>
+            </div>
+          {%- endif -%}
+
+          <!-- Name row: first + last side by side -->
+          <div class="rg-field-row">
+
+            <div class="rg-field">
+              <input
+                type="text"
+                name="customer[first_name]"
+                id="rg-fname-{{ section.id }}"
+                class="rg-field-input"
+                autocomplete="given-name"
+                required
+                placeholder="{{ 'customer.register.first_name' | t }}"
+                {% if form.first_name %}value="{{ form.first_name }}"{% endif %}
+              >
+              <label for="rg-fname-{{ section.id }}" class="rg-field-label">
+                {{ 'customer.register.first_name' | t }}
+              </label>
+              <span class="rg-check" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="4,10 8,14 16,6"/>
+                </svg>
+              </span>
+            </div>
+
+            <div class="rg-field">
+              <input
+                type="text"
+                name="customer[last_name]"
+                id="rg-lname-{{ section.id }}"
+                class="rg-field-input"
+                autocomplete="family-name"
+                required
+                placeholder="{{ 'customer.register.last_name' | t }}"
+                {% if form.last_name %}value="{{ form.last_name }}"{% endif %}
+              >
+              <label for="rg-lname-{{ section.id }}" class="rg-field-label">
+                {{ 'customer.register.last_name' | t }}
+              </label>
+              <span class="rg-check" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="4,10 8,14 16,6"/>
+                </svg>
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Email + Password stacked -->
+          <div class="rg-form">
+
+            <div class="rg-field">
+              <input
+                type="email"
+                name="customer[email]"
+                id="rg-email-{{ section.id }}"
+                class="rg-field-input"
+                autocomplete="email"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                required
+                placeholder="{{ 'customer.register.email' | t }}"
+                {% if form.email %}value="{{ form.email }}"{% endif %}
+                {% if form.errors contains 'email' %}aria-invalid="true"{% endif %}
+              >
+              <label for="rg-email-{{ section.id }}" class="rg-field-label">
+                {{ 'customer.register.email' | t }}
+              </label>
+              <span class="rg-check" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="4,10 8,14 16,6"/>
+                </svg>
+              </span>
+            </div>
+
+            <div class="rg-field rg-field--pw">
+              <input
+                type="password"
+                name="customer[password]"
+                id="rg-pw-{{ section.id }}"
+                class="rg-field-input"
+                autocomplete="new-password"
+                required
+                placeholder="{{ 'customer.register.password' | t }}"
+                {% if form.errors contains 'password' %}aria-invalid="true"{% endif %}
+              >
+              <label for="rg-pw-{{ section.id }}" class="rg-field-label">
+                {{ 'customer.register.password' | t }}
+              </label>
+              <span class="rg-check" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="4,10 8,14 16,6"/>
+                </svg>
+              </span>
+              <button type="button" class="rg-pw-toggle" id="rg-pwtoggle-{{ section.id }}" aria-label="Show password">
+                <svg class="rg-icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="rg-icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+
+              {% if show_strength %}
+                <div class="rg-strength" id="rg-strength-{{ section.id }}" aria-hidden="true">
+                  <div class="rg-strength-track">
+                    <div class="rg-strength-fill" id="rg-sfill-{{ section.id }}" data-score="0"></div>
+                  </div>
+                  <span class="rg-strength-label" id="rg-slabel-{{ section.id }}"></span>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <!-- Submit with beacon rings -->
+          <div class="rg-btn-wrap">
+            <span class="rg-beacon" aria-hidden="true"></span>
+            <span class="rg-beacon" aria-hidden="true"></span>
+            <span class="rg-beacon" aria-hidden="true"></span>
+            <button type="submit" class="rg-btn">
+              {{ 'customer.register.submit' | t }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </button>
+          </div>
+
+        {% endform %}
+
+        <!-- Return to store -->
+        <a href="{{ routes.root_url }}" class="rg-return">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          {{ 'customer.login_page.return_to_store' | t }}
+        </a>
+
+      </div><!-- /rg-form-panel -->
+
+    {% if show_brand_panel %}
+      </div><!-- /rg-grid -->
+    {% else %}
+      </div><!-- /rg-solo -->
+    {% endif %}
+
+  </div><!-- /rg-container -->
+</section>
+
+<script>
+(function () {
+  var SEC = document.getElementById('{{ section_id }}');
+  if (!SEC) return;
+
+  /* ── Float label + validation checkmarks ── */
+  SEC.querySelectorAll('.rg-field').forEach(function (field) {
+    var input = field.querySelector('.rg-field-input');
+    if (!input) return;
+
+    function validate() {
+      var val = input.value.trim();
+      field.classList.toggle('rg-filled', val.length > 0);
+
+      var valid = false;
+      if (input.type === 'email') {
+        valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      } else if (input.type === 'password') {
+        valid = val.length >= 6;
+      } else {
+        valid = val.length >= 1;
+      }
+      field.classList.toggle('rg-valid', valid && val.length > 0);
+    }
+
+    input.addEventListener('input', validate);
+    input.addEventListener('blur', validate);
+    setTimeout(validate, 400); /* autofill */
+  });
+
+  /* ── Password show/hide ── */
+  var pwToggle = document.getElementById('rg-pwtoggle-{{ section.id }}');
+  var pwInput  = document.getElementById('rg-pw-{{ section.id }}');
+
+  if (pwToggle && pwInput) {
+    pwToggle.addEventListener('click', function () {
+      var shown = pwToggle.classList.toggle('is-shown');
+      pwInput.type = shown ? 'text' : 'password';
+      pwToggle.setAttribute('aria-label', shown ? 'Hide password' : 'Show password');
+    });
+  }
+
+  /* ── Password strength meter ── */
+  {% if show_strength %}
+  var strengthFill  = document.getElementById('rg-sfill-{{ section.id }}');
+  var strengthLabel = document.getElementById('rg-slabel-{{ section.id }}');
+  var LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+  function scorePassword(val) {
+    if (!val) return 0;
+    var score = 0;
+    if (val.length >= 8)            score++;
+    if (val.length >= 12)           score++;
+    if (/[A-Z]/.test(val))          score++;
+    if (/[0-9]/.test(val))          score++;
+    if (/[^A-Za-z0-9]/.test(val))   score++;
+    return Math.min(4, Math.ceil(score / 1.25));
+  }
+
+  if (pwInput && strengthFill && strengthLabel) {
+    pwInput.addEventListener('input', function () {
+      var score = scorePassword(pwInput.value);
+      strengthFill.setAttribute('data-score', score);
+      strengthLabel.textContent = pwInput.value ? LABELS[score] : '';
+    });
+  }
+  {% endif %}
+
+  /* ── Button micro-animation ── */
+  SEC.querySelectorAll('.rg-btn').forEach(function (btn) {
+    btn.addEventListener('pointerdown', function () {
+      btn.style.transition = 'transform 0.08s ease';
+      btn.style.transform  = 'scale(0.97)';
+    });
+    btn.addEventListener('pointerup',    function () { btn.style.transition = ''; btn.style.transform = ''; });
+    btn.addEventListener('pointerleave', function () { btn.style.transform = ''; });
+  });
+
+  {% if enable_particles and enable_anims %}
+  /* ── Floating particles ── */
+  var host = SEC.querySelector('.rg-particles-host');
+  if (host) {
+    for (var i = 0; i < 16; i++) {
+      var p = document.createElement('div');
+      p.className = 'rg-particle';
+      var size   = 2 + Math.random() * 4;
+      var opBase = 0.12 + Math.random() * 0.30;
+      p.style.cssText =
+        'left:'                 + (Math.random() * 100)         + '%;' +
+        'top:'                  + (Math.random() * 100)         + '%;' +
+        'width:'                + size                          + 'px;' +
+        'height:'               + size                          + 'px;' +
+        'animation-duration:'   + (6 + Math.random() * 9)      + 's;' +
+        'animation-delay:'      + (-Math.random() * 12)         + 's;' +
+        '--p-base:'             + opBase                        + ';' +
+        'opacity:'              + opBase                        + ';';
+      host.appendChild(p);
+    }
+  }
+  {% endif %}
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Customer Register",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Form Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Form heading",
+      "default": "Create Account"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Form subheading",
+      "default": "Already have an account?"
+    },
+    {
+      "type": "text",
+      "id": "login_link_label",
+      "label": "Login link label",
+      "default": "Sign in"
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_dark",
+      "label": "Logo — dark mode",
+      "info": "Shown above the form heading in dark mode. If neither logo is set, the orbital bolt icon is displayed as a fallback."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_light",
+      "label": "Logo — light mode",
+      "info": "Shown when the theme is in light mode. Falls back to the dark logo if not uploaded."
+    },
+    {
+      "type": "header",
+      "content": "Brand Panel"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_brand_panel",
+      "label": "Show brand panel",
+      "default": true,
+      "info": "Displays a split layout with brand content on one side. Hidden on tablet and mobile."
+    },
+    {
+      "type": "image_picker",
+      "id": "side_image",
+      "label": "Brand panel image",
+      "info": "Optional. Displays as a full-height image behind the brand content."
+    },
+    {
+      "type": "select",
+      "id": "image_side",
+      "label": "Brand panel side",
+      "options": [
+        { "value": "left",  "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow_text",
+      "label": "Eyebrow label",
+      "default": "Join BurnLab"
+    },
+    {
+      "type": "text",
+      "id": "brand_heading_main",
+      "label": "Brand heading — first line",
+      "default": "Build your best self."
+    },
+    {
+      "type": "text",
+      "id": "brand_heading_accent",
+      "label": "Brand heading — accent word (green)",
+      "default": "Start today."
+    },
+    {
+      "type": "text",
+      "id": "brand_tagline",
+      "label": "Brand tagline",
+      "default": "Join thousands of athletes training smarter with BurnLab."
+    },
+    {
+      "type": "header",
+      "content": "Stats"
+    },
+    {
+      "type": "text",
+      "id": "stat_1_value",
+      "label": "Stat 1 — value",
+      "default": "10,000+"
+    },
+    {
+      "type": "text",
+      "id": "stat_1_label",
+      "label": "Stat 1 — label",
+      "default": "Members"
+    },
+    {
+      "type": "text",
+      "id": "stat_2_value",
+      "label": "Stat 2 — value",
+      "default": "50+"
+    },
+    {
+      "type": "text",
+      "id": "stat_2_label",
+      "label": "Stat 2 — label",
+      "default": "Products"
+    },
+    {
+      "type": "text",
+      "id": "stat_3_value",
+      "label": "Stat 3 — value",
+      "default": "5-Star"
+    },
+    {
+      "type": "text",
+      "id": "stat_3_label",
+      "label": "Stat 3 — label",
+      "default": "Rated"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Page background",
+      "default": "#000d18"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Form card background",
+      "default": "#001428"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_dark",
+      "label": "Border and input border",
+      "default": "#183448"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Page background",
+      "default": "#f0f5f8"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Form card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_light",
+      "label": "Border and input border",
+      "default": "#bdd6e0"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true,
+      "info": "Card entrance, orbital spinner, name field split-slide, stat pop-in, blob drift. Disabled for reduced-motion visitors."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_stripes",
+      "label": "Enable diagonal stripe background",
+      "default": true,
+      "info": "Subtle animated diagonal lines drifting across the background."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_particles",
+      "label": "Enable floating particles",
+      "default": true,
+      "info": "Small green particles that float gently in the background."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_password_strength",
+      "label": "Show password strength meter",
+      "default": true,
+      "info": "Displays a colour-coded bar beneath the password field as the visitor types."
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Customer Register",
+      "settings": {
+        "heading": "Create Account",
+        "subheading": "Already have an account?",
+        "show_brand_panel": true,
+        "image_side": "right",
+        "enable_animations": true,
+        "enable_stripes": true,
+        "enable_particles": true,
+        "show_password_strength": true
+      }
+    }
+  ]
+}
+{% endschema %}

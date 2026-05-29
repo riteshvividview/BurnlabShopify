@@ -1,0 +1,1821 @@
+{% comment %}
+  ============================================================
+  BURNLAB — 3D DUMBBELL SHOWCASE
+  Three.js + GSAP + ScrollTrigger | Shopify OS 2.0 | Min Width: 300px
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id = 'burnlab-dbs-' | append: section.id
+
+  assign layout_mode            = section.settings.layout_mode           | default: 'fullscreen'
+  assign show_content           = section.settings.show_content
+  assign content_overlay_pos    = section.settings.content_overlay_pos   | default: 'bottom-left'
+  assign content_opacity_raw    = section.settings.content_overlay_opacity | default: 85
+  assign content_opacity_dec    = content_opacity_raw | divided_by: 100.0
+  assign canvas_opacity_raw     = section.settings.canvas_opacity        | default: 100
+  assign canvas_opacity_dec     = canvas_opacity_raw | divided_by: 100.0
+
+  assign eyebrow      = section.settings.eyebrow
+  assign heading      = section.settings.heading
+  assign subheading   = section.settings.subheading
+  assign cta1_label   = section.settings.cta1_label
+  assign cta1_url     = section.settings.cta1_url
+  assign cta1_style   = section.settings.cta1_style   | default: 'primary'
+  assign cta2_label   = section.settings.cta2_label
+  assign cta2_url     = section.settings.cta2_url
+  assign cta2_style   = section.settings.cta2_style   | default: 'outline'
+  assign stat1_num    = section.settings.stat1_num
+  assign stat1_label  = section.settings.stat1_label
+  assign stat2_num    = section.settings.stat2_num    | default: '100%'
+  assign stat2_label  = section.settings.stat2_label
+  assign stat3_num    = section.settings.stat3_num
+  assign stat3_label  = section.settings.stat3_label
+  assign badge1_num   = section.settings.badge1_num
+  assign badge1_label = section.settings.badge1_label
+  assign badge2_num   = section.settings.badge2_num 
+  assign badge2_label = section.settings.badge2_label
+  assign fallback_image = section.settings.fallback_image
+  assign model_side     = section.settings.model_side   | default: 'right'
+  assign content_align  = section.settings.content_align | default: 'left'
+
+  assign model_scale_raw        = section.settings.model_scale          | default: 100
+  assign model_scale            = model_scale_raw | divided_by: 100.0
+  assign model_scale_mob_raw    = section.settings.model_scale_mobile   | default: 60
+  assign model_scale_mobile     = model_scale_mob_raw | divided_by: 100.0
+  assign model_camera_z_raw     = section.settings.model_camera_z       | default: 65
+  assign model_camera_z         = model_camera_z_raw | divided_by: 10.0
+  assign model_camera_mob_raw   = section.settings.model_camera_z_mobile | default: 65
+  assign model_camera_z_mobile  = model_camera_mob_raw | divided_by: 10.0
+  assign float_strength_raw  = section.settings.float_strength      | default: 12
+  assign float_strength      = float_strength_raw | divided_by: 100.0
+  assign scroll_smooth_raw   = section.settings.scroll_smoothing    | default: 18
+  assign scroll_smoothing    = scroll_smooth_raw | divided_by: 10.0
+  assign lighting_intensity  = section.settings.lighting_intensity  | default: 100
+  assign lighting_dec        = lighting_intensity | divided_by: 100.0
+
+  assign kinetic_row1    = section.settings.kinetic_row1
+  assign kinetic_row2    = section.settings.kinetic_row2
+  assign kinetic_row3    = section.settings.kinetic_row3
+  assign bg_text_opacity = section.settings.bg_text_opacity | default: 6
+  assign bg_text_opacity_dec = bg_text_opacity | divided_by: 100.0
+
+  assign dark_bg      = section.settings.dark_bg      | default: '#000f1c'
+  assign light_bg     = section.settings.light_bg     | default: '#f0f5f8'
+  assign dark_text    = section.settings.dark_text    | default: '#eaf4f5'
+  assign light_text   = section.settings.light_text   | default: '#001a2e'
+  assign dark_glow    = section.settings.dark_glow    | default: '#07d16e'
+  assign light_glow   = section.settings.light_glow   | default: '#07d16e'
+  assign accent_color = section.settings.accent_color | default: '#07d16e'
+
+  assign heading_size = section.settings.heading_size | default: 72
+  assign body_size    = section.settings.body_size    | default: 16
+
+  assign enable_glitch       = section.settings.enable_glitch
+  assign glitch_intensity    = section.settings.glitch_intensity    | default: 40
+  assign glitch_speed        = section.settings.glitch_speed        | default: 5
+  assign rgb_amount          = section.settings.rgb_amount          | default: 3
+  assign enable_scanlines    = section.settings.enable_scanlines
+  assign enable_particles    = section.settings.enable_particles
+  assign enable_kinetic_text = section.settings.enable_kinetic_text
+  assign show_bar_text   = section.settings.show_bar_text
+  assign bar_text_size   = section.settings.bar_text_size   | default: 30
+  assign bar_text_color  = section.settings.bar_text_color  | default: '#eaf4f5'
+  assign enable_grain        = section.settings.enable_grain
+  assign enable_glows        = section.settings.enable_glows
+  assign enable_grid         = section.settings.enable_grid
+  assign enable_mouse_parallax = section.settings.enable_mouse_parallax
+  assign parallax_intensity  = section.settings.parallax_intensity  | default: 15
+  assign enable_anim         = section.settings.enable_animations
+  assign low_power_mobile    = section.settings.low_power_mobile
+
+  assign section_height        = section.settings.section_height        | default: 100
+  assign section_height_mobile = section.settings.section_height_mobile | default: 80
+
+  assign logo_image_url   = section.settings.logo_image  | image_url: width: 512
+  assign logo_size_raw    = section.settings.logo_size    | default: 80
+  assign logo_size_scale  = logo_size_raw | divided_by: 100.0
+  assign logo_opacity_raw = section.settings.logo_opacity | default: 100
+  assign logo_opacity_dec = logo_opacity_raw | divided_by: 100.0
+-%}
+
+<style>
+/* ── CSS VARIABLES ──────────────────────────────────────── */
+#{{ section_id }} {
+  --dbs-dark-bg:      {{ dark_bg }};
+  --dbs-light-bg:     {{ light_bg }};
+  --dbs-dark-text:    {{ dark_text }};
+  --dbs-light-text:   {{ light_text }};
+  --dbs-dark-glow:    {{ dark_glow }};
+  --dbs-light-glow:   {{ light_glow }};
+  --dbs-accent:       {{ accent_color }};
+  --dbs-section-h:    {{ section_height }}vh;
+  --dbs-heading-size: {{ heading_size }}px;
+  --dbs-body-size:    {{ body_size }}px;
+  --dbs-bg:           var(--dbs-dark-bg);
+  --dbs-text:         var(--dbs-dark-text);
+  --dbs-text-muted:   rgba(234,244,245,0.52);
+  --dbs-glow-color:   var(--dbs-dark-glow);
+  --dbs-glass-bg:     rgba(0,26,46,0.55);
+  --dbs-glass-border: rgba(7,209,110,0.20);
+  --dbs-grid-color:   rgba(7,209,110,0.042);
+  --dbs-bgtext-fill:  rgba(7,209,110, {{ bg_text_opacity_dec }});
+  --font-primary:     'Archivo Black', sans-serif;
+  --font-secondary:   'DM Sans', sans-serif;
+  --ease-expo:        cubic-bezier(0.16,1,0.3,1);
+  --ease-back:        cubic-bezier(0.34,1.56,0.64,1);
+}
+[data-theme="light"] #{{ section_id }} {
+  --dbs-bg:           var(--dbs-light-bg);
+  --dbs-text:         var(--dbs-light-text);
+  --dbs-text-muted:   rgba(0,26,46,0.52);
+  --dbs-glow-color:   var(--dbs-light-glow);
+  --dbs-glass-bg:     rgba(240,245,248,0.72);
+  --dbs-glass-border: rgba(0,26,46,0.12);
+  --dbs-grid-color:   rgba(0,26,46,0.045);
+  --dbs-bgtext-fill:  rgba(0,26,46, {{ bg_text_opacity_dec }});
+}
+
+/* ── RESET ──────────────────────────────────────────────── */
+#{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+}
+
+/* ── SECTION SHELL ──────────────────────────────────────── */
+#{{ section_id }} {
+  position: relative;
+  width: 100%;
+  min-height: var(--dbs-section-h);
+  overflow: hidden;
+  background-color: var(--dbs-bg);
+  color: var(--dbs-text);
+  isolation: isolate;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ── DECORATIVE LAYERS (absolute, all) ──────────────────── */
+#{{ section_id }} .dbs-grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px; opacity: 0.5;
+  pointer-events: none; z-index: 2;
+}
+
+#{{ section_id }} .dbs-glow {
+  position: absolute; border-radius: 50%;
+  filter: blur(140px); pointer-events: none; z-index: 1; will-change: transform;
+}
+#{{ section_id }} .dbs-glow--a {
+  width: clamp(300px,55vw,800px); height: clamp(300px,55vw,800px);
+  background: var(--dbs-glow-color); opacity: 0.055;
+  top: -15%; left: 40%;
+  animation: dbsGlowA 18s ease-in-out infinite alternate;
+}
+#{{ section_id }} .dbs-glow--b {
+  width: clamp(200px,38vw,520px); height: clamp(200px,38vw,520px);
+  background: #336870; opacity: 0.07;
+  bottom: 10%; left: -5%;
+  animation: dbsGlowB 22s ease-in-out infinite alternate;
+}
+#{{ section_id }} .dbs-glow--c {
+  width: clamp(160px,28vw,380px); height: clamp(160px,28vw,380px);
+  background: var(--dbs-glow-color); opacity: 0.04;
+  top: 30%; right: -8%;
+  animation: dbsGlowC 15s ease-in-out infinite alternate;
+}
+@keyframes dbsGlowA { from{transform:translate(0,0) scale(1)} to{transform:translate(40px,30px) scale(1.12)} }
+@keyframes dbsGlowB { from{transform:translate(0,0) scale(1)} to{transform:translate(-30px,-40px) scale(1.09)} }
+@keyframes dbsGlowC { from{transform:translate(0,0) scale(1)} to{transform:translate(20px,-25px) scale(1.11)} }
+
+#{{ section_id }} .dbs-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--dbs-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dbs-grid-color) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none; z-index: 2;
+  animation: dbsGridPulse 5s ease-in-out infinite;
+}
+@keyframes dbsGridPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+/* ── KINETIC BG TEXT ────────────────────────────────────── */
+#{{ section_id }} .dbs-bgtext-wrap {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 3;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  justify-content: space-around;
+  padding-block: 6%;
+}
+#{{ section_id }} .dbs-bgtext {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: clamp(5rem, 12vw, 16rem);
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: var(--dbs-bgtext-fill);
+  user-select: none;
+  will-change: transform;
+  line-height: 1;
+  display: block;
+}
+#{{ section_id }} .dbs-bgtext--outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--dbs-bgtext-fill);
+}
+#{{ section_id }} .dbs-bgtext--sm { font-size: clamp(3.5rem, 8vw, 10rem); }
+
+/* ── PARTICLES ──────────────────────────────────────────── */
+#{{ section_id }} .dbs-particles {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 4;
+}
+
+/* ── GLITCH / SCANLINES ─────────────────────────────────── */
+#{{ section_id }} .dbs-glitch-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 18;
+  opacity: 0; mix-blend-mode: screen;
+  transition: opacity 0.04s linear;
+}
+#{{ section_id }} .dbs-glitch-overlay.is-glitching {
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(7,209,110,0.04) 3px, rgba(7,209,110,0.04) 4px
+  );
+  opacity: 1;
+}
+#{{ section_id }} .dbs-scanlines {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 19;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.09) 2px, rgba(0,0,0,0.09) 3px
+  );
+  opacity: 0.4;
+}
+[data-theme="light"] #{{ section_id }} .dbs-scanlines { opacity: 0.2; }
+
+/* ══════════════════════════════════════════════════════════
+   FULLSCREEN LAYOUT
+   Canvas fills the entire section; content overlaid
+   ══════════════════════════════════════════════════════════ */
+#{{ section_id }} .dbs-canvas-fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 10;
+  opacity: {{ canvas_opacity_dec }};
+  transition: filter 0.08s linear;
+}
+
+/* Content overlay — sits between text (z:3) and canvas (z:10),
+   visible through transparent canvas regions */
+#{{ section_id }} .dbs-overlay-content {
+  position: absolute;
+  z-index: 6;
+  pointer-events: auto;
+  max-width: min(520px, 90%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.2rem, 1.8vw, 1.8rem);
+  padding: clamp(2rem, 4vw, 5rem);
+}
+/* 9-position grid */
+#{{ section_id }} .dbs-overlay-content--top-left      { top: 8%;  left: 0; }
+#{{ section_id }} .dbs-overlay-content--top-center    { top: 8%;  left: 50%; transform: translateX(-50%); align-items: center; text-align: center; }
+#{{ section_id }} .dbs-overlay-content--top-right     { top: 8%;  right: 0; left: auto; align-items: flex-end; text-align: right; }
+#{{ section_id }} .dbs-overlay-content--center-left   { top: 50%; left: 0; transform: translateY(-50%); }
+#{{ section_id }} .dbs-overlay-content--center-center { top: 50%; left: 50%; transform: translate(-50%,-50%); align-items: center; text-align: center; }
+#{{ section_id }} .dbs-overlay-content--center-right  { top: 50%; right: 0; left: auto; transform: translateY(-50%); align-items: flex-end; text-align: right; }
+#{{ section_id }} .dbs-overlay-content--bottom-left   { bottom: 8%; left: 0; }
+#{{ section_id }} .dbs-overlay-content--bottom-center { bottom: 8%; left: 50%; transform: translateX(-50%); align-items: center; text-align: center; }
+#{{ section_id }} .dbs-overlay-content--bottom-right  { bottom: 8%; right: 0; left: auto; align-items: flex-end; text-align: right; }
+/* Eyebrow flex alignment mirrors text-align */
+#{{ section_id }} .dbs-overlay-content--top-center .dbs-eyebrow,
+#{{ section_id }} .dbs-overlay-content--center-center .dbs-eyebrow,
+#{{ section_id }} .dbs-overlay-content--bottom-center .dbs-eyebrow { justify-content: center; }
+#{{ section_id }} .dbs-overlay-content--top-right .dbs-eyebrow,
+#{{ section_id }} .dbs-overlay-content--center-right .dbs-eyebrow,
+#{{ section_id }} .dbs-overlay-content--bottom-right .dbs-eyebrow { justify-content: flex-end; }
+#{{ section_id }} .dbs-overlay-content--top-right .dbs-ctas,
+#{{ section_id }} .dbs-overlay-content--center-right .dbs-ctas,
+#{{ section_id }} .dbs-overlay-content--bottom-right .dbs-ctas { justify-content: flex-end; }
+
+/* Floating badges (above canvas) */
+#{{ section_id }} .dbs-badge {
+  position: absolute;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: clamp(12px,1.8vw,18px) clamp(14px,2vw,22px);
+  background: var(--dbs-glass-bg);
+  border: 1px solid var(--dbs-glass-border);
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  min-width: clamp(100px,12vw,140px);
+  z-index: 20;
+  opacity: 0;
+  transform: scale(0.85) translateY(10px);
+  transition: opacity 0.6s var(--ease-back), transform 0.6s var(--ease-back);
+  will-change: transform;
+}
+#{{ section_id }} .dbs-badge.is-visible { opacity: 1; transform: scale(1) translateY(0); }
+#{{ section_id }} .dbs-badge--1 { top: 14%; right: 6%; transition-delay: 0.7s; }
+#{{ section_id }} .dbs-badge--2 { bottom: 18%; left: 6%; transition-delay: 0.9s; }
+#{{ section_id }} .dbs-badge__val {
+  font-family: var(--font-primary); font-weight: 400;
+  font-size: clamp(1.6rem,2.2vw,2.4rem); line-height: 1;
+  letter-spacing: -0.02em; color: var(--dbs-accent);
+}
+#{{ section_id }} .dbs-badge__label {
+  font-family: var(--font-secondary);
+  font-size: clamp(0.95rem,0.9vw,1.05rem); font-weight: 500;
+  color: var(--dbs-text-muted); letter-spacing: 0.05em;
+  overflow-wrap: break-word;
+}
+#{{ section_id }} .dbs-badge::after {
+  content: ''; position: absolute; top: 10px; right: 10px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--dbs-accent);
+  animation: dbsBadgePulse 2.2s ease-in-out infinite;
+}
+@keyframes dbsBadgePulse {
+  0%,100%{box-shadow:0 0 0 0 rgba(7,209,110,0.55)}
+  50%{box-shadow:0 0 0 5px rgba(7,209,110,0)}
+}
+
+/* ══════════════════════════════════════════════════════════
+   SPLIT LAYOUT
+   ══════════════════════════════════════════════════════════ */
+#{{ section_id }} .dbs-wrap {
+  position: relative; z-index: 10;
+  max-width: 1400px; margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  min-height: var(--dbs-section-h);
+  display: flex; flex-direction: column; justify-content: center;
+}
+#{{ section_id }} .dbs-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 4vw, 6rem);
+  padding-block: clamp(4rem, 8vw, 8rem);
+}
+#{{ section_id }} .dbs-layout--right .dbs-content    { order: 1; }
+#{{ section_id }} .dbs-layout--right .dbs-canvas-split { order: 2; }
+#{{ section_id }} .dbs-layout--left  .dbs-content    { order: 2; }
+#{{ section_id }} .dbs-layout--left  .dbs-canvas-split { order: 1; }
+
+/* Split canvas — contained in grid cell */
+#{{ section_id }} .dbs-canvas-split {
+  position: relative;
+  width: 100%;
+  align-self: stretch;
+  min-height: clamp(320px, 50vw, 680px);
+}
+#{{ section_id }} .dbs-canvas-split canvas {
+  position: absolute; inset: 0;
+  width: 100% !important; height: 100% !important;
+  display: block;
+  opacity: {{ canvas_opacity_dec }};
+  transition: filter 0.08s linear;
+}
+
+/* Fallback image */
+#{{ section_id }} .dbs-fallback {
+  position: absolute; inset: 0;
+  display: none; align-items: center; justify-content: center;
+}
+#{{ section_id }} .dbs-fallback img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+#{{ section_id }} .show-fallback .dbs-fallback { display: flex; }
+#{{ section_id }} .show-fallback canvas { opacity: 0; pointer-events: none; }
+
+/* ── SHARED TEXT STYLES ─────────────────────────────────── */
+#{{ section_id }} .dbs-content {
+  display: flex; flex-direction: column;
+  gap: clamp(1.2rem, 1.8vw, 2rem);
+  {% if content_align == 'center' %}align-items: center; text-align: center;{% endif %}
+}
+#{{ section_id }} .dbs-eyebrow {
+  font-family: var(--font-secondary);
+  font-size: clamp(0.9rem,1.1vw,1.2rem);
+  font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--dbs-accent);
+  display: flex; align-items: center; gap: 12px;
+  overflow-wrap: break-word;
+}
+#{{ section_id }} .dbs-eyebrow::before {
+  content: ''; display: inline-block;
+  width: 28px; height: 2px;
+  background: var(--dbs-accent); flex-shrink: 0; border-radius: 2px;
+}
+#{{ section_id }} .dbs-heading {
+  font-family: var(--font-primary); font-weight: 400;
+  font-size: clamp(2.4rem, 5.5vw, var(--dbs-heading-size));
+  line-height: 1.0; letter-spacing: -0.03em;
+  color: var(--dbs-text);
+  overflow-wrap: break-word; word-break: break-word;
+}
+#{{ section_id }} .dbs-heading em { font-style: normal; color: var(--dbs-accent); }
+#{{ section_id }} .dbs-sub {
+  font-family: var(--font-secondary);
+  font-size: clamp(1.3rem, 1.5vw, var(--dbs-body-size));
+  font-weight: 400; line-height: 1.72;
+  color: var(--dbs-text-muted);
+  max-width: 500px;
+  overflow-wrap: break-word; word-break: break-word;
+}
+#{{ section_id }} .dbs-stats {
+  display: flex; gap: clamp(1.4rem, 3vw, 3rem); flex-wrap: wrap;
+}
+#{{ section_id }} .dbs-stat { display: flex; flex-direction: column; gap: 4px; }
+#{{ section_id }} .dbs-stat__num {
+  font-family: var(--font-primary); font-weight: 400;
+  font-size: clamp(1.8rem, 2.8vw, 3.2rem);
+  letter-spacing: -0.03em; color: var(--dbs-text); line-height: 1;
+}
+#{{ section_id }} .dbs-stat__num--accent { color: var(--dbs-accent); }
+#{{ section_id }} .dbs-stat__label {
+  font-family: var(--font-secondary);
+  font-size: clamp(1rem,1vw,1.1rem); font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dbs-text-muted);
+}
+#{{ section_id }} .dbs-stat + .dbs-stat {
+  padding-left: clamp(1.4rem, 3vw, 3rem);
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+[data-theme="light"] #{{ section_id }} .dbs-stat + .dbs-stat { border-left-color: rgba(0,0,0,0.1); }
+#{{ section_id }} .dbs-ctas { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+#{{ section_id }} .dbs-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: clamp(12px,1.4vw,16px) clamp(22px,2.5vw,32px);
+  border-radius: 100px;
+  font-family: var(--font-secondary);
+  font-size: clamp(1.2rem,1.1vw,1.4rem); font-weight: 600; letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: transform 0.28s var(--ease-back), box-shadow 0.28s ease;
+  will-change: transform; cursor: pointer; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+#{{ section_id }} .dbs-btn:hover  { transform: translateY(-3px) scale(1.02); }
+#{{ section_id }} .dbs-btn:active { transform: translateY(0) scale(0.98); }
+#{{ section_id }} .dbs-btn--primary {
+  background: var(--dbs-accent); color: #001a2e;
+  box-shadow: 0 8px 28px rgba(7,209,110,0.30);
+}
+#{{ section_id }} .dbs-btn--primary:hover { box-shadow: 0 16px 40px rgba(7,209,110,0.45); }
+#{{ section_id }} .dbs-btn--outline {
+  background: transparent; color: var(--dbs-text);
+  border: 1.5px solid rgba(234,244,245,0.28);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="light"] #{{ section_id }} .dbs-btn--outline { border-color: rgba(0,26,46,0.25); }
+#{{ section_id }} .dbs-btn--outline:hover {
+  border-color: var(--dbs-accent);
+  box-shadow: 0 0 0 1px var(--dbs-accent), 0 8px 24px rgba(7,209,110,0.14);
+}
+#{{ section_id }} .dbs-btn--navy { background:#001a2e; color:#eaf4f5; border:1.5px solid rgba(234,244,245,0.12); }
+#{{ section_id }} .dbs-btn--teal { background:#336870; color:#eaf4f5; }
+
+/* ── REVEAL ─────────────────────────────────────────────── */
+#{{ section_id }} .dbs-reveal {
+  opacity: 0; transform: translateY(22px); will-change: transform;
+  transition: opacity 0.75s var(--ease-expo), transform 0.75s var(--ease-expo);
+}
+#{{ section_id }} .dbs-reveal.is-visible { opacity: 1; transform: translateY(0); }
+#{{ section_id }}.is-visible .dbs-reveal,
+.shopify-design-mode #{{ section_id }} .dbs-reveal,
+.shopify-design-mode #{{ section_id }} .dbs-badge { opacity:1 !important; transform:none !important; }
+
+/* ── REDUCED MOTION ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .dbs-reveal { opacity:1!important; transform:none!important; transition:none!important; }
+  #{{ section_id }} .dbs-badge  { opacity:1!important; transform:none!important; transition:none!important; }
+  #{{ section_id }} .dbs-glow--a,
+  #{{ section_id }} .dbs-glow--b,
+  #{{ section_id }} .dbs-glow--c { animation:none; }
+  #{{ section_id }} .dbs-grid    { animation:none; }
+  #{{ section_id }} .dbs-bgtext  { transform:none!important; }
+  #{{ section_id }} .dbs-btn     { transition:none; }
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ section.settings.padding_top_mobile }}px !important;
+    padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    --dbs-section-h: {{ section_height_mobile }}vh;
+  }
+  #{{ section_id }} .dbs-layout {
+    grid-template-columns: 1fr; gap: 0;
+    padding-block: clamp(3rem, 8vw, 5rem); min-height: unset;
+  }
+  #{{ section_id }} .dbs-content    { order: 2!important; padding-top: clamp(2rem,6vw,3rem); }
+  #{{ section_id }} .dbs-canvas-split { order: 1!important; min-height: clamp(280px,80vw,420px); }
+  #{{ section_id }} .dbs-heading    { font-size: clamp(2rem,8vw,3rem); }
+  #{{ section_id }} .dbs-ctas       { flex-direction: column; align-items: stretch; }
+  #{{ section_id }} .dbs-btn        { justify-content: center; width: 100%; }
+  #{{ section_id }} .dbs-bgtext     { font-size: clamp(3.5rem,14vw,7rem); }
+  #{{ section_id }} .dbs-overlay-content { max-width: 90%; padding: clamp(1.4rem,5vw,2.5rem); }
+  #{{ section_id }} .dbs-overlay-content--center-left { top: auto; bottom: 8%; transform: none; }
+  #{{ section_id }} .dbs-overlay-content--bottom-center { left: 5%; transform: none; align-items: flex-start; text-align: left; }
+  #{{ section_id }} .dbs-stats      { gap: clamp(1rem,4vw,1.8rem); }
+  #{{ section_id }} .dbs-sub        { max-width: 100%; }
+}
+@media (max-width: 480px) {
+  #{{ section_id }} .dbs-heading { font-size: clamp(2rem,8vw,3rem); }
+  #{{ section_id }} .dbs-bgtext  { display: none; }
+  #{{ section_id }} .dbs-badge   { padding: 10px 12px; }
+  #{{ section_id }} .dbs-stat__num { font-size: clamp(1.6rem,6vw,2.2rem); }
+  #{{ section_id }} .dbs-overlay-content { padding: 1.4rem; }
+}
+</style>
+
+<section
+  id="{{ section_id }}"
+  class="burnlab-dbs"
+  data-section-id="{{ section.id }}"
+  data-layout="{{ layout_mode }}"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
+
+  {%- if enable_grain -%}<div class="dbs-grain" aria-hidden="true"></div>{%- endif -%}
+  {%- if enable_glows -%}
+  <div class="dbs-glow dbs-glow--a" aria-hidden="true"></div>
+  <div class="dbs-glow dbs-glow--b" aria-hidden="true"></div>
+  <div class="dbs-glow dbs-glow--c" aria-hidden="true"></div>
+  {%- endif -%}
+  {%- if enable_grid -%}<div class="dbs-grid" aria-hidden="true"></div>{%- endif -%}
+  {%- assign has_kinetic_rows = false -%}
+  {%- if kinetic_row1 != blank or kinetic_row2 != blank or kinetic_row3 != blank -%}
+    {%- assign has_kinetic_rows = true -%}
+  {%- endif -%}
+  {%- if enable_kinetic_text and has_kinetic_rows -%}
+  <div class="dbs-bgtext-wrap" aria-hidden="true">
+    {%- if kinetic_row1 != blank -%}<span class="dbs-bgtext dbs-bgtext--row1">{{ kinetic_row1 }}</span>{%- endif -%}
+    {%- if kinetic_row2 != blank -%}<span class="dbs-bgtext dbs-bgtext--row2 dbs-bgtext--outline">{{ kinetic_row2 }}</span>{%- endif -%}
+    {%- if kinetic_row3 != blank -%}<span class="dbs-bgtext dbs-bgtext--row3 dbs-bgtext--sm">{{ kinetic_row3 }}</span>{%- endif -%}
+  </div>
+  {%- endif -%}
+  {%- if enable_particles -%}<canvas class="dbs-particles" aria-hidden="true"></canvas>{%- endif -%}
+  {%- if enable_glitch -%}<div class="dbs-glitch-overlay" aria-hidden="true"></div>{%- endif -%}
+  {%- if enable_scanlines -%}<div class="dbs-scanlines" aria-hidden="true"></div>{%- endif -%}
+
+  {%- if layout_mode == 'fullscreen' -%}
+
+    <!-- ── FULLSCREEN: canvas fills entire section ────────── -->
+    <canvas
+      id="dbs-canvas-{{ section.id }}"
+      class="dbs-canvas-fullscreen"
+      aria-label="Interactive 3D dumbbell"
+    ></canvas>
+
+    {%- if badge1_num != blank or badge1_label != blank -%}
+    <div class="dbs-badge dbs-badge--1" role="note">
+      {%- if badge1_num != blank -%}<span class="dbs-badge__val">{{ badge1_num }}</span>{%- endif -%}
+      {%- if badge1_label != blank -%}<span class="dbs-badge__label">{{ badge1_label }}</span>{%- endif -%}
+    </div>
+    {%- endif -%}
+    {%- if badge2_num != blank or badge2_label != blank -%}
+    <div class="dbs-badge dbs-badge--2" role="note">
+      {%- if badge2_num != blank -%}<span class="dbs-badge__val">{{ badge2_num }}</span>{%- endif -%}
+      {%- if badge2_label != blank -%}<span class="dbs-badge__label">{{ badge2_label }}</span>{%- endif -%}
+    </div>
+    {%- endif -%}
+
+    {%- if show_content -%}
+    <div class="dbs-overlay-content dbs-overlay-content--{{ content_overlay_pos }}"
+         style="opacity: {{ content_opacity_dec }};">
+      {%- if eyebrow != blank -%}<p class="dbs-eyebrow dbs-reveal">{{ eyebrow }}</p>{%- endif -%}
+      {%- if heading != blank -%}<h2 class="dbs-heading dbs-reveal">{{ heading }}</h2>{%- endif -%}
+      {%- if subheading != blank -%}<p class="dbs-sub dbs-reveal">{{ subheading }}</p>{%- endif -%}
+      {%- assign has_stats = false -%}
+      {%- if stat1_num != blank or stat2_num != blank or stat3_num != blank -%}{%- assign has_stats = true -%}{%- endif -%}
+      {%- if has_stats -%}
+      <div class="dbs-stats dbs-reveal">
+        {%- if stat1_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num dbs-stat__num--accent">{{ stat1_num }}</span>{%- if stat1_label != blank -%}<span class="dbs-stat__label">{{ stat1_label }}</span>{%- endif -%}</div>{%- endif -%}
+        {%- if stat2_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num">{{ stat2_num }}</span>{%- if stat2_label != blank -%}<span class="dbs-stat__label">{{ stat2_label }}</span>{%- endif -%}</div>{%- endif -%}
+        {%- if stat3_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num">{{ stat3_num }}</span>{%- if stat3_label != blank -%}<span class="dbs-stat__label">{{ stat3_label }}</span>{%- endif -%}</div>{%- endif -%}
+      </div>
+      {%- endif -%}
+      {%- if cta1_label != blank or cta2_label != blank -%}
+      <div class="dbs-ctas dbs-reveal">
+        {%- if cta1_label != blank -%}
+        <a href="{{ cta1_url | default: '#' }}" class="dbs-btn dbs-btn--{{ cta1_style }}">{{ cta1_label }} <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M1.5 6.5H11.5M11.5 6.5L7 2M11.5 6.5L7 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        {%- endif -%}
+        {%- if cta2_label != blank -%}
+        <a href="{{ cta2_url | default: '#' }}" class="dbs-btn dbs-btn--{{ cta2_style }}">{{ cta2_label }}</a>
+        {%- endif -%}
+      </div>
+      {%- endif -%}
+    </div>
+    {%- endif -%}
+
+  {%- else -%}
+
+    <!-- ── SPLIT: side-by-side grid ──────────────────────── -->
+    <div class="dbs-wrap">
+      <div class="dbs-layout dbs-layout--{{ model_side }}">
+        <div class="dbs-content">
+          {%- if eyebrow != blank -%}<p class="dbs-eyebrow dbs-reveal">{{ eyebrow }}</p>{%- endif -%}
+          {%- if heading != blank -%}<h2 class="dbs-heading dbs-reveal">{{ heading }}</h2>{%- endif -%}
+          {%- if subheading != blank -%}<p class="dbs-sub dbs-reveal">{{ subheading }}</p>{%- endif -%}
+          {%- assign has_stats2 = false -%}
+          {%- if stat1_num != blank or stat2_num != blank or stat3_num != blank -%}{%- assign has_stats2 = true -%}{%- endif -%}
+          {%- if has_stats2 -%}
+          <div class="dbs-stats dbs-reveal">
+            {%- if stat1_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num dbs-stat__num--accent">{{ stat1_num }}</span>{%- if stat1_label != blank -%}<span class="dbs-stat__label">{{ stat1_label }}</span>{%- endif -%}</div>{%- endif -%}
+            {%- if stat2_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num">{{ stat2_num }}</span>{%- if stat2_label != blank -%}<span class="dbs-stat__label">{{ stat2_label }}</span>{%- endif -%}</div>{%- endif -%}
+            {%- if stat3_num != blank -%}<div class="dbs-stat"><span class="dbs-stat__num">{{ stat3_num }}</span>{%- if stat3_label != blank -%}<span class="dbs-stat__label">{{ stat3_label }}</span>{%- endif -%}</div>{%- endif -%}
+          </div>
+          {%- endif -%}
+          {%- if cta1_label != blank or cta2_label != blank -%}
+          <div class="dbs-ctas dbs-reveal">
+            {%- if cta1_label != blank -%}
+            <a href="{{ cta1_url | default: '#' }}" class="dbs-btn dbs-btn--{{ cta1_style }}">{{ cta1_label }} <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M1.5 6.5H11.5M11.5 6.5L7 2M11.5 6.5L7 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            {%- endif -%}
+            {%- if cta2_label != blank -%}
+            <a href="{{ cta2_url | default: '#' }}" class="dbs-btn dbs-btn--{{ cta2_style }}">{{ cta2_label }}</a>
+            {%- endif -%}
+          </div>
+          {%- endif -%}
+        </div>
+        <div class="dbs-canvas-split" id="dbs-wrap-{{ section.id }}">
+          <canvas id="dbs-canvas-{{ section.id }}" aria-label="Interactive 3D dumbbell"></canvas>
+          {%- if fallback_image != blank -%}
+          <div class="dbs-fallback" aria-hidden="true">
+            {{ fallback_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: fallback_image.alt }}
+          </div>
+          {%- endif -%}
+          {%- if badge1_num != blank or badge1_label != blank -%}
+          <div class="dbs-badge dbs-badge--1" role="note">{%- if badge1_num != blank -%}<span class="dbs-badge__val">{{ badge1_num }}</span>{%- endif -%}{%- if badge1_label != blank -%}<span class="dbs-badge__label">{{ badge1_label }}</span>{%- endif -%}</div>
+          {%- endif -%}
+          {%- if badge2_num != blank or badge2_label != blank -%}
+          <div class="dbs-badge dbs-badge--2" role="note">{%- if badge2_num != blank -%}<span class="dbs-badge__val">{{ badge2_num }}</span>{%- endif -%}{%- if badge2_label != blank -%}<span class="dbs-badge__label">{{ badge2_label }}</span>{%- endif -%}</div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+  {%- endif -%}
+
+</section>
+
+<script>
+(function(){
+  function loadScript(src,id,cb){
+    if(document.getElementById(id)){if(cb)cb();return;}
+    var s=document.createElement('script');s.src=src;s.id=id;s.async=true;
+    if(cb)s.onload=cb; document.head.appendChild(s);
+  }
+  window.__dbsLoadLibs=window.__dbsLoadLibs||function(cb){
+    var n=0; function done(){if(++n===3)cb();}
+    loadScript('https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js','three-js-cdn',done);
+    loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js','gsap-cdn',done);
+    loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js','gsap-st-cdn',done);
+  };
+}());
+</script>
+
+{% if section.settings.enable_animations %}
+<script>
+(function(){
+  'use strict';
+
+  var SID      = '{{ section_id }}';
+  var SEC_ID   = '{{ section.id }}';
+  var LAYOUT   = '{{ layout_mode }}';
+  var LOGO_URL     = '{{ logo_image_url }}';
+  var LOGO_FACE    = 1.21 * {{ logo_size_scale }};
+  var LOGO_OPACITY = {{ logo_opacity_dec }};
+
+  var root     = document.getElementById(SID);
+  if (!root) return;
+  var canvasEl = document.getElementById('dbs-canvas-' + SEC_ID);
+  if (!canvasEl) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var isMobile      = window.innerWidth <= 768;
+
+  var MODEL_SCALE = isMobile ? {{ model_scale_mobile }} : {{ model_scale }};
+  var CAMERA_Z    = isMobile ? {{ model_camera_z_mobile }} : {{ model_camera_z }};
+  var FLOAT_STRENGTH  = {{ float_strength }};
+  var SCROLL_SMOOTH   = {{ scroll_smoothing }};
+  var PARALLAX_INT    = {{ parallax_intensity }};
+  var LIGHT_MULT      = {{ lighting_dec }};
+  var GLITCH_ON       = {{ enable_glitch | default: false }};
+  var GLITCH_INT      = {{ glitch_intensity }};
+  var GLITCH_SPD      = {{ glitch_speed }};
+  var RGB_AMT         = {{ rgb_amount }};
+  var PARTICLES_ON    = {{ enable_particles | default: false }};
+  var KINETIC_ON      = {{ enable_kinetic_text | default: false }};
+  var SHOW_BAR_TEXT   = {{ show_bar_text | default: true }};
+  var BAR_TEXT_SIZE   = {{ bar_text_size }};
+  var BAR_TEXT_COLOR  = '{{ bar_text_color }}';
+  var MOUSE_PAR       = {{ enable_mouse_parallax | default: false }};
+  var LOW_POWER       = {{ low_power_mobile | default: false }};
+
+  /* ── WebGL availability check (runs before loading Three.js) ─────
+   * Covers: hardware acceleration disabled, GPU blocklisted, sandboxed
+   * iframes (Shopify theme editor preview), VMs, remote desktops.       */
+  function webGLAvailable() {
+    try {
+      var t = document.createElement('canvas');
+      return !!(window.WebGL2RenderingContext && t.getContext('webgl2')) ||
+             !!(window.WebGLRenderingContext  && (t.getContext('webgl') || t.getContext('experimental-webgl')));
+    } catch(e) { return false; }
+  }
+
+  function showFallback() {
+    var wrap = document.getElementById('dbs-wrap-' + SEC_ID) || canvasEl.parentElement;
+    if (wrap) wrap.classList.add('show-fallback');
+    canvasEl.style.display = 'none';
+  }
+
+  if (!webGLAvailable()) {
+    showFallback();
+    /* Still run non-3D effects */
+    window.__dbsLoadLibs(function(){
+      if (typeof gsap !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+      if (KINETIC_ON && !reducedMotion) initKinetic();
+      if (PARTICLES_ON && !(isMobile && LOW_POWER) && !reducedMotion) initParticles();
+      initReveal();
+    });
+  } else {
+    window.__dbsLoadLibs(function(){
+      if (typeof THREE === 'undefined' || typeof gsap === 'undefined') return;
+      gsap.registerPlugin(ScrollTrigger);
+      initScene();
+      if (KINETIC_ON && !reducedMotion) initKinetic();
+      if (PARTICLES_ON && !(isMobile && LOW_POWER) && !reducedMotion) initParticles();
+      if (GLITCH_ON && !reducedMotion) scheduleGlitch();
+      initReveal();
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     THREE.JS SCENE
+  ═══════════════════════════════════════════════════════ */
+  function initScene(){
+    /* Guard: one WebGL context per canvas — prevents duplicate init on
+     * section reload in the Shopify editor or when the section appears
+     * on the page more than once.                                       */
+    if (canvasEl._dbsReady) return;
+    canvasEl._dbsReady = true;
+
+    var wrap = (LAYOUT === 'fullscreen') ? root : (document.getElementById('dbs-wrap-' + SEC_ID) || root);
+    var W = wrap.offsetWidth;
+    var H = wrap.offsetHeight || window.innerHeight;
+
+    /* ── Renderer ────────────────────────────────────── */
+    var dpr = (isMobile && LOW_POWER) ? 1 : Math.min(window.devicePixelRatio, 2);
+    var renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasEl, alpha: true,
+        antialias: !(isMobile && LOW_POWER),
+        powerPreference: 'high-performance'
+      });
+    } catch(e) {
+      /* WebGL context creation failed at runtime (can happen even after
+       * the availability pre-check on some sandboxed environments).
+       * Show the fallback image and abort cleanly.                      */
+      canvasEl._dbsReady = false;
+      showFallback();
+      return;
+    }
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(W, H, false);
+    if (THREE.SRGBColorSpace !== undefined) {
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+    } else {
+      renderer.outputEncoding = THREE.sRGBEncoding; /* eslint-disable-line */
+    }
+    renderer.toneMapping     = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3 * LIGHT_MULT;
+    renderer.shadowMap.enabled   = !(isMobile && LOW_POWER);
+    renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
+
+    var scene  = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 100);
+    camera.position.set(0, 0, CAMERA_Z);
+
+    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    var floatTime = 0;
+    var scrollProg = 0;
+    var mouseX = 0, mouseY = 0, mTargetX = 0, mTargetY = 0;
+    var rafId = null, isVisible = false;
+
+    /* ── Materials ─────────────────────────────────── */
+    var matBody, matHandle, matAccent, matGrip;
+
+    function createMats(){
+      isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      if (matBody) {
+        matBody.color.setHex(isDark ? 0x0b1c30 : 0xb2bec8);
+        matBody.metalness    = isDark ? 0.88 : 0.70;
+        matBody.roughness    = isDark ? 0.13 : 0.24;
+        matBody.needsUpdate  = true;
+        matHandle.color.setHex(isDark ? 0x060d18 : 0x9aaab6);
+        matHandle.needsUpdate = true;
+        matAccent.emissiveIntensity = isDark ? 0.22 : 0.05;
+        matAccent.needsUpdate = true;
+        matGrip.color.setHex(isDark ? 0x0e1620 : 0x1c2430);
+        matGrip.needsUpdate  = true;
+      } else {
+        matBody   = new THREE.MeshStandardMaterial({ color: isDark?0x0b1c30:0xb2bec8, metalness:isDark?0.88:0.70, roughness:isDark?0.13:0.24, envMapIntensity:1.1 });
+        matHandle = new THREE.MeshStandardMaterial({ color: isDark?0x060d18:0x9aaab6, metalness:0.95, roughness:0.06, envMapIntensity:1.2 });
+        matAccent = new THREE.MeshStandardMaterial({ color:0x07d16e, metalness:0.55, roughness:0.28, emissive:new THREE.Color(0x07d16e), emissiveIntensity:isDark?0.22:0.05 });
+        matGrip   = new THREE.MeshStandardMaterial({ color: isDark?0x0e1620:0x1c2430, metalness:0.25, roughness:0.72 });
+      }
+    }
+    createMats();
+
+    /* ── Build dumbbell ────────────────────────────── */
+    var dumbbell = new THREE.Group();
+    dumbbell.scale.setScalar(MODEL_SCALE);
+
+    /* Bar — thick (0.17 radius) */
+    var barGeo  = new THREE.CylinderGeometry(0.17, 0.17, 2.2, 24);
+    var barMesh = new THREE.Mesh(barGeo, matHandle);
+    barMesh.rotation.z = Math.PI / 2;
+    barMesh.castShadow  = true;
+    dumbbell.add(barMesh);
+
+    /* Knurl rings — sized to thick bar */
+    for (var ki = -0.62; ki <= 0.62; ki += 0.14) {
+      var rg = new THREE.TorusGeometry(0.187, 0.012, 6, 24);
+      var rm = new THREE.Mesh(rg, matGrip);
+      rm.rotation.y = Math.PI / 2;
+      rm.position.x = ki;
+      dumbbell.add(rm);
+    }
+
+    /* Collars */
+    var colGeo  = new THREE.CylinderGeometry(0.22, 0.22, 0.24, 18);
+    var lCollar = new THREE.Mesh(colGeo, matBody);
+    lCollar.rotation.z = Math.PI/2; lCollar.position.x = -0.96; lCollar.castShadow = true;
+    dumbbell.add(lCollar);
+    var rCollar = lCollar.clone(); rCollar.position.x = 0.96; dumbbell.add(rCollar);
+
+    /* Hex weight heads */
+    var hexGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.64, 6, 1);
+    var lHead  = new THREE.Mesh(hexGeo, matBody);
+    lHead.rotation.z = Math.PI/2; lHead.position.x = -1.41; lHead.castShadow = lHead.receiveShadow = true;
+    dumbbell.add(lHead);
+    var rHead = lHead.clone(); rHead.position.x = 1.41; dumbbell.add(rHead);
+
+    /* Accent rim rings */
+    var rimGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.025, 6);
+    [-1.10, 1.10].forEach(function(x){
+      var r = new THREE.Mesh(rimGeo, matAccent);
+      r.rotation.z = Math.PI/2; r.position.x = x; dumbbell.add(r);
+    });
+
+    /* Outer accent caps (green ring) */
+    var faceAccGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.022, 6);
+    [-1.73, 1.73].forEach(function(x){
+      var r = new THREE.Mesh(faceAccGeo, matAccent);
+      r.rotation.z = Math.PI/2; r.position.x = x; dumbbell.add(r);
+    });
+
+    /* Solid end caps — named references needed for DecalGeometry targeting */
+    var capGeo = new THREE.CylinderGeometry(0.70, 0.70, 0.04, 6);
+    var lCap   = new THREE.Mesh(capGeo, matBody);
+    lCap.rotation.z = Math.PI/2; lCap.position.x = -1.754; dumbbell.add(lCap);
+    var rCap   = new THREE.Mesh(capGeo, matBody);
+    rCap.rotation.z = Math.PI/2; rCap.position.x =  1.754; dumbbell.add(rCap);
+
+    {% comment %} /* BURNLAB text on bar — toggle, size, and colour from schema */
+    if (SHOW_BAR_TEXT) {
+      var tc   = document.createElement('canvas');
+      tc.width = 512; tc.height = 80;
+      var tctx = tc.getContext('2d');
+      tctx.clearRect(0,0,512,80);
+      tctx.font = 'bold ' + BAR_TEXT_SIZE + 'px "Archivo Black","Arial Black",sans-serif';
+      tctx.textAlign = 'center'; tctx.textBaseline = 'middle';
+      tctx.fillStyle = BAR_TEXT_COLOR;
+      tctx.fillText('BURNLAB', 256, 40);
+      var barTex   = new THREE.CanvasTexture(tc);
+      var barTxMat = new THREE.MeshBasicMaterial({ map:barTex, transparent:true, depthWrite:false });
+      var barTxGeo = new THREE.PlaneGeometry(0.82, 0.14);
+      var barLabel = new THREE.Mesh(barTxGeo, barTxMat);
+      barLabel.position.set(0, 0.178, 0.001);
+      dumbbell.add(barLabel);
+    } {% endcomment %}
+
+    scene.add(dumbbell);
+
+    /* ── Logo on dumbbell face plates — UV-mapped PlaneGeometry ───────
+     *
+     * PlaneGeometry has native 0→1 UVs from corner to corner — the logo
+     * image maps cleanly with no projection math or CORS complexity.
+     *
+     * Image source: Shopify image_picker schema field → image_url filter
+     * → always served from Shopify CDN → no CORS issues.
+     *
+     * The plane is oriented to face outward on each end cap:
+     *   Left face  normal = −X  →  rotation.y = −π/2
+     *   Right face normal = +X  →  rotation.y = +π/2
+     *
+     * Position 1.776 = cap centre (1.754) + half-thickness (0.02) + 0.002
+     * clearance to avoid z-fighting against the solid cap mesh.
+     * depthWrite:false + polygonOffset + renderOrder:2 guarantee the logo
+     * always renders on top regardless of draw order.                    */
+    if (LOGO_URL) {
+      var logoTexLoader = new THREE.TextureLoader();
+      logoTexLoader.load(LOGO_URL,
+        function(tex) {
+          if (THREE.SRGBColorSpace !== undefined) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+          }
+          tex.needsUpdate = true;
+
+          var logoMat = new THREE.MeshBasicMaterial({
+            map:           tex,
+            transparent:   true,
+            opacity:       LOGO_OPACITY,
+            alphaTest:     0.01,
+            depthWrite:    false,
+            depthTest:     true,
+            polygonOffset: true,
+            polygonOffsetFactor: -4,
+            polygonOffsetUnits:  -4,
+            side: THREE.FrontSide,
+          });
+
+          /* LOGO_FACE = hex inscribed diameter × size% from schema */
+          var logoGeo = new THREE.PlaneGeometry(LOGO_FACE, LOGO_FACE);
+
+          var lLogo = new THREE.Mesh(logoGeo, logoMat);
+          lLogo.rotation.y = -Math.PI / 2;
+          lLogo.position.x = -1.776;
+          lLogo.renderOrder = 2;
+          dumbbell.add(lLogo);
+
+          var rLogo = new THREE.Mesh(logoGeo, logoMat.clone());
+          rLogo.rotation.y =  Math.PI / 2;
+          rLogo.position.x =  1.776;
+          rLogo.renderOrder = 2;
+          dumbbell.add(rLogo);
+        }
+      );
+    }
+
+    /* Initial visual orientation — RAF overwrites from frame 1 onward */
+    dumbbell.rotation.x = 0.12;
+    dumbbell.rotation.y = -0.35;
+    dumbbell.rotation.z = 0.06;
+
+    /* ── Lights ────────────────────────────────────── */
+    var ambLight, keyLight, rimLight, fillLight, bounceLight;
+    function buildLights(){
+      isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      var lm = LIGHT_MULT;
+      if (ambLight) {
+        ambLight.color.setHex(isDark?0x203050:0xd0e8f8);
+        ambLight.intensity   = (isDark?0.55:1.35)*lm;
+        keyLight.intensity   = (isDark?2.8:2.1)*lm;
+        rimLight.intensity   = (isDark?2.2:0.7)*lm;
+        fillLight.intensity  = (isDark?0.8:1.15)*lm;
+        bounceLight.intensity= (isDark?0.5:0.28)*lm;
+        return;
+      }
+      ambLight = new THREE.AmbientLight(isDark?0x203050:0xd0e8f8,(isDark?0.55:1.35)*lm);
+      scene.add(ambLight);
+      keyLight = new THREE.DirectionalLight(0xffffff,(isDark?2.8:2.1)*lm);
+      keyLight.position.set(-3.5,5,4.5); keyLight.castShadow=true;
+      keyLight.shadow.mapSize.setScalar(1024);
+      scene.add(keyLight);
+      rimLight = new THREE.PointLight(0x07d16e,(isDark?2.2:0.7)*lm,14);
+      rimLight.position.set(2.5,-2.5,-3.5); scene.add(rimLight);
+      fillLight = new THREE.DirectionalLight(0xffffff,(isDark?0.8:1.15)*lm);
+      fillLight.position.set(5,0.5,2); scene.add(fillLight);
+      bounceLight = new THREE.PointLight(isDark?0x07d16e:0x80c8e8,(isDark?0.5:0.28)*lm,10);
+      bounceLight.position.set(0,-4,1.5); scene.add(bounceLight);
+    }
+    buildLights();
+
+    /* ── ScrollTrigger ─────────────────────────────── */
+    if (!reducedMotion) {
+      var st = { val: 0 };
+      gsap.to(st, {
+        val: 1, ease: 'none',
+        scrollTrigger: {
+          trigger: root, start: 'top 80%', end: 'bottom 20%',
+          scrub: SCROLL_SMOOTH,
+          onUpdate: function(self){ scrollProg = self.progress; }
+        }
+      });
+    }
+
+    /* ── Mouse follow ──────────────────────────────── */
+    if (MOUSE_PAR && !isMobile && !reducedMotion) {
+      var ms = PARALLAX_INT / 800;
+      root.addEventListener('mousemove', function(e){
+        var r = root.getBoundingClientRect();
+        mTargetX = ((e.clientX-r.left)/r.width -0.5)*ms*2;
+        mTargetY = -((e.clientY-r.top)/r.height-0.5)*ms*1.5;
+      }, {passive:true});
+      root.addEventListener('mouseleave', function(){ mTargetX=0; mTargetY=0; });
+    }
+
+    /* ── Visibility — pause RAF when fully offscreen ──── */
+    var visObs = new IntersectionObserver(function(entries){
+      isVisible = entries[0].isIntersecting;
+    }, {threshold:0.0});
+    visObs.observe(root);
+
+    /* Start RAF immediately so dumbbell is animated on first paint */
+    isVisible = true;
+    rafId = requestAnimationFrame(tick);
+
+    /* ── RAF loop ──────────────────────────────────── */
+    function tick(){
+      rafId = requestAnimationFrame(tick);
+      if (!isVisible) return;
+      floatTime += 0.012;
+      mouseX += (mTargetX-mouseX)*0.055;
+      mouseY += (mTargetY-mouseY)*0.055;
+
+      var sp = scrollProg;
+      var fy = Math.sin(floatTime*0.65)*FLOAT_STRENGTH*0.4;
+
+      /* Continuous slow auto-rotation — always alive even at scroll 0 */
+      var autoRot = floatTime * 0.28;
+
+      /* Rotation: auto + scroll Y-spin + X tilt */
+      dumbbell.rotation.y = autoRot + sp * Math.PI*2.4 + mouseX;
+      dumbbell.rotation.x = Math.sin(sp*Math.PI)*0.44 + mouseY + fy*0.4 + 0.12;
+      dumbbell.rotation.z = Math.cos(floatTime*0.38)*0.10 + 0.06;
+
+      /* Z-APPROACH: dumbbell surges toward camera on scroll */
+      var approachZ  = sp * 2.8;
+      var floatY     = Math.sin(floatTime*0.58)*FLOAT_STRENGTH;
+      var floatZ     = Math.cos(floatTime*0.40)*FLOAT_STRENGTH*0.3;
+      dumbbell.position.y = floatY;
+      dumbbell.position.z = -0.4 + approachZ + floatZ;
+
+      /* Scale swells as it approaches */
+      var scrollScale = 1 + sp*0.30;
+      var breathe     = 1 + Math.sin(floatTime*0.35)*0.008;
+      dumbbell.scale.setScalar(MODEL_SCALE * scrollScale * breathe);
+
+      /* Camera also drifts closer to amplify the approach effect */
+      camera.position.z = CAMERA_Z*(1 - sp*0.10);
+
+      renderer.render(scene, camera);
+    }
+
+    /* ── Resize ────────────────────────────────────── */
+    function onResize(){
+      W = wrap.offsetWidth;
+      H = (LAYOUT==='fullscreen') ? root.offsetHeight : (wrap.offsetHeight||window.innerHeight);
+      if (!H || H < 100) H = window.innerHeight;
+      renderer.setSize(W, H, false);
+      camera.aspect = W/H;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', onResize, {passive:true});
+
+    /* ── Theme watcher ─────────────────────────────── */
+    var themeObs = new MutationObserver(function(){ createMats(); buildLights(); });
+    themeObs.observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+    /* ── Shopify editor ────────────────────────────── */
+    document.addEventListener('shopify:section:load',   function(e){ if(e.detail.sectionId===SEC_ID) onResize(); });
+    document.addEventListener('shopify:section:unload', function(e){
+      if (e.detail.sectionId !== SEC_ID) return;
+      if (rafId) cancelAnimationFrame(rafId);
+      visObs.disconnect(); themeObs.disconnect();
+      ScrollTrigger.getAll().forEach(function(t){ if(t.vars.trigger===root) t.kill(); });
+      renderer.dispose();
+    });
+  }
+
+  /* ── KINETIC TEXT ───────────────────────────────── */
+  function initKinetic(){
+    var r1=root.querySelector('.dbs-bgtext--row1');
+    var r2=root.querySelector('.dbs-bgtext--row2');
+    var r3=root.querySelector('.dbs-bgtext--row3');
+    if (!r1) return;
+    function update(){
+      var rect=root.getBoundingClientRect();
+      var p=Math.max(0,Math.min(1,(window.innerHeight-rect.top)/(window.innerHeight+rect.height)));
+      var b=(p-0.5)*280;
+      r1.style.transform='translateX('+(-b)+'px)';
+      r2.style.transform='translateX('+(b*0.75)+'px)';
+      if(r3)r3.style.transform='translateX('+(-b*1.15)+'px)';
+    }
+    window.addEventListener('scroll',update,{passive:true});
+    update();
+  }
+
+  /* ── PARTICLES ──────────────────────────────────── */
+  function initParticles(){
+    var pc=root.querySelector('.dbs-particles');
+    if (!pc) return;
+    var pctx=pc.getContext('2d');
+    pc.width=root.offsetWidth; pc.height=root.offsetHeight;
+    var pts=[];
+    for(var i=0;i<(isMobile?30:60);i++){
+      pts.push({x:Math.random()*pc.width,y:Math.random()*pc.height,r:Math.random()*1.4+0.4,
+                vx:(Math.random()-0.5)*0.28,vy:-(Math.random()*0.36+0.08),
+                op:Math.random()*0.55+0.15,life:Math.random()});
+    }
+    function draw(){
+      pctx.clearRect(0,0,pc.width,pc.height);
+      pts.forEach(function(p){
+        p.x+=p.vx; p.y+=p.vy; p.life-=0.0025;
+        if(p.life<=0||p.y<-10){p.x=Math.random()*pc.width;p.y=pc.height+8;p.life=0.7+Math.random()*0.5;p.op=Math.random()*0.55+0.15;}
+        pctx.beginPath(); pctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        pctx.fillStyle='rgba(7,209,110,'+(p.op*Math.min(p.life,1))+')'; pctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+    window.addEventListener('resize',function(){pc.width=root.offsetWidth;pc.height=root.offsetHeight;},{passive:true});
+  }
+
+  /* ── GLITCH ─────────────────────────────────────── */
+  function scheduleGlitch(){
+    var overlay=root.querySelector('.dbs-glitch-overlay');
+    var sf=11-GLITCH_SPD;
+    function doGlitch(){
+      if(!overlay||!canvasEl) return;
+      var intensity=GLITCH_INT/100;
+      var px=Math.round(RGB_AMT*intensity*(Math.random()*2+0.5));
+      canvasEl.style.filter='drop-shadow('+px+'px 0 rgba(255,0,80,'+(0.35*intensity)+')) drop-shadow(-'+px+'px 0 rgba(0,210,255,'+(0.35*intensity)+'))';
+      overlay.classList.add('is-glitching');
+      var dur=55+Math.random()*90;
+      setTimeout(function(){overlay.classList.remove('is-glitching');canvasEl.style.filter='';},dur);
+      if(Math.random()<0.35){
+        setTimeout(function(){
+          canvasEl.style.filter='hue-rotate('+(Math.random()*8-4)+'deg)';
+          setTimeout(function(){canvasEl.style.filter='';},40);
+        },dur+60);
+      }
+      setTimeout(doGlitch,(2800+Math.random()*5500)/sf*3);
+    }
+    setTimeout(doGlitch,2200+Math.random()*2000);
+    window.addEventListener('scroll',function(){if(Math.random()<0.04*(GLITCH_INT/100))doGlitch();},{passive:true});
+  }
+
+  /* ── REVEAL ─────────────────────────────────────── */
+  function initReveal(){
+    var els=root.querySelectorAll('.dbs-reveal');
+    els.forEach(function(el,i){ if(!reducedMotion) el.style.transitionDelay=(i*0.09)+'s'; });
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        entry.target.addEventListener('transitionend',function c(){entry.target.style.transitionDelay='';entry.target.removeEventListener('transitionend',c);});
+        obs.unobserve(entry.target);
+      });
+    },{threshold:0.12});
+    els.forEach(function(el){obs.observe(el);});
+    var bobs=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-visible');bobs.unobserve(e.target);}});
+    },{threshold:0.15});
+    root.querySelectorAll('.dbs-badge').forEach(function(b){bobs.observe(b);});
+  }
+
+}());
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "3D Dumbbell Showcase",
+  "tag": "section",
+  "class": "burnlab-dbs-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout Mode"
+    },
+    {
+      "type": "select",
+      "id": "layout_mode",
+      "label": "Layout Mode",
+      "options": [
+        { "value": "fullscreen", "label": "Fullscreen — dumbbell centered, text behind" },
+        { "value": "split",      "label": "Split — text on one side, dumbbell on other" }
+      ],
+      "default": "fullscreen"
+    },
+    {
+      "type": "range",
+      "id": "section_height",
+      "label": "Section Height",
+      "min": 60,
+      "max": 200,
+      "step": 5,
+      "unit": "vh",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "section_height_mobile",
+      "label": "Section Height (Mobile)",
+      "min": 40,
+      "max": 150,
+      "step": 5,
+      "unit": "vh",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "canvas_opacity",
+      "label": "Dumbbell Canvas Opacity",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100,
+      "info": "Lower this to let background layers show through the canvas more strongly."
+    },
+    {
+      "type": "header",
+      "content": "Fullscreen Content Overlay"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_content",
+      "label": "Show Text Content Overlay",
+      "default": false,
+      "info": "When in Fullscreen mode, shows heading, stats and CTA overlaid on the dumbbell."
+    },
+    {
+      "type": "select",
+      "id": "content_overlay_pos",
+      "label": "Overlay Position",
+      "options": [
+        { "value": "top-left",      "label": "Top Left"      },
+        { "value": "top-center",    "label": "Top Center"    },
+        { "value": "top-right",     "label": "Top Right"     },
+        { "value": "center-left",   "label": "Center Left"   },
+        { "value": "center-center", "label": "Center Center" },
+        { "value": "center-right",  "label": "Center Right"  },
+        { "value": "bottom-left",   "label": "Bottom Left"   },
+        { "value": "bottom-center", "label": "Bottom Center" },
+        { "value": "bottom-right",  "label": "Bottom Right"  }
+      ],
+      "default": "bottom-left"
+    },
+    {
+      "type": "range",
+      "id": "content_overlay_opacity",
+      "label": "Content Overlay Opacity",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 85
+    },
+    {
+      "type": "header",
+      "content": "Split Layout Options"
+    },
+    {
+      "type": "select",
+      "id": "model_side",
+      "label": "Dumbbell Position (Split mode)",
+      "options": [
+        { "value": "right", "label": "Right — text left, dumbbell right" },
+        { "value": "left",  "label": "Left — dumbbell left, text right" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "label": "Text Alignment (Split mode)",
+      "options": [
+        { "value": "left",   "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Section Content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow Label",
+      "default": "Premium Equipment"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Built to Dominate"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Precision-forged hex dumbbells engineered for serious athletes."
+    },
+    {
+      "type": "text",
+      "id": "cta1_label",
+      "label": "Primary Button Label",
+      "default": "Shop Dumbbells"
+    },
+    {
+      "type": "url",
+      "id": "cta1_url",
+      "label": "Primary Button URL"
+    },
+    {
+      "type": "select",
+      "id": "cta1_style",
+      "label": "Primary Button Style",
+      "options": [
+        { "value": "primary", "label": "Primary (Green)" },
+        { "value": "outline", "label": "Outline" },
+        { "value": "navy",    "label": "Navy" },
+        { "value": "teal",    "label": "Teal" }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "text",
+      "id": "cta2_label",
+      "label": "Secondary Button Label",
+      "default": "View All"
+    },
+    {
+      "type": "url",
+      "id": "cta2_url",
+      "label": "Secondary Button URL"
+    },
+    {
+      "type": "select",
+      "id": "cta2_style",
+      "label": "Secondary Button Style",
+      "options": [
+        { "value": "primary", "label": "Primary (Green)" },
+        { "value": "outline", "label": "Outline" },
+        { "value": "navy",    "label": "Navy" },
+        { "value": "teal",    "label": "Teal" }
+      ],
+      "default": "outline"
+    },
+    {
+      "type": "header",
+      "content": "Stats"
+    },
+    {
+      "type": "text",
+      "id": "stat1_num",
+      "label": "Stat 1 Value",
+      "default": "50KG"
+    },
+    {
+      "type": "text",
+      "id": "stat1_label",
+      "label": "Stat 1 Label",
+      "default": "Max Load"
+    },
+    {
+      "type": "text",
+      "id": "stat2_num",
+      "label": "Stat 2 Value",
+      "default": "100%"
+    },
+    {
+      "type": "text",
+      "id": "stat2_label",
+      "label": "Stat 2 Label",
+      "default": "Steel Core"
+    },
+    {
+      "type": "text",
+      "id": "stat3_num",
+      "label": "Stat 3 Value",
+      "default": "2 YR"
+    },
+    {
+      "type": "text",
+      "id": "stat3_label",
+      "label": "Stat 3 Label",
+      "default": "Warranty"
+    },
+    {
+      "type": "header",
+      "content": "Floating Badges"
+    },
+    {
+      "type": "text",
+      "id": "badge1_num",
+      "label": "Badge 1 Value",
+      "default": "HEX"
+    },
+    {
+      "type": "text",
+      "id": "badge1_label",
+      "label": "Badge 1 Label",
+      "default": "Anti-Roll Design"
+    },
+    {
+      "type": "text",
+      "id": "badge2_num",
+      "label": "Badge 2 Value",
+      "default": "PRO"
+    },
+    {
+      "type": "text",
+      "id": "badge2_label",
+      "label": "Badge 2 Label",
+      "default": "Grade Steel"
+    },
+    {
+      "type": "header",
+      "content": "3D Model Settings"
+    },
+    {
+      "type": "image_picker",
+      "id": "fallback_image",
+      "label": "Fallback Image",
+      "info": "Shown if WebGL is unavailable."
+    },
+    {
+      "type": "header",
+      "content": "Dumbbell Face Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_image",
+      "label": "Logo Image",
+      "info": "Upload your logo PNG. It will appear on both outer face plates of the dumbbell. Transparent PNG recommended."
+    },
+    {
+      "type": "range",
+      "id": "logo_size",
+      "label": "Logo Size",
+      "min": 40,
+      "max": 120,
+      "step": 5,
+      "unit": "%",
+      "default": 80,
+      "info": "Size relative to the face plate diameter. 80% gives a natural fit with visible border."
+    },
+    {
+      "type": "range",
+      "id": "logo_opacity",
+      "label": "Logo Opacity",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "model_scale",
+      "label": "Model Scale",
+      "min": 50,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "model_scale_mobile",
+      "label": "Model Scale (Mobile)",
+      "min": 20,
+      "max": 150,
+      "step": 5,
+      "unit": "%",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "model_camera_z",
+      "label": "Camera Distance",
+      "min": 40,
+      "max": 90,
+      "step": 5,
+      "unit": "px",
+      "default": 65,
+      "info": "Distance from camera to dumbbell. Higher = more zoomed out."
+    },
+    {
+      "type": "range",
+      "id": "model_camera_z_mobile",
+      "label": "Camera Distance (Mobile)",
+      "min": 40,
+      "max": 120,
+      "step": 5,
+      "unit": "px",
+      "default": 65,
+      "info": "Distance from camera on mobile. Higher = more zoomed out."
+    },
+    {
+      "type": "range",
+      "id": "float_strength",
+      "label": "Float Intensity",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "scroll_smoothing",
+      "label": "Scroll Smoothing",
+      "min": 5,
+      "max": 50,
+      "step": 5,
+      "default": 20,
+      "info": "Higher = more cinematic lag on scroll. Lower = snappier response."
+    },
+    {
+      "type": "range",
+      "id": "lighting_intensity",
+      "label": "Lighting Intensity",
+      "min": 20,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Kinetic Background Text"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_kinetic_text",
+      "label": "Enable Kinetic Background Text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "kinetic_row1",
+      "label": "Row 1 Text",
+      "default": "POWER · PERFORMANCE · STRENGTH · POWER · PERFORMANCE · STRENGTH ·"
+    },
+    {
+      "type": "text",
+      "id": "kinetic_row2",
+      "label": "Row 2 Text (outline)",
+      "default": "BURNLAB · FORGED · ELITE · TRAIN HARD · BURN MORE · BURNLAB ·"
+    },
+    {
+      "type": "text",
+      "id": "kinetic_row3",
+      "label": "Row 3 Text",
+      "default": "DOMINATE · PRECISION · POWER · DOMINATE · PRECISION · POWER ·"
+    },
+    {
+      "type": "range",
+      "id": "bg_text_opacity",
+      "label": "Background Text Opacity",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "default": 6
+    },
+    {
+      "type": "header",
+      "content": "Theme Colors"
+    },
+    {
+      "type": "color",
+      "id": "dark_bg",
+      "label": "Dark Mode Background",
+      "default": "#000f1c"
+    },
+    {
+      "type": "color",
+      "id": "light_bg",
+      "label": "Light Mode Background",
+      "default": "#f0f5f8"
+    },
+    {
+      "type": "color",
+      "id": "dark_text",
+      "label": "Dark Mode Text",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "light_text",
+      "label": "Light Mode Text",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "dark_glow",
+      "label": "Dark Mode Glow",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "light_glow",
+      "label": "Light Mode Glow",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading Size",
+      "min": 32,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "body_size",
+      "label": "Body Text Size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glitch",
+      "label": "Enable Glitch Effect",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "glitch_intensity",
+      "label": "Glitch Intensity",
+      "min": 5,
+      "max": 100,
+      "step": 5,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "glitch_speed",
+      "label": "Glitch Frequency",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "rgb_amount",
+      "label": "RGB Split Amount",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "unit": "px",
+      "default": 3
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_scanlines",
+      "label": "Enable Scanlines",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_particles",
+      "label": "Enable Particles",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grain",
+      "label": "Enable Grain",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_glows",
+      "label": "Enable Glow Blobs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_grid",
+      "label": "Enable Animated Grid",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable Animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_mouse_parallax",
+      "label": "Enable Mouse Parallax",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "parallax_intensity",
+      "label": "Mouse Parallax Intensity",
+      "min": 2,
+      "max": 50,
+      "step": 1,
+      "default": 15
+    },
+    {
+      "type": "header",
+      "content": "Performance"
+    },
+    {
+      "type": "checkbox",
+      "id": "low_power_mobile",
+      "label": "Low Power Mode on Mobile",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding Top (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding Bottom (Mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "3D Dumbbell Showcase",
+      "category": "Interactive"
+    }
+  ]
+}
+{% endschema %}

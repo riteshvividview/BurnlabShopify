@@ -1,0 +1,1649 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Customer Addresses
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Layout: Split — address cards left, sticky inline form right
+  Animation: Location Lock — pin-drop cards + GPS badge ping +
+             mode-switch form fade + radar rings bg
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-addresses-' | append: section.id -%}
+
+{%- liquid
+  assign page_title         = section.settings.page_title         | default: 'Your Addresses'
+  assign add_new_label      = section.settings.add_new_label      | default: 'Add New Address'
+  assign return_label       = section.settings.return_label       | default: 'Back to Account'
+  assign default_label      = section.settings.default_label      | default: 'Default'
+  assign edit_label         = section.settings.edit_label         | default: 'Edit'
+  assign delete_label       = section.settings.delete_label       | default: 'Delete'
+  assign update_label       = section.settings.update_label       | default: 'Save Changes'
+  assign cancel_label       = section.settings.cancel_label       | default: 'Cancel Edit'
+  assign add_submit_label   = section.settings.add_submit_label   | default: 'Add Address'
+  assign form_add_title     = section.settings.form_add_title     | default: 'Add New Address'
+  assign form_edit_title    = section.settings.form_edit_title    | default: 'Editing Address'
+  assign empty_heading      = section.settings.empty_heading      | default: 'No addresses yet'
+  assign empty_subtext      = section.settings.empty_subtext      | default: 'Your saved shipping addresses will appear here.'
+  assign brand_logo         = section.settings.brand_logo
+  assign brand_logo_width   = section.settings.brand_logo_width   | default: 100
+
+  assign bg_dark            = section.settings.bg_color_dark      | default: '#000f1c'
+  assign card_bg_dark       = section.settings.card_bg_dark       | default: '#001a2e'
+  assign panel_bg_dark      = section.settings.panel_bg_dark      | default: '#001428'
+  assign text_dark          = section.settings.text_color_dark    | default: '#eaf4f5'
+  assign accent_dark        = section.settings.accent_color_dark  | default: '#07d16e'
+  assign border_dark        = section.settings.border_color_dark  | default: '#1a3a50'
+  assign muted_dark         = text_dark | color_modify: 'alpha', 0.55
+
+  assign bg_light           = section.settings.bg_color_light     | default: '#eaf4f5'
+  assign card_bg_light      = section.settings.card_bg_light      | default: '#ffffff'
+  assign panel_bg_light     = section.settings.panel_bg_light     | default: '#f4f8fa'
+  assign text_light         = section.settings.text_color_light   | default: '#001a2e'
+  assign accent_light       = section.settings.accent_color_light | default: '#07d16e'
+  assign border_light       = section.settings.border_color_light | default: '#c4d8e2'
+  assign muted_light        = text_light | color_modify: 'alpha', 0.58
+
+  assign card_radius        = section.settings.card_radius        | default: 16
+  assign enable_anims       = section.settings.enable_animations
+  assign enable_radar       = section.settings.enable_radar_bg
+
+  assign padding_top        = section.settings.padding_top        | default: 56
+  assign padding_bottom     = section.settings.padding_bottom     | default: 80
+  assign pt_mob             = section.settings.padding_top_mobile | default: 36
+  assign pb_mob             = section.settings.padding_bottom_mobile | default: 56
+-%}
+
+{% style %}
+
+/* ── Reset ── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark mode tokens ── */
+#{{ section_id }} {
+  --al-bg:       {{ bg_dark }};
+  --al-card:     {{ card_bg_dark }};
+  --al-panel:    {{ panel_bg_dark }};
+  --al-text:     {{ text_dark }};
+  --al-muted:    {{ muted_dark }};
+  --al-accent:   {{ accent_dark }};
+  --al-border:   {{ border_dark }};
+  --al-glow:     rgba(7, 209, 110, 0.09);
+  --al-ring:     rgba(7, 209, 110, 0.20);
+  --al-input-bg: rgba(255, 255, 255, 0.05);
+  --al-error:    #ff5f5f;
+  --al-radius:   {{ card_radius }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --al-bg:       {{ bg_light }};
+  --al-card:     {{ card_bg_light }};
+  --al-panel:    {{ panel_bg_light }};
+  --al-text:     {{ text_light }};
+  --al-muted:    {{ muted_light }};
+  --al-accent:   {{ accent_light }};
+  --al-border:   {{ border_light }};
+  --al-glow:     rgba(7, 209, 110, 0.06);
+  --al-ring:     rgba(7, 209, 110, 0.15);
+  --al-input-bg: rgba(0, 26, 46, 0.04);
+}
+
+/* ── Section root ── */
+#{{ section_id }} {
+  position: relative;
+  overflow: hidden;
+  background: var(--al-bg);
+  color: var(--al-text);
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  min-height: 100vh;
+  min-height: 100svh;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Background ── */
+#{{ section_id }} .al-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#{{ section_id }} .al-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+#{{ section_id }} .al-blob--1 {
+  width: 70rem;
+  height: 70rem;
+  background: radial-gradient(ellipse, rgba(7, 209, 110, 0.06) 0%, transparent 62%);
+  top: -18%;
+  right: -8%;
+}
+
+#{{ section_id }} .al-blob--2 {
+  width: 48rem;
+  height: 48rem;
+  background: radial-gradient(ellipse, rgba(51, 104, 112, 0.07) 0%, transparent 60%);
+  bottom: -18%;
+  left: -4%;
+}
+
+{% if enable_radar %}
+#{{ section_id }} .al-radar {
+  position: absolute;
+  width: min(100rem, 150vw);
+  height: min(100rem, 150vw);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, transparent calc(10% - 1px), rgba(7,209,110,0.04) calc(10% - 1px), rgba(7,209,110,0.04) 10%, transparent 10%),
+    radial-gradient(circle, transparent calc(22% - 1px), rgba(7,209,110,0.03) calc(22% - 1px), rgba(7,209,110,0.03) 22%, transparent 22%),
+    radial-gradient(circle, transparent calc(36% - 1px), rgba(7,209,110,0.025) calc(36% - 1px), rgba(7,209,110,0.025) 36%, transparent 36%),
+    radial-gradient(circle, transparent calc(52% - 1px), rgba(7,209,110,0.018) calc(52% - 1px), rgba(7,209,110,0.018) 52%, transparent 52%),
+    radial-gradient(circle, transparent calc(70% - 1px), rgba(7,209,110,0.012) calc(70% - 1px), rgba(7,209,110,0.012) 70%, transparent 70%);
+}
+{% endif %}
+
+/* ══════════════════════════════════════════════════
+   CONTAINER + OUTER LAYOUT
+══════════════════════════════════════════════════ */
+#{{ section_id }} .al-container {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 7rem);
+  position: relative;
+  z-index: 10;
+}
+
+/* Page header */
+#{{ section_id }} .al-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(1.4rem, 2.5vw, 2.4rem);
+  margin-bottom: clamp(2.8rem, 4.5vw, 4.4rem);
+  flex-wrap: wrap;
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .al-page-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4.5vw, 5rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: var(--al-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .al-header-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* Split layout */
+#{{ section_id }} .al-split {
+  display: grid;
+  grid-template-columns: 1fr 42rem;
+  gap: clamp(2.4rem, 4vw, 5rem);
+  align-items: start;
+}
+
+@media (max-width: 1180px) {
+  #{{ section_id }} .al-split {
+    grid-template-columns: 1fr 36rem;
+    gap: clamp(2rem, 3vw, 3.6rem);
+  }
+}
+
+@media (max-width: 960px) {
+  #{{ section_id }} .al-split {
+    grid-template-columns: 1fr;
+    gap: clamp(2.4rem, 4vw, 4rem);
+  }
+}
+
+/* ── Shared button ── */
+#{{ section_id }} .al-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem 2rem;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.22s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
+  white-space: nowrap;
+}
+
+#{{ section_id }} .al-btn svg { width: 1.4rem; height: 1.4rem; flex-shrink: 0; }
+#{{ section_id }} .al-btn:active { transform: scale(0.97); }
+
+#{{ section_id }} .al-btn--primary {
+  background: var(--al-accent);
+  color: #001a2e;
+}
+#{{ section_id }} .al-btn--primary:hover {
+  background: rgba(7, 209, 110, 0.88);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(7, 209, 110, 0.35);
+}
+
+#{{ section_id }} .al-btn--outline {
+  background: transparent;
+  color: var(--al-muted);
+  border: 1.5px solid var(--al-border);
+}
+#{{ section_id }} .al-btn--outline:hover {
+  border-color: var(--al-accent);
+  color: var(--al-accent);
+  background: rgba(7, 209, 110, 0.05);
+}
+
+#{{ section_id }} .al-btn--danger {
+  background: transparent;
+  color: rgba(255, 95, 95, 0.7);
+  border: 1.5px solid rgba(255, 95, 95, 0.22);
+  padding: 1rem 1.6rem;
+}
+#{{ section_id }} .al-btn--danger:hover {
+  background: rgba(255, 95, 95, 0.07);
+  border-color: rgba(255, 95, 95, 0.5);
+  color: #ff5f5f;
+}
+
+#{{ section_id }} .al-btn--ghost {
+  background: transparent;
+  color: var(--al-muted);
+  border: 1.5px solid transparent;
+}
+#{{ section_id }} .al-btn--ghost:hover { color: var(--al-text); }
+
+/* Mobile: full-width buttons in header */
+@media (max-width: 480px) {
+  #{{ section_id }} .al-header { flex-direction: column; }
+  #{{ section_id }} .al-header-btns { width: 100%; }
+  #{{ section_id }} .al-header-btns .al-btn { flex: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   LEFT COL — Address cards
+══════════════════════════════════════════════════ */
+#{{ section_id }} .al-cards {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.4rem, 2vw, 2rem);
+}
+
+/* Address card */
+#{{ section_id }} .al-card {
+  background: var(--al-card);
+  border: 1.5px solid var(--al-border);
+  border-radius: var(--al-radius);
+  padding: clamp(1.8rem, 2.5vw, 2.6rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  transition: background 0.35s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform, opacity;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Green left accent strip on hover / editing */
+#{{ section_id }} .al-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--al-accent);
+  border-radius: 0;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#{{ section_id }} .al-card:hover::before,
+#{{ section_id }} .al-card--active::before {
+  transform: scaleY(1);
+}
+
+#{{ section_id }} .al-card--active {
+  border-color: rgba(7, 209, 110, 0.35);
+  box-shadow: 0 0 0 1px rgba(7, 209, 110, 0.12), 0 8px 28px rgba(7, 209, 110, 0.06);
+}
+
+/* Default badge */
+#{{ section_id }} .al-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--al-glow);
+  border: 1px solid var(--al-ring);
+  border-radius: 99px;
+  padding: 0.25rem 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.95rem, 1.0vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--al-accent);
+  width: fit-content;
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .al-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--al-accent);
+  flex-shrink: 0;
+}
+
+/* Address text */
+#{{ section_id }} .al-addr {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  line-height: 1.75;
+  color: var(--al-text);
+  font-style: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+  flex: 1;
+}
+
+#{{ section_id }} .al-addr p { margin: 0; line-height: 1.75; }
+
+/* Card actions */
+#{{ section_id }} .al-card-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--al-border);
+  transition: border-color 0.35s ease;
+}
+
+/* Empty state */
+#{{ section_id }} .al-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.2rem, 2vw, 1.8rem);
+  padding: clamp(4rem, 7vw, 7rem) clamp(2rem, 4vw, 3rem);
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .al-empty-logo {
+  width: {{ brand_logo_width }}px;
+  max-width: min({{ brand_logo_width }}px, 70vw);
+  height: auto;
+  display: block;
+  opacity: 0.45;
+  transition: opacity 0.3s ease;
+}
+
+#{{ section_id }} .al-empty-icon {
+  width: 6.4rem;
+  height: 6.4rem;
+  border-radius: 50%;
+  background: var(--al-glow);
+  border: 1.5px solid var(--al-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--al-accent);
+}
+
+#{{ section_id }} .al-empty-icon svg { width: 2.8rem; height: 2.8rem; }
+
+#{{ section_id }} .al-empty-h {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  letter-spacing: -0.02em;
+  color: var(--al-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .al-empty-p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.4vw, 1.55rem);
+  color: var(--al-muted);
+  max-width: 32rem;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+/* Pagination */
+#{{ section_id }} .al-pagination { margin-top: clamp(2rem, 3.5vw, 3.6rem); }
+
+/* ══════════════════════════════════════════════════
+   RIGHT COL — Sticky form panel
+══════════════════════════════════════════════════ */
+#{{ section_id }} .al-form-col {
+  position: sticky;
+  top: clamp(80px, 10vw, 92px); /* below sticky header */
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--al-border) transparent;
+}
+
+#{{ section_id }} .al-form-col::-webkit-scrollbar { width: 5px; }
+#{{ section_id }} .al-form-col::-webkit-scrollbar-track { background: transparent; }
+#{{ section_id }} .al-form-col::-webkit-scrollbar-thumb { background: var(--al-border); border-radius: 99px; }
+
+/* On smaller screens: not sticky */
+@media (max-width: 960px) {
+  #{{ section_id }} .al-form-col {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* Form panel card */
+#{{ section_id }} .al-panel {
+  background: var(--al-panel);
+  border: 1.5px solid var(--al-border);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+/* Top accent bar */
+#{{ section_id }} .al-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--al-accent), rgba(7, 209, 110, 0.35), transparent);
+  z-index: 2;
+}
+
+/* Panel mode header */
+#{{ section_id }} .al-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.6rem, 2.2vw, 2.2rem) clamp(1.8rem, 2.8vw, 2.8rem) clamp(1.2rem, 1.8vw, 1.8rem);
+  border-bottom: 1px solid var(--al-border);
+  transition: border-color 0.35s ease;
+}
+
+#{{ section_id }} .al-panel-mode {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 1;
+  min-width: 0;
+}
+
+#{{ section_id }} .al-mode-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--al-accent);
+  flex-shrink: 0;
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .al-panel-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 2vw, 2rem);
+  letter-spacing: -0.018em;
+  line-height: 1.15;
+  color: var(--al-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+/* Cancel edit button */
+#{{ section_id }} .al-cancel-edit {
+  display: none; /* shown when in edit mode */
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1.5px solid var(--al-border);
+  border-radius: 99px;
+  padding: 0.5rem 1.1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.1rem, 1.15vw, 1.25rem);
+  color: var(--al-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.22s ease, color 0.22s ease;
+}
+
+#{{ section_id }} .al-cancel-edit.is-visible { display: inline-flex; }
+#{{ section_id }} .al-cancel-edit:hover { border-color: var(--al-accent); color: var(--al-accent); }
+#{{ section_id }} .al-cancel-edit svg { width: 1.3rem; height: 1.3rem; pointer-events: none; }
+
+/* Panel body */
+#{{ section_id }} .al-panel-body {
+  padding: clamp(1.8rem, 2.8vw, 2.8rem);
+}
+
+/* Form instances — add new + one per edit form */
+#{{ section_id }} .al-form-instance {
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+#{{ section_id }} .al-form-instance.is-hidden {
+  display: none;
+}
+
+#{{ section_id }} .al-form-instance.is-switching {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* Form fields — single column */
+#{{ section_id }} .al-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.2rem, 1.8vw, 1.6rem);
+}
+
+#{{ section_id }} .al-form-group:last-child { margin-bottom: 0; }
+
+#{{ section_id }} .al-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.05rem, 1.1vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--al-muted);
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .al-input,
+#{{ section_id }} .al-select {
+  width: 100%;
+  background: var(--al-input-bg);
+  border: 1.5px solid var(--al-border);
+  border-radius: 10px;
+  padding: 1.1rem 1.3rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.25rem, 1.3vw, 1.45rem);
+  color: var(--al-text);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.28s ease, box-shadow 0.28s ease, background 0.28s ease, color 0.35s ease;
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .al-input:focus,
+#{{ section_id }} .al-select:focus {
+  border-color: var(--al-accent);
+  box-shadow: 0 0 0 3px rgba(7, 209, 110, 0.16);
+}
+
+#{{ section_id }} .al-input::placeholder { color: var(--al-muted); opacity: 0.65; }
+
+/* Two fields side by side (name row) */
+#{{ section_id }} .al-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.8rem, 1.2vw, 1.2rem);
+  margin-bottom: clamp(1.2rem, 1.8vw, 1.6rem);
+}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .al-form-row { grid-template-columns: 1fr; }
+}
+
+/* Inside al-form-row, groups have no bottom margin */
+#{{ section_id }} .al-form-row .al-form-group { margin-bottom: 0; }
+
+/* Select wrapper */
+#{{ section_id }} .al-select-wrap { position: relative; }
+
+#{{ section_id }} .al-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--al-muted);
+  pointer-events: none;
+  transition: border-top-color 0.22s ease;
+}
+
+#{{ section_id }} .al-select-wrap:focus-within::after { border-top-color: var(--al-accent); }
+#{{ section_id }} .al-select-wrap .al-select { padding-right: 3.2rem; cursor: pointer; }
+
+/* Province row — shown/hidden by province-selector JS */
+#{{ section_id }} .al-province-row { /* visibility controlled by province-selector */ }
+
+/* Checkbox */
+#{{ section_id }} .al-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-block: 0.6rem;
+  margin-bottom: clamp(1.2rem, 1.8vw, 1.6rem);
+}
+
+#{{ section_id }} .al-check-row input[type="checkbox"] {
+  width: 1.7rem;
+  height: 1.7rem;
+  accent-color: var(--al-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .al-check-row label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.25rem, 1.3vw, 1.45rem);
+  color: var(--al-text);
+  cursor: pointer;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+/* Form actions */
+#{{ section_id }} .al-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding-top: clamp(1.4rem, 2vw, 2rem);
+  border-top: 1px solid var(--al-border);
+  margin-top: clamp(1.4rem, 2vw, 2rem);
+  transition: border-color 0.35s ease;
+}
+
+#{{ section_id }} .al-form-actions .al-btn { flex: 1; min-width: 10rem; }
+
+@media (max-width: 360px) {
+  #{{ section_id }} .al-form-actions { flex-direction: column; }
+  #{{ section_id }} .al-form-actions .al-btn { width: 100%; }
+}
+
+/* Form error block */
+#{{ section_id }} .al-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: 10px;
+  margin-bottom: 1.6rem;
+  border: 1px solid rgba(255, 95, 95, 0.28);
+  background: rgba(255, 95, 95, 0.07);
+}
+
+#{{ section_id }} .al-form-error p,
+#{{ section_id }} .al-form-error ul,
+#{{ section_id }} .al-form-error li {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--al-error);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Mobile: form col below list col */
+@media (max-width: 960px) {
+  #{{ section_id }} .al-form-col { order: 2; }
+  #{{ section_id }} .al-list-col { order: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════ */
+{% if enable_anims %}
+
+@keyframes al-blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(14px, -12px) scale(1.04); }
+  75%       { transform: translate(-10px, 7px) scale(0.97); }
+}
+
+@keyframes al-fade-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes al-panel-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes al-ping {
+  0%   { box-shadow: 0 0 0 0 rgba(7, 209, 110, 0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(7, 209, 110, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(7, 209, 110, 0); }
+}
+
+@keyframes al-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.7; }
+}
+
+#{{ section_id }} .al-blob--1 { animation: al-blob-drift 18s ease-in-out infinite; }
+#{{ section_id }} .al-blob--2 { animation: al-blob-drift 22s ease-in-out infinite; animation-delay: -9s; }
+
+#{{ section_id }} .al-header {
+  animation: al-fade-down 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#{{ section_id }} .al-form-col {
+  animation: al-panel-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  will-change: transform, opacity;
+}
+
+/* Card pin-drop — set to invisible, JS triggers .is-visible */
+#{{ section_id }} .al-card {
+  opacity: 0;
+  transform: scale(0.93) translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.35s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#{{ section_id }} .al-card.is-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* GPS badge pulse */
+#{{ section_id }} .al-badge { animation: al-ping 2.2s ease-out infinite; }
+
+/* Mode dot pulse */
+#{{ section_id }} .al-mode-dot { animation: al-dot-pulse 2s ease-in-out infinite; }
+
+/* Empty state */
+#{{ section_id }} .al-empty {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#{{ section_id }} .al-empty.is-visible { opacity: 1; transform: none; }
+
+/* Shopify editor override */
+.shopify-design-mode #{{ section_id }} .al-card,
+.shopify-design-mode #{{ section_id }} .al-header,
+.shopify-design-mode #{{ section_id }} .al-form-col,
+.shopify-design-mode #{{ section_id }} .al-empty {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .al-blob--1,
+  #{{ section_id }} .al-blob--2,
+  #{{ section_id }} .al-header,
+  #{{ section_id }} .al-card,
+  #{{ section_id }} .al-form-col,
+  #{{ section_id }} .al-badge,
+  #{{ section_id }} .al-mode-dot,
+  #{{ section_id }} .al-empty {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+{% else %}
+
+#{{ section_id }} .al-card { opacity: 1; transform: none; }
+#{{ section_id }} .al-empty { opacity: 1; transform: none; }
+
+{% endif %}
+
+/* Theme transitions */
+#{{ section_id }} .al-card,
+#{{ section_id }} .al-panel,
+#{{ section_id }} .al-input,
+#{{ section_id }} .al-select,
+#{{ section_id }} .al-addr,
+#{{ section_id }} .al-panel-title {
+  transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .al-container { padding-inline: 1rem; }
+}
+
+{% endstyle %}
+
+{% paginate customer.addresses by 9 %}
+
+<section id="{{ section_id }}" aria-label="{{ 'customer.addresses.title' | t }}">
+
+  <div class="al-bg" aria-hidden="true">
+    {% if enable_radar %}<div class="al-radar"></div>{% endif %}
+    <div class="al-blob al-blob--1"></div>
+    <div class="al-blob al-blob--2"></div>
+  </div>
+
+  <div class="al-container">
+
+    <!-- Page header -->
+    <div class="al-header">
+      <h1 class="al-page-title">{{ page_title | escape }}</h1>
+      <div class="al-header-btns">
+        <a href="{{ routes.account_url }}" class="al-btn al-btn--outline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          {{ return_label | escape }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Split layout -->
+    <div class="al-split">
+
+      <!-- ── Left col: address cards ── -->
+      <div class="al-list-col">
+
+        {% if customer.addresses.size > 0 %}
+          <div class="al-cards" id="al-cards-{{ section.id }}">
+            {%- for address in customer.addresses -%}
+              <div
+                class="al-card"
+                data-card-index="{{ forloop.index0 }}"
+                data-address-id="{{ address.id }}"
+                id="al-card-{{ address.id }}"
+              >
+                {% if address == customer.default_address %}
+                  <div class="al-badge" role="status">{{ default_label | escape }}</div>
+                {% endif %}
+
+                <address class="al-addr">{{ address | format_address }}</address>
+
+                <div class="al-card-btns">
+                  <button
+                    type="button"
+                    class="al-btn al-btn--outline"
+                    data-edit-address="{{ address.id }}"
+                    aria-label="{{ edit_label | escape }}"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    {{ edit_label | escape }}
+                  </button>
+                  <button
+                    type="button"
+                    class="al-btn al-btn--danger"
+                    data-delete-url="{{ address.url }}"
+                    data-confirm="{{ 'customer.addresses.delete_confirm' | t | escape }}"
+                    aria-label="{{ delete_label | escape }}"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                    {{ delete_label | escape }}
+                  </button>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+
+          {% if paginate.pages > 1 %}
+            <div class="al-pagination">{% render 'pagination', paginate: paginate %}</div>
+          {% endif %}
+
+        {% else %}
+
+          <div class="al-empty" id="al-empty-{{ section.id }}">
+            {% if brand_logo %}
+              <img
+                src="{{ brand_logo | image_url: width: brand_logo_width }}"
+                alt="{{ shop.name }}"
+                class="al-empty-logo"
+                loading="lazy"
+                width="{{ brand_logo_width }}"
+              >
+            {% else %}
+              <div class="al-empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+              </div>
+            {% endif %}
+            <h2 class="al-empty-h">{{ empty_heading | escape }}</h2>
+            <p class="al-empty-p">{{ empty_subtext | escape }}</p>
+          </div>
+
+        {% endif %}
+
+      </div><!-- /al-list-col -->
+
+      <!-- ── Right col: sticky form panel ── -->
+      <div class="al-form-col">
+        <div class="al-panel">
+
+          <!-- Panel header: shows mode + cancel button -->
+          <div class="al-panel-head">
+            <div class="al-panel-mode">
+              <span class="al-mode-dot" aria-hidden="true"></span>
+              <h2 class="al-panel-title" id="al-panel-title-{{ section.id }}">{{ form_add_title | escape }}</h2>
+            </div>
+            <button
+              type="button"
+              class="al-cancel-edit"
+              id="al-cancel-edit-{{ section.id }}"
+              aria-label="{{ cancel_label | escape }}"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              {{ cancel_label | escape }}
+            </button>
+          </div>
+
+          <div class="al-panel-body">
+
+            <!-- ── ADD NEW FORM ── -->
+            <div class="al-form-instance" id="al-new-form-{{ section.id }}">
+              {%- form 'customer_address', customer.new_address, id: 'al-new-{{ section.id }}' -%}
+
+                {%- if form.errors -%}
+                  <div class="al-form-error" role="alert">{{ form.errors | default_errors }}</div>
+                {%- endif -%}
+
+                <!-- First + Last name -->
+                <div class="al-form-row">
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-n-fname-{{ section.id }}">{{ 'customer.addresses.first_name' | t }}</label>
+                    <input type="text" id="al-n-fname-{{ section.id }}" name="address[first_name]" value="{{ form.first_name }}" autocomplete="given-name" class="al-input" placeholder="{{ 'customer.addresses.first_name' | t }}">
+                  </div>
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-n-lname-{{ section.id }}">{{ 'customer.addresses.last_name' | t }}</label>
+                    <input type="text" id="al-n-lname-{{ section.id }}" name="address[last_name]" value="{{ form.last_name }}" autocomplete="family-name" class="al-input" placeholder="{{ 'customer.addresses.last_name' | t }}">
+                  </div>
+                </div>
+
+                <div class="al-form-group">
+                  <label class="al-label" for="al-n-company-{{ section.id }}">{{ 'customer.addresses.company' | t }}</label>
+                  <input type="text" id="al-n-company-{{ section.id }}" name="address[company]" value="{{ form.company }}" autocomplete="organization" class="al-input" placeholder="{{ 'customer.addresses.company' | t }}">
+                </div>
+                <div class="al-form-group">
+                  <label class="al-label" for="al-n-addr1-{{ section.id }}">{{ 'customer.addresses.address1' | t }}</label>
+                  <input type="text" id="al-n-addr1-{{ section.id }}" name="address[address1]" value="{{ form.address1 }}" autocomplete="address-line1" class="al-input" placeholder="{{ 'customer.addresses.address1' | t }}">
+                </div>
+                <div class="al-form-group">
+                  <label class="al-label" for="al-n-addr2-{{ section.id }}">{{ 'customer.addresses.address2' | t }}</label>
+                  <input type="text" id="al-n-addr2-{{ section.id }}" name="address[address2]" value="{{ form.address2 }}" autocomplete="address-line2" class="al-input" placeholder="{{ 'customer.addresses.address2' | t }}">
+                </div>
+
+                <div class="al-form-row">
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-n-city-{{ section.id }}">{{ 'customer.addresses.city' | t }}</label>
+                    <input type="text" id="al-n-city-{{ section.id }}" name="address[city]" value="{{ form.city }}" autocomplete="address-level2" class="al-input" placeholder="{{ 'customer.addresses.city' | t }}">
+                  </div>
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-n-zip-{{ section.id }}">{{ 'customer.addresses.zip' | t }}</label>
+                    <input type="text" id="al-n-zip-{{ section.id }}" name="address[zip]" value="{{ form.zip }}" autocapitalize="characters" autocomplete="postal-code" class="al-input" placeholder="{{ 'customer.addresses.zip' | t }}">
+                  </div>
+                </div>
+
+                <province-selector>
+                  <div class="al-form-group al-province-row">
+                    <label class="al-label" for="al-n-country-{{ section.id }}">{{ 'customer.addresses.country' | t }}</label>
+                    <div class="al-select-wrap">
+                      <select id="al-n-country-{{ section.id }}" name="address[country]" data-country data-default="{{ form.country }}" autocomplete="country" class="al-select">
+                        {{ all_country_option_tags }}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="al-form-group al-province-row" id="al-n-prov-wrap-{{ section.id }}" style="display:none;">
+                    <label class="al-label" for="al-n-prov-{{ section.id }}">{{ 'customer.addresses.province' | t }}</label>
+                    <div class="al-select-wrap">
+                      <select id="al-n-prov-{{ section.id }}" name="address[province]" data-default="{{ form.province }}" data-province autocomplete="address-level1" class="al-select"></select>
+                    </div>
+                  </div>
+                </province-selector>
+
+                <div class="al-form-group">
+                  <label class="al-label" for="al-n-phone-{{ section.id }}">{{ 'customer.addresses.phone' | t }}</label>
+                  <input type="tel" id="al-n-phone-{{ section.id }}" name="address[phone]" value="{{ form.phone }}" autocomplete="tel" class="al-input" placeholder="{{ 'customer.addresses.phone' | t }}">
+                </div>
+
+                <div class="al-check-row">
+                  {{ form.set_as_default_checkbox }}
+                  <label for="address_default_address_new">{{ 'customer.addresses.set_default' | t }}</label>
+                </div>
+
+                <div class="al-form-actions">
+                  <button type="submit" class="al-btn al-btn--primary">
+                    {{ add_submit_label | escape }}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  </button>
+                </div>
+
+              {%- endform -%}
+            </div><!-- /al-new-form -->
+
+            <!-- ── EDIT FORMS (one per address, hidden by default) ── -->
+            {%- for address in customer.addresses -%}
+              <div class="al-form-instance is-hidden" id="al-edit-form-{{ address.id }}">
+                {%- form 'customer_address', address -%}
+
+                  {%- if form.errors -%}
+                    <div class="al-form-error" role="alert">{{ form.errors | default_errors }}</div>
+                  {%- endif -%}
+
+                  <div class="al-form-row">
+                    <div class="al-form-group">
+                      <label class="al-label" for="al-e-fname-{{ form.id }}">{{ 'customer.addresses.first_name' | t }}</label>
+                      <input type="text" id="al-e-fname-{{ form.id }}" name="address[first_name]" value="{{ form.first_name }}" autocomplete="given-name" class="al-input" placeholder="{{ 'customer.addresses.first_name' | t }}">
+                    </div>
+                    <div class="al-form-group">
+                      <label class="al-label" for="al-e-lname-{{ form.id }}">{{ 'customer.addresses.last_name' | t }}</label>
+                      <input type="text" id="al-e-lname-{{ form.id }}" name="address[last_name]" value="{{ form.last_name }}" autocomplete="family-name" class="al-input" placeholder="{{ 'customer.addresses.last_name' | t }}">
+                    </div>
+                  </div>
+
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-e-company-{{ form.id }}">{{ 'customer.addresses.company' | t }}</label>
+                    <input type="text" id="al-e-company-{{ form.id }}" name="address[company]" value="{{ form.company }}" autocomplete="organization" class="al-input" placeholder="{{ 'customer.addresses.company' | t }}">
+                  </div>
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-e-addr1-{{ form.id }}">{{ 'customer.addresses.address1' | t }}</label>
+                    <input type="text" id="al-e-addr1-{{ form.id }}" name="address[address1]" value="{{ form.address1 }}" autocomplete="address-line1" class="al-input" placeholder="{{ 'customer.addresses.address1' | t }}">
+                  </div>
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-e-addr2-{{ form.id }}">{{ 'customer.addresses.address2' | t }}</label>
+                    <input type="text" id="al-e-addr2-{{ form.id }}" name="address[address2]" value="{{ form.address2 }}" autocomplete="address-line2" class="al-input" placeholder="{{ 'customer.addresses.address2' | t }}">
+                  </div>
+
+                  <div class="al-form-row">
+                    <div class="al-form-group">
+                      <label class="al-label" for="al-e-city-{{ form.id }}">{{ 'customer.addresses.city' | t }}</label>
+                      <input type="text" id="al-e-city-{{ form.id }}" name="address[city]" value="{{ form.city }}" autocomplete="address-level2" class="al-input" placeholder="{{ 'customer.addresses.city' | t }}">
+                    </div>
+                    <div class="al-form-group">
+                      <label class="al-label" for="al-e-zip-{{ form.id }}">{{ 'customer.addresses.zip' | t }}</label>
+                      <input type="text" id="al-e-zip-{{ form.id }}" name="address[zip]" value="{{ form.zip }}" autocapitalize="characters" autocomplete="postal-code" class="al-input" placeholder="{{ 'customer.addresses.zip' | t }}">
+                    </div>
+                  </div>
+
+                  <province-selector>
+                    <div class="al-form-group al-province-row">
+                      <label class="al-label" for="al-e-country-{{ form.id }}">{{ 'customer.addresses.country' | t }}</label>
+                      <div class="al-select-wrap">
+                        <select id="al-e-country-{{ form.id }}" name="address[country]" data-country data-default="{{ form.country }}" data-form-id="{{ form.id }}" autocomplete="country" class="al-select">
+                          {{ all_country_option_tags }}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="al-form-group al-province-row" id="al-e-prov-wrap-{{ form.id }}" style="display:none;">
+                      <label class="al-label" for="al-e-prov-{{ form.id }}">{{ 'customer.addresses.province' | t }}</label>
+                      <div class="al-select-wrap">
+                        <select id="al-e-prov-{{ form.id }}" name="address[province]" data-default="{{ form.province }}" data-province autocomplete="address-level1" class="al-select"></select>
+                      </div>
+                    </div>
+                  </province-selector>
+
+                  <div class="al-form-group">
+                    <label class="al-label" for="al-e-phone-{{ form.id }}">{{ 'customer.addresses.phone' | t }}</label>
+                    <input type="tel" id="al-e-phone-{{ form.id }}" name="address[phone]" value="{{ form.phone }}" autocomplete="tel" class="al-input" placeholder="{{ 'customer.addresses.phone' | t }}">
+                  </div>
+
+                  <div class="al-check-row">
+                    {{ form.set_as_default_checkbox }}
+                    <label for="address_default_address_{{ form.id }}">{{ 'customer.addresses.set_default' | t }}</label>
+                  </div>
+
+                  <div class="al-form-actions">
+                    <button type="submit" class="al-btn al-btn--primary">
+                      {{ update_label | escape }}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                {%- endform -%}
+              </div><!-- /al-edit-form -->
+            {%- endfor -%}
+
+          </div><!-- /al-panel-body -->
+        </div><!-- /al-panel -->
+      </div><!-- /al-form-col -->
+
+    </div><!-- /al-split -->
+  </div><!-- /al-container -->
+</section>
+
+{% endpaginate %}
+
+<script>
+(function () {
+  var SEC          = document.getElementById('{{ section_id }}');
+  if (!SEC) return;
+
+  var panelTitle   = document.getElementById('al-panel-title-{{ section.id }}');
+  var cancelBtn    = document.getElementById('al-cancel-edit-{{ section.id }}');
+  var newFormEl    = document.getElementById('al-new-form-{{ section.id }}');
+  var formColEl    = SEC.querySelector('.al-form-col');
+
+  var ADD_TITLE    = {{ form_add_title | escape | json }};
+  var EDIT_TITLE   = {{ form_edit_title | escape | json }};
+
+  /* ── Switch to edit mode ── */
+  function switchToEdit(addressId) {
+    var editForm = document.getElementById('al-edit-form-' + addressId);
+    if (!editForm) return;
+
+    /* Fade out */
+    var active = SEC.querySelector('.al-form-instance:not(.is-hidden)');
+    if (active) {
+      active.classList.add('is-switching');
+      setTimeout(function () {
+        active.classList.add('is-hidden');
+        active.classList.remove('is-switching');
+        showForm(editForm);
+      }, 200);
+    } else {
+      showForm(editForm);
+    }
+
+    /* Update panel header */
+    if (panelTitle) panelTitle.textContent = EDIT_TITLE;
+    if (cancelBtn)  cancelBtn.classList.add('is-visible');
+
+    /* Highlight card */
+    SEC.querySelectorAll('.al-card').forEach(function (c) { c.classList.remove('al-card--active'); });
+    var card = document.getElementById('al-card-' + addressId);
+    if (card) card.classList.add('al-card--active');
+
+    /* Scroll to form panel on small screens */
+    if (window.innerWidth < 960 && formColEl) {
+      setTimeout(function () {
+        formColEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }
+
+  function showForm(el) {
+    el.classList.remove('is-hidden');
+    requestAnimationFrame(function () {
+      el.classList.remove('is-switching');
+    });
+    /* Focus first input */
+    var first = el.querySelector('input:not([type=hidden])');
+    if (first) setTimeout(function () { try { first.focus(); } catch(e) {} }, 100);
+  }
+
+  /* ── Reset to add new mode ── */
+  function resetToAdd() {
+    var active = SEC.querySelector('.al-form-instance:not(.is-hidden)');
+    if (active && active !== newFormEl) {
+      active.classList.add('is-switching');
+      setTimeout(function () {
+        active.classList.add('is-hidden');
+        active.classList.remove('is-switching');
+        if (newFormEl) {
+          newFormEl.classList.remove('is-hidden');
+        }
+      }, 200);
+    }
+    if (panelTitle) panelTitle.textContent = ADD_TITLE;
+    if (cancelBtn)  cancelBtn.classList.remove('is-visible');
+    SEC.querySelectorAll('.al-card').forEach(function (c) { c.classList.remove('al-card--active'); });
+  }
+
+  /* ── Edit buttons ── */
+  SEC.querySelectorAll('[data-edit-address]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      switchToEdit(btn.getAttribute('data-edit-address'));
+    });
+  });
+
+  /* ── Cancel edit ── */
+  if (cancelBtn) cancelBtn.addEventListener('click', resetToAdd);
+
+  /* ── Delete ── */
+  SEC.querySelectorAll('[data-delete-url]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var url = btn.getAttribute('data-delete-url');
+      var msg = btn.getAttribute('data-confirm') || 'Are you sure?';
+      if (confirm(msg)) {
+        Shopify.postLink(url, { parameters: { _method: 'delete' } });
+      }
+    });
+  });
+
+  {% if enable_anims %}
+  /* ── Card pin-drop reveal ── */
+  var cards = SEC.querySelectorAll('.al-card');
+  if (cards.length) {
+    var obs = new IntersectionObserver(function (entries, o) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var idx = parseInt(entry.target.getAttribute('data-card-index') || 0, 10);
+          entry.target.style.transitionDelay = (idx * 0.09) + 's';
+          entry.target.classList.add('is-visible');
+          o.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    cards.forEach(function (c) { obs.observe(c); });
+  }
+
+  var emptyEl = document.getElementById('al-empty-{{ section.id }}');
+  if (emptyEl) {
+    var emptyObs = new IntersectionObserver(function (entries, o) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); o.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12 });
+    emptyObs.observe(emptyEl);
+  }
+  {% endif %}
+
+})();
+</script>
+
+<script>
+(function () {
+  if (customElements.get('province-selector')) return;
+
+  class ProvinceSelector extends HTMLElement {
+    constructor() {
+      super();
+      this.countryEl        = this.querySelector('[data-country]');
+      this.provinceEl       = this.querySelector('[data-province]');
+      this.provinceContainer = this.querySelector('.al-province-row:last-child, [id*="prov-wrap"]');
+      if (!this.countryEl || !this.provinceEl) return;
+      this.defaultCountry  = this.countryEl.dataset.default || '';
+      this.defaultProvince = this.provinceEl.dataset.default || '';
+    }
+
+    connectedCallback() {
+      if (!this.countryEl) return;
+      this.countryEl.querySelectorAll('option').forEach(function (opt) {
+        if (opt.value === this.defaultCountry) this.countryEl.value = opt.value;
+        var data = Shopify.countryProvinceSelector
+          && Shopify.countryProvinceSelector.countries
+          && Shopify.countryProvinceSelector.countries[opt.value];
+        if (data && data.provinces) opt.setAttribute('data-provinces', JSON.stringify(data.provinces));
+      }.bind(this));
+      this.updateProvinces();
+      this.countryEl.addEventListener('change', this.updateProvinces.bind(this));
+    }
+
+    updateProvinces() {
+      if (!this.countryEl || !this.provinceEl) return;
+      var selected  = this.countryEl.options[this.countryEl.selectedIndex];
+      var provinces = [];
+      try { provinces = JSON.parse(selected.getAttribute('data-provinces') || '[]'); } catch (e) {}
+      this.provinceEl.innerHTML = '';
+      /* Find container: look for the div with style="display:none" or the province wrap */
+      var container = this.querySelector('[id*="prov-wrap"]') || this.querySelector('.al-province-row:not(:first-child)');
+      if (!container) {
+        /* Fallback: second .al-form-group */
+        var groups = this.querySelectorAll('.al-form-group');
+        if (groups.length > 1) container = groups[1];
+      }
+      if (provinces.length === 0) {
+        if (container) container.style.display = 'none';
+        this.provinceEl.required = false;
+        return;
+      }
+      if (container) container.style.display = '';
+      this.provinceEl.required = true;
+      provinces.forEach(function (pair) {
+        var opt = document.createElement('option');
+        opt.value = pair[1]; opt.textContent = pair[1];
+        if (pair[1] === this.defaultProvince) opt.selected = true;
+        this.provinceEl.appendChild(opt);
+      }.bind(this));
+    }
+  }
+
+  customElements.define('province-selector', ProvinceSelector);
+}());
+</script>
+
+{% schema %}
+{
+  "name": "Customer Addresses",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Page Content"
+    },
+    {
+      "type": "text",
+      "id": "page_title",
+      "label": "Page title",
+      "default": "Your Addresses"
+    },
+    {
+      "type": "text",
+      "id": "add_new_label",
+      "label": "Add new button label",
+      "default": "Add New Address"
+    },
+    {
+      "type": "text",
+      "id": "return_label",
+      "label": "Return to account label",
+      "default": "Back to Account"
+    },
+    {
+      "type": "text",
+      "id": "default_label",
+      "label": "Default badge label",
+      "default": "Default"
+    },
+    {
+      "type": "text",
+      "id": "edit_label",
+      "label": "Edit button label",
+      "default": "Edit"
+    },
+    {
+      "type": "text",
+      "id": "delete_label",
+      "label": "Delete button label",
+      "default": "Delete"
+    },
+    {
+      "type": "header",
+      "content": "Form Panel"
+    },
+    {
+      "type": "text",
+      "id": "form_add_title",
+      "label": "Add new form heading",
+      "default": "Add New Address"
+    },
+    {
+      "type": "text",
+      "id": "form_edit_title",
+      "label": "Edit form heading",
+      "default": "Editing Address"
+    },
+    {
+      "type": "text",
+      "id": "add_submit_label",
+      "label": "Add address button label",
+      "default": "Add Address"
+    },
+    {
+      "type": "text",
+      "id": "update_label",
+      "label": "Save changes button label",
+      "default": "Save Changes"
+    },
+    {
+      "type": "text",
+      "id": "cancel_label",
+      "label": "Cancel edit button label",
+      "default": "Cancel Edit"
+    },
+    {
+      "type": "header",
+      "content": "Empty State"
+    },
+    {
+      "type": "image_picker",
+      "id": "brand_logo",
+      "label": "Brand logo for empty state",
+      "info": "Shown when no addresses are saved. Falls back to a location pin icon."
+    },
+    {
+      "type": "range",
+      "id": "brand_logo_width",
+      "label": "Logo width",
+      "min": 60,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "default": 100
+    },
+    {
+      "type": "text",
+      "id": "empty_heading",
+      "label": "Empty state heading",
+      "default": "No addresses yet"
+    },
+    {
+      "type": "text",
+      "id": "empty_subtext",
+      "label": "Empty state subtext",
+      "default": "Your saved shipping addresses will appear here."
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 28,
+      "step": 2,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Page background",
+      "default": "#000f1c"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Address card background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "panel_bg_dark",
+      "label": "Form panel background",
+      "default": "#001428"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_dark",
+      "label": "Border color",
+      "default": "#1a3a50"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Page background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Address card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "panel_bg_light",
+      "label": "Form panel background",
+      "default": "#f4f8fa"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_light",
+      "label": "Border color",
+      "default": "#c4d8e2"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true,
+      "info": "Card pin-drop reveal, GPS badge pulse, form panel entrance. Disabled for reduced-motion visitors."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_radar_bg",
+      "label": "Enable radar ring background",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 56
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Customer Addresses",
+      "settings": {
+        "enable_animations": true,
+        "enable_radar_bg": true
+      }
+    }
+  ]
+}
+{% endschema %}

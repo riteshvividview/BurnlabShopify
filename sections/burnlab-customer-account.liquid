@@ -1,0 +1,1482 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Customer Account Dashboard
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Dashboard Boot — IntersectionObserver order cascade +
+             row scan-down reveal + sidebar spring-in + avatar pop +
+             status badge pulse + hex-grid background
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-account-' | append: section.id -%}
+
+{%- liquid
+  assign welcome_prefix     = section.settings.welcome_prefix      | default: 'Welcome back,'
+  assign orders_heading     = section.settings.orders_heading       | default: 'Order History'
+  assign empty_msg          = section.settings.empty_orders_msg    | default: 'No orders yet. Time to build something great.'
+  assign address_heading    = section.settings.address_heading     | default: 'Default Address'
+  assign member_badge_label = section.settings.member_badge_label  | default: 'BurnLab Member'
+  assign no_address_msg     = section.settings.no_address_msg      | default: 'No address saved yet.'
+  assign shop_now_label     = section.settings.shop_now_label      | default: 'Shop Now'
+  assign manage_addr_label  = section.settings.manage_addr_label   | default: 'Manage Addresses'
+
+  assign bg_dark            = section.settings.bg_color_dark       | default: '#000f1c'
+  assign hero_bg_dark       = section.settings.hero_bg_dark        | default: '#001428'
+  assign card_bg_dark       = section.settings.card_bg_dark        | default: '#001a2e'
+  assign text_dark          = section.settings.text_color_dark     | default: '#eaf4f5'
+  assign accent_dark        = section.settings.accent_color_dark   | default: '#07d16e'
+  assign border_dark        = section.settings.border_color_dark   | default: '#1a3a50'
+  assign muted_dark         = text_dark | color_modify: 'alpha', 0.55
+
+  assign bg_light           = section.settings.bg_color_light      | default: '#eaf4f5'
+  assign hero_bg_light      = section.settings.hero_bg_light       | default: '#001a2e'
+  assign card_bg_light      = section.settings.card_bg_light       | default: '#ffffff'
+  assign text_light         = section.settings.text_color_light    | default: '#001a2e'
+  assign accent_light       = section.settings.accent_color_light  | default: '#07d16e'
+  assign border_light       = section.settings.border_color_light  | default: '#c4d8e2'
+  assign muted_light        = text_light | color_modify: 'alpha', 0.58
+
+  assign card_radius        = section.settings.card_radius         | default: 16
+  assign enable_anims       = section.settings.enable_animations
+  assign enable_hex         = section.settings.enable_hex_grid
+
+  assign padding_top        = section.settings.padding_top         | default: 0
+  assign padding_bottom     = section.settings.padding_bottom      | default: 80
+  assign pt_mob             = section.settings.padding_top_mobile  | default: 0
+  assign pb_mob             = section.settings.padding_bottom_mobile | default: 56
+
+  assign first_initial  = customer.first_name | slice: 0 | upcase
+  assign last_initial   = customer.last_name  | slice: 0 | upcase
+-%}
+
+{% style %}
+
+/* ── Reset ── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark mode tokens ── */
+#{{ section_id }} {
+  --ca-bg:         {{ bg_dark }};
+  --ca-hero-bg:    {{ hero_bg_dark }};
+  --ca-card:       {{ card_bg_dark }};
+  --ca-text:       {{ text_dark }};
+  --ca-muted:      {{ muted_dark }};
+  --ca-accent:     {{ accent_dark }};
+  --ca-border:     {{ border_dark }};
+  --ca-glow:       rgba(7, 209, 110, 0.09);
+  --ca-ring:       rgba(7, 209, 110, 0.20);
+  --ca-paid:       rgba(7, 209, 110, 0.14);
+  --ca-paid-text:  #07d16e;
+  --ca-warn:       rgba(245, 166, 35, 0.14);
+  --ca-warn-text:  #f5a623;
+  --ca-red:        rgba(255, 95, 95, 0.12);
+  --ca-red-text:   #ff5f5f;
+  --ca-radius:     {{ card_radius }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --ca-bg:         {{ bg_light }};
+  --ca-hero-bg:    {{ hero_bg_light }};
+  --ca-card:       {{ card_bg_light }};
+  --ca-text:       {{ text_light }};
+  --ca-muted:      {{ muted_light }};
+  --ca-accent:     {{ accent_light }};
+  --ca-border:     {{ border_light }};
+  --ca-glow:       rgba(7, 209, 110, 0.05);
+  --ca-ring:       rgba(7, 209, 110, 0.14);
+  --ca-paid:       rgba(7, 209, 110, 0.10);
+  --ca-paid-text:  #059050;
+  --ca-warn:       rgba(200, 130, 20, 0.10);
+  --ca-warn-text:  #a06010;
+  --ca-red:        rgba(200, 60, 60, 0.09);
+  --ca-red-text:   #c04040;
+}
+
+/* ── Section root ── */
+#{{ section_id }} {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--ca-bg);
+  color: var(--ca-text);
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  transition: background 0.35s ease, color 0.35s ease;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Background ── */
+#{{ section_id }} .ca-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#{{ section_id }} .ca-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+#{{ section_id }} .ca-blob--1 {
+  width: 80rem;
+  height: 80rem;
+  background: radial-gradient(ellipse, rgba(7, 209, 110, 0.06) 0%, transparent 62%);
+  top: -20%;
+  right: -10%;
+}
+
+#{{ section_id }} .ca-blob--2 {
+  width: 55rem;
+  height: 55rem;
+  background: radial-gradient(ellipse, rgba(51, 104, 112, 0.08) 0%, transparent 60%);
+  bottom: -15%;
+  left: -5%;
+}
+
+/* Hex grid pattern */
+{% if enable_hex %}
+#{{ section_id }} .ca-hex {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2307d16e' fill-opacity='0.035'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.61v-2.1zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.1h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+{% endif %}
+
+/* ══════════════════════════════════════════════════
+   HERO BAR
+══════════════════════════════════════════════════ */
+#{{ section_id }} .ca-hero {
+  background: var(--ca-hero-bg);
+  border-bottom: 1px solid var(--ca-border);
+  position: relative;
+  z-index: 10;
+  transition: background 0.35s ease, border-color 0.35s ease;
+  will-change: transform, opacity;
+}
+
+/* Accent bar on left */
+#{{ section_id }} .ca-hero::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ca-accent);
+}
+
+#{{ section_id }} .ca-hero-inner {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  padding-block: clamp(2.4rem, 3.5vw, 3.6rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1.6rem, 3vw, 2.4rem);
+  flex-wrap: wrap;
+}
+
+/* Member badge */
+#{{ section_id }} .ca-member-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(7, 209, 110, 0.10);
+  border: 1px solid rgba(7, 209, 110, 0.25);
+  border-radius: 99px;
+  padding: 0.3rem 1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.95rem, 1.0vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ca-accent);
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+#{{ section_id }} .ca-member-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ca-accent);
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .ca-greeting {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 3.5vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  color: #eaf4f5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#{{ section_id }} .ca-greeting span {
+  color: var(--ca-accent);
+}
+
+#{{ section_id }} .ca-hero-email {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: rgba(234, 244, 245, 0.55);
+  margin-top: 0.5rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Logout button */
+#{{ section_id }} .ca-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1rem 2rem;
+  background: transparent;
+  border: 1.5px solid rgba(234, 244, 245, 0.22);
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  font-weight: 500;
+  color: rgba(234, 244, 245, 0.72);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .ca-logout-btn:hover {
+  border-color: rgba(255, 95, 95, 0.5);
+  color: #ff7070;
+  background: rgba(255, 95, 95, 0.07);
+  transform: translateY(-1px);
+}
+
+#{{ section_id }} .ca-logout-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   MAIN CONTAINER
+══════════════════════════════════════════════════ */
+#{{ section_id }} .ca-container {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  position: relative;
+  z-index: 10;
+}
+
+#{{ section_id }} .ca-main {
+  display: grid;
+  grid-template-columns: 1fr 36rem;
+  gap: clamp(2rem, 3vw, 3.2rem);
+  padding-top: clamp(2.4rem, 4vw, 4rem);
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  #{{ section_id }} .ca-main {
+    grid-template-columns: 1fr 30rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .ca-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   CARD BASE
+══════════════════════════════════════════════════ */
+#{{ section_id }} .ca-card {
+  background: var(--ca-card);
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius);
+  overflow: hidden;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+#{{ section_id }} .ca-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(1.6rem, 2vw, 2rem) clamp(1.8rem, 2.5vw, 2.8rem);
+  border-bottom: 1px solid var(--ca-border);
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  transition: border-color 0.35s ease;
+}
+
+#{{ section_id }} .ca-card-header h2,
+#{{ section_id }} .ca-card-header h3 {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.8vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  color: var(--ca-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+/* Order count chip */
+#{{ section_id }} .ca-count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding-inline: 0.8rem;
+  background: var(--ca-glow);
+  border: 1px solid var(--ca-ring);
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.05rem, 1.1vw, 1.2rem);
+  font-weight: 700;
+  color: var(--ca-accent);
+}
+
+/* View all link */
+#{{ section_id }} .ca-view-all {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.25vw, 1.35rem);
+  color: var(--ca-accent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+#{{ section_id }} .ca-view-all:hover { opacity: 0.75; }
+
+/* ══════════════════════════════════════════════════
+   ORDERS PANEL
+══════════════════════════════════════════════════ */
+#{{ section_id }} .ca-orders-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scan line — sweeps top-to-bottom across orders on reveal */
+#{{ section_id }} .ca-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ca-accent), rgba(7, 209, 110, 0.4), transparent);
+  z-index: 3;
+  pointer-events: none;
+  transform: translateY(-4px);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ── Desktop table ── */
+#{{ section_id }} .ca-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+#{{ section_id }} .ca-orders-table thead tr {
+  background: rgba(7, 209, 110, 0.04);
+  border-bottom: 1px solid var(--ca-border);
+  transition: background 0.35s ease;
+}
+
+#{{ section_id }} .ca-orders-table th {
+  padding: clamp(1rem, 1.2vw, 1.3rem) clamp(1.2rem, 2vw, 2rem);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.95rem, 1.0vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+  text-align: left;
+  white-space: nowrap;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-orders-table tbody tr {
+  border-bottom: 1px solid var(--ca-border);
+  transition: background 0.22s ease, border-color 0.35s ease;
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .ca-orders-table tbody tr:last-child { border-bottom: none; }
+
+#{{ section_id }} .ca-orders-table tbody tr:hover {
+  background: rgba(7, 209, 110, 0.04);
+}
+
+#{{ section_id }} .ca-orders-table td {
+  padding: clamp(1.1rem, 1.4vw, 1.5rem) clamp(1.2rem, 2vw, 2rem);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--ca-text);
+  vertical-align: middle;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-order-link {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--ca-accent);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+#{{ section_id }} .ca-order-link:hover { opacity: 0.78; }
+
+#{{ section_id }} .ca-order-date {
+  color: var(--ca-muted);
+  white-space: nowrap;
+}
+
+#{{ section_id }} .ca-order-total {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Hide desktop table on mobile */
+@media (max-width: 640px) {
+  #{{ section_id }} .ca-orders-table { display: none; }
+}
+
+/* ── Mobile order cards ── */
+#{{ section_id }} .ca-order-cards {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (max-width: 640px) {
+  #{{ section_id }} .ca-order-cards { display: flex; }
+}
+
+#{{ section_id }} .ca-order-card {
+  border-bottom: 1px solid var(--ca-border);
+  padding: clamp(1.4rem, 2.5vw, 2rem) clamp(1.6rem, 3vw, 2.4rem);
+  transition: background 0.22s ease, border-color 0.35s ease;
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .ca-order-card:last-child { border-bottom: none; }
+
+#{{ section_id }} .ca-order-card:active { background: rgba(7, 209, 110, 0.04); }
+
+#{{ section_id }} .ca-order-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+#{{ section_id }} .ca-order-card-number {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.4rem, 1.6vw, 1.7rem);
+  letter-spacing: -0.015em;
+  color: var(--ca-accent);
+  text-decoration: none;
+}
+
+#{{ section_id }} .ca-order-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#{{ section_id }} .ca-order-card-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.1rem, 1.2vw, 1.3rem);
+  color: var(--ca-muted);
+  flex-shrink: 0;
+}
+
+#{{ section_id }} .ca-order-card-value {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--ca-text);
+  text-align: right;
+}
+
+#{{ section_id }} .ca-order-card-value--bold {
+  font-weight: 700;
+  color: var(--ca-text);
+}
+
+/* ── Status badges ── */
+#{{ section_id }} .ca-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.05rem, 1.1vw, 1.2rem);
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--ca-warn);
+  color: var(--ca-warn-text);
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .ca-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Paid / Authorized / Fulfilled */
+#{{ section_id }} .ca-badge--paid,
+#{{ section_id }} .ca-badge--authorized,
+#{{ section_id }} .ca-badge--fulfilled {
+  background: var(--ca-paid);
+  color: var(--ca-paid-text);
+}
+
+/* Pending / Unfulfilled / Partial */
+#{{ section_id }} .ca-badge--pending,
+#{{ section_id }} .ca-badge--partially_paid,
+#{{ section_id }} .ca-badge--partially_fulfilled,
+#{{ section_id }} .ca-badge--unfulfilled {
+  background: var(--ca-warn);
+  color: var(--ca-warn-text);
+}
+
+/* Refunded / Voided / Restocked */
+#{{ section_id }} .ca-badge--refunded,
+#{{ section_id }} .ca-badge--voided {
+  background: var(--ca-red);
+  color: var(--ca-red-text);
+}
+
+/* Restocked */
+#{{ section_id }} .ca-badge--restocked {
+  background: rgba(51, 104, 112, 0.14);
+  color: #5bbccc;
+}
+
+/* ── Empty state ── */
+#{{ section_id }} .ca-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.2rem, 2vw, 1.8rem);
+  padding: clamp(4rem, 6vw, 6.4rem) clamp(2rem, 4vw, 4rem);
+  text-align: center;
+}
+
+#{{ section_id }} .ca-empty-icon {
+  width: 7.2rem;
+  height: 7.2rem;
+  border-radius: 50%;
+  background: var(--ca-glow);
+  border: 1.5px solid var(--ca-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ca-accent);
+  will-change: transform;
+}
+
+#{{ section_id }} .ca-empty-icon svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+#{{ section_id }} .ca-empty-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.4vw, 1.6rem);
+  color: var(--ca-muted);
+  max-width: 32rem;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-shop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.1rem 2.4rem;
+  background: var(--ca-accent);
+  color: #001a2e;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .ca-shop-btn:hover {
+  background: rgba(7, 209, 110, 0.88);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(7, 209, 110, 0.35);
+}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════ */
+#{{ section_id }} .ca-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.6rem, 2.5vw, 2.4rem);
+}
+
+/* ── Profile card ── */
+#{{ section_id }} .ca-profile-body {
+  padding: clamp(1.8rem, 2.5vw, 2.6rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(1.4rem, 2vw, 2rem);
+  flex-wrap: wrap;
+}
+
+#{{ section_id }} .ca-avatar {
+  width: 5.6rem;
+  height: 5.6rem;
+  border-radius: 50%;
+  background: var(--ca-accent);
+  color: #001a2e;
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 2vw, 2.2rem);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(7, 209, 110, 0.18);
+  will-change: transform;
+}
+
+#{{ section_id }} .ca-profile-info { min-width: 0; }
+
+#{{ section_id }} .ca-profile-name {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.7vw, 1.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ca-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-profile-email {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.15rem, 1.2vw, 1.35rem);
+  color: var(--ca-muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-top: 0.3rem;
+  transition: color 0.35s ease;
+}
+
+/* ── Address card ── */
+#{{ section_id }} .ca-address-body {
+  padding: clamp(1.8rem, 2.5vw, 2.6rem);
+}
+
+#{{ section_id }} .ca-address-block {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  line-height: 1.75;
+  color: var(--ca-text);
+  font-style: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-address-block p {
+  margin: 0;
+  line-height: 1.75;
+}
+
+#{{ section_id }} .ca-no-address {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--ca-muted);
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .ca-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: clamp(1.4rem, 2vw, 2rem);
+  padding: 1rem 1.8rem;
+  border: 1.5px solid var(--ca-border);
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.25vw, 1.35rem);
+  font-weight: 500;
+  color: var(--ca-muted);
+  text-decoration: none;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+#{{ section_id }} .ca-manage-btn:hover {
+  border-color: var(--ca-accent);
+  color: var(--ca-accent);
+  background: rgba(7, 209, 110, 0.05);
+}
+
+#{{ section_id }} .ca-manage-btn svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════ */
+{% if enable_anims %}
+
+/* ── Page-load: hero boot ── */
+@keyframes ca-hero-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ca-blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(18px, -14px) scale(1.04); }
+  70%       { transform: translate(-12px, 8px) scale(0.97); }
+}
+
+/* ── Scroll reveal states ── */
+@keyframes ca-slide-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ca-slide-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ca-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ca-avatar-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ca-scan-sweep {
+  0%   { transform: translateY(-4px); opacity: 0; }
+  5%   { opacity: 1; }
+  92%  { opacity: 0.7; }
+  100% { transform: translateY(var(--ca-scan-height, 400px)); opacity: 0; }
+}
+
+@keyframes ca-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: 0 0 0 4px rgba(7, 209, 110, 0); }
+}
+
+@keyframes ca-empty-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-8px) scale(1.04); }
+}
+
+/* Blob drift */
+#{{ section_id }} .ca-blob--1 { animation: ca-blob-drift 16s ease-in-out infinite; }
+#{{ section_id }} .ca-blob--2 { animation: ca-blob-drift 20s ease-in-out infinite; animation-delay: -8s; }
+
+/* Hero entrance */
+#{{ section_id }} .ca-hero {
+  animation: ca-hero-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Scan line fires when orders panel is visible */
+#{{ section_id }} .ca-orders-panel.is-visible .ca-scan-line {
+  animation: ca-scan-sweep 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+}
+
+/* Order rows — set to invisible; JS adds stagger delay; .is-visible on parent triggers */
+#{{ section_id }} .ca-order-row,
+#{{ section_id }} .ca-order-card {
+  opacity: 0;
+  transform: translateX(-16px);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .ca-orders-panel.is-visible .ca-order-row,
+#{{ section_id }} .ca-orders-panel.is-visible .ca-order-card {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Orders card container fade-up */
+#{{ section_id }} .ca-orders-panel {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .ca-orders-panel.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sidebar cards */
+#{{ section_id }} .ca-profile-card,
+#{{ section_id }} .ca-address-card {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+#{{ section_id }} .ca-profile-card.is-visible,
+#{{ section_id }} .ca-address-card.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Avatar pop */
+#{{ section_id }} .ca-profile-card.is-visible .ca-avatar {
+  animation: ca-avatar-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+  will-change: transform, opacity;
+}
+
+/* Empty state icon float */
+#{{ section_id }} .ca-empty-icon {
+  animation: ca-empty-float 3.5s ease-in-out infinite;
+}
+
+/* Status badge subtle pulse */
+#{{ section_id }} .ca-badge--paid,
+#{{ section_id }} .ca-badge--fulfilled {
+  animation: ca-badge-pulse 3s ease-in-out infinite;
+}
+
+/* Shopify editor override */
+.shopify-design-mode #{{ section_id }} .ca-hero,
+.shopify-design-mode #{{ section_id }} .ca-orders-panel,
+.shopify-design-mode #{{ section_id }} .ca-order-row,
+.shopify-design-mode #{{ section_id }} .ca-order-card,
+.shopify-design-mode #{{ section_id }} .ca-profile-card,
+.shopify-design-mode #{{ section_id }} .ca-address-card {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  transition: background 0.35s ease, border-color 0.35s ease !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .ca-hero,
+  #{{ section_id }} .ca-orders-panel,
+  #{{ section_id }} .ca-order-row,
+  #{{ section_id }} .ca-order-card,
+  #{{ section_id }} .ca-profile-card,
+  #{{ section_id }} .ca-address-card,
+  #{{ section_id }} .ca-blob--1,
+  #{{ section_id }} .ca-blob--2,
+  #{{ section_id }} .ca-empty-icon,
+  #{{ section_id }} .ca-badge--paid,
+  #{{ section_id }} .ca-badge--fulfilled {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: background 0.35s ease, border-color 0.35s ease !important;
+  }
+  #{{ section_id }} .ca-scan-line { display: none !important; }
+}
+
+{% else %}
+
+/* Animations off */
+#{{ section_id }} .ca-orders-panel,
+#{{ section_id }} .ca-order-row,
+#{{ section_id }} .ca-order-card,
+#{{ section_id }} .ca-profile-card,
+#{{ section_id }} .ca-address-card {
+  opacity: 1;
+  transform: none;
+}
+
+{% endif %}
+
+/* ── Theme transitions ── */
+#{{ section_id }} .ca-card,
+#{{ section_id }} .ca-card-header,
+#{{ section_id }} .ca-orders-table th,
+#{{ section_id }} .ca-orders-table td,
+#{{ section_id }} .ca-orders-table tbody tr,
+#{{ section_id }} .ca-profile-name,
+#{{ section_id }} .ca-profile-email,
+#{{ section_id }} .ca-address-block,
+#{{ section_id }} .ca-no-address,
+#{{ section_id }} .ca-empty-text {
+  transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  #{{ section_id }} .ca-hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.6rem;
+  }
+
+  #{{ section_id }} .ca-logout-btn { align-self: flex-start; }
+
+  #{{ section_id }} .ca-greeting {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+  }
+
+  #{{ section_id }} .ca-stat-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .ca-container { padding-inline: 1rem; }
+  #{{ section_id }} .ca-hero-inner { padding-inline: 1rem; }
+}
+
+{% endstyle %}
+
+<section
+  id="{{ section_id }}"
+  aria-label="{{ 'customer.account.title' | t }}"
+>
+
+  <!-- Background -->
+  <div class="ca-bg" aria-hidden="true">
+    {% if enable_hex %}<div class="ca-hex"></div>{% endif %}
+    <div class="ca-blob ca-blob--1"></div>
+    <div class="ca-blob ca-blob--2"></div>
+  </div>
+
+  <!-- Hero bar -->
+  <div class="ca-hero">
+    <div class="ca-hero-inner">
+      <div class="ca-hero-left">
+        {% if member_badge_label != blank %}
+          <div class="ca-member-badge">{{ member_badge_label | escape }}</div>
+        {% endif %}
+        <h1 class="ca-greeting">
+          {{ welcome_prefix | escape }}
+          <span>{{ customer.first_name | escape }}</span>
+        </h1>
+        <p class="ca-hero-email">{{ customer.email }}</p>
+      </div>
+
+      <div class="ca-hero-right">
+        <a href="{{ routes.account_logout_url }}" class="ca-logout-btn" aria-label="{{ 'customer.log_out' | t }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          {{ 'customer.log_out' | t }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="ca-container">
+    <div class="ca-main">
+
+      <!-- Orders panel -->
+      <div class="ca-orders-panel" id="ca-orders-{{ section.id }}">
+        <div class="ca-card">
+
+          <div class="ca-card-header">
+            <h2>{{ orders_heading | escape }}</h2>
+            <span class="ca-count-chip">{{ customer.orders.size }}</span>
+          </div>
+
+          {% if customer.orders.size > 0 %}
+
+            <!-- Desktop table -->
+            <div class="ca-orders-wrap">
+              <span class="ca-scan-line" aria-hidden="true"></span>
+
+              <table class="ca-orders-table" role="table">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'customer.account.order_name' | t }}</th>
+                    <th scope="col">{{ 'customer.account.order_date' | t }}</th>
+                    <th scope="col">{{ 'customer.account.payment_status' | t }}</th>
+                    <th scope="col">{{ 'customer.account.fulfillment_status' | t }}</th>
+                    <th scope="col">{{ 'customer.account.order_total' | t }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {%- for order in customer.orders -%}
+                    <tr class="ca-order-row">
+                      <td>
+                        <a href="{{ order.customer_url }}" class="ca-order-link">{{ order.name }}</a>
+                      </td>
+                      <td class="ca-order-date">{{ order.created_at | date: '%b %d, %Y' }}</td>
+                      <td>
+                        <span class="ca-badge ca-badge--{{ order.financial_status }}">
+                          {{ order.financial_status_label }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="ca-badge ca-badge--{{ order.fulfillment_status }}">
+                          {{ order.fulfillment_status_label }}
+                        </span>
+                      </td>
+                      <td class="ca-order-total">{{ order.total_net_amount | money_with_currency }}</td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile cards -->
+            <div class="ca-order-cards" aria-label="Order list">
+              {%- for order in customer.orders -%}
+                <div class="ca-order-card">
+                  <div class="ca-order-card-top">
+                    <a href="{{ order.customer_url }}" class="ca-order-card-number">{{ order.name }}</a>
+                    <span class="ca-badge ca-badge--{{ order.financial_status }}">{{ order.financial_status_label }}</span>
+                  </div>
+                  <div class="ca-order-card-row">
+                    <span class="ca-order-card-label">{{ 'customer.account.order_date' | t }}</span>
+                    <span class="ca-order-card-value">{{ order.created_at | date: '%b %d, %Y' }}</span>
+                  </div>
+                  <div class="ca-order-card-row">
+                    <span class="ca-order-card-label">{{ 'customer.account.fulfillment_status' | t }}</span>
+                    <span class="ca-badge ca-badge--{{ order.fulfillment_status }}">{{ order.fulfillment_status_label }}</span>
+                  </div>
+                  <div class="ca-order-card-row">
+                    <span class="ca-order-card-label">{{ 'customer.account.order_total' | t }}</span>
+                    <span class="ca-order-card-value ca-order-card-value--bold">{{ order.total_net_amount | money_with_currency }}</span>
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+
+          {% else %}
+
+            <!-- Empty state -->
+            <div class="ca-empty-state">
+              <div class="ca-empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 2L6 18h11L15 30 28 14H17L18 2z"/>
+                </svg>
+              </div>
+              <p class="ca-empty-text">{{ empty_msg | escape }}</p>
+              <a href="{{ routes.root_url }}" class="ca-shop-btn">
+                {{ shop_now_label | escape }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1.4rem;height:1.4rem;">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </div>
+
+          {% endif %}
+
+        </div>
+      </div><!-- /ca-orders-panel -->
+
+      <!-- Sidebar -->
+      <aside class="ca-sidebar">
+
+        <!-- Profile card -->
+        <div class="ca-card ca-profile-card" id="ca-profile-{{ section.id }}">
+          <div class="ca-card-header">
+            <h3>{{ 'customer.account.title' | t }}</h3>
+          </div>
+          <div class="ca-profile-body">
+            <div class="ca-avatar" aria-hidden="true">{{ first_initial }}{{ last_initial }}</div>
+            <div class="ca-profile-info">
+              <div class="ca-profile-name">{{ customer.name }}</div>
+              <div class="ca-profile-email">{{ customer.email }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Address card -->
+        <div class="ca-card ca-address-card" id="ca-address-{{ section.id }}">
+          <div class="ca-card-header">
+            <h3>{{ address_heading | escape }}</h3>
+            {% if customer.addresses_count > 0 %}
+              <a href="{{ routes.account_addresses_url }}" class="ca-view-all" aria-label="{{ 'customer.account.view_addresses' | t }}">
+                {{ 'customer.account.view_addresses' | t }} ({{ customer.addresses_count }})
+              </a>
+            {% endif %}
+          </div>
+          <div class="ca-address-body">
+            {% if customer.default_address %}
+              <address class="ca-address-block">
+                {{ customer.default_address | format_address }}
+              </address>
+            {% else %}
+              <p class="ca-no-address">{{ no_address_msg | escape }}</p>
+            {% endif %}
+            <a href="{{ routes.account_addresses_url }}" class="ca-manage-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              {{ manage_addr_label | escape }}
+            </a>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+
+</section>
+
+{% if enable_anims %}
+<script>
+(function () {
+  var SEC = document.getElementById('{{ section_id }}');
+  if (!SEC) return;
+
+  /* ── IntersectionObserver: orders panel cascade ── */
+  var ordersPanel = document.getElementById('ca-orders-{{ section.id }}');
+  if (ordersPanel) {
+    /* Set stagger delay on each row */
+    var rows = ordersPanel.querySelectorAll('.ca-order-row, .ca-order-card');
+    rows.forEach(function (row, i) {
+      row.style.transitionDelay = (0.22 + i * 0.08) + 's';
+    });
+
+    /* Set scan line height CSS variable */
+    var wrap = ordersPanel.querySelector('.ca-orders-wrap');
+    var scanLine = ordersPanel.querySelector('.ca-scan-line');
+    if (wrap && scanLine) {
+      scanLine.style.setProperty('--ca-scan-height', wrap.offsetHeight + 'px');
+    }
+
+    var ordersObs = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          ordersPanel.classList.add('is-visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    ordersObs.observe(ordersPanel);
+  }
+
+  /* ── IntersectionObserver: sidebar cards ── */
+  var profileCard = document.getElementById('ca-profile-{{ section.id }}');
+  var addressCard = document.getElementById('ca-address-{{ section.id }}');
+
+  [profileCard, addressCard].forEach(function (card, i) {
+    if (!card) return;
+    card.style.transitionDelay = (i * 0.12) + 's';
+    var obs = new IntersectionObserver(function (entries, o) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          card.classList.add('is-visible');
+          o.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    obs.observe(card);
+  });
+
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Customer Account",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Hero Bar"
+    },
+    {
+      "type": "text",
+      "id": "welcome_prefix",
+      "label": "Welcome prefix",
+      "default": "Welcome back,"
+    },
+    {
+      "type": "text",
+      "id": "member_badge_label",
+      "label": "Member badge label",
+      "default": "BurnLab Member"
+    },
+    {
+      "type": "header",
+      "content": "Orders Section"
+    },
+    {
+      "type": "text",
+      "id": "orders_heading",
+      "label": "Orders heading",
+      "default": "Order History"
+    },
+    {
+      "type": "text",
+      "id": "empty_orders_msg",
+      "label": "Empty orders message",
+      "default": "No orders yet. Time to build something great."
+    },
+    {
+      "type": "text",
+      "id": "shop_now_label",
+      "label": "Shop now button label",
+      "default": "Shop Now"
+    },
+    {
+      "type": "header",
+      "content": "Sidebar"
+    },
+    {
+      "type": "text",
+      "id": "address_heading",
+      "label": "Address section heading",
+      "default": "Default Address"
+    },
+    {
+      "type": "text",
+      "id": "no_address_msg",
+      "label": "No address message",
+      "default": "No address saved yet."
+    },
+    {
+      "type": "text",
+      "id": "manage_addr_label",
+      "label": "Manage addresses button label",
+      "default": "Manage Addresses"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Page background",
+      "default": "#000f1c"
+    },
+    {
+      "type": "color",
+      "id": "hero_bg_dark",
+      "label": "Hero bar background",
+      "default": "#001428"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Card background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_dark",
+      "label": "Border color",
+      "default": "#1a3a50"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Page background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "hero_bg_light",
+      "label": "Hero bar background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_light",
+      "label": "Border color",
+      "default": "#c4d8e2"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true,
+      "info": "Dashboard Boot sequence: hero slides in, orders cascade from left, sidebar springs from right, avatar pops in. IntersectionObserver triggers on scroll. Disabled for reduced-motion visitors."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hex_grid",
+      "label": "Enable hex grid background",
+      "default": true,
+      "info": "Subtle honeycomb pattern in the page background."
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0,
+      "info": "Top padding below the hero bar."
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 56
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Customer Account",
+      "settings": {
+        "enable_animations": true,
+        "enable_hex_grid": true
+      }
+    }
+  ]
+}
+{% endschema %}

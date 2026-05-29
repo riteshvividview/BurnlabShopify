@@ -1,0 +1,1712 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Customer Login
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Auth Pulse — card materialise + input glow rings +
+             mesh drift + circuit trace draw + floating particles
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-login-' | append: section.id -%}
+
+{%- liquid
+  assign heading              = section.settings.heading              | default: 'Welcome Back'
+  assign subheading           = section.settings.subheading           | default: 'Sign in to your BurnLab account'
+  assign register_link_label  = section.settings.register_link_label  | default: 'Create an account'
+  assign eyebrow_text         = section.settings.eyebrow_text         | default: 'Members Area'
+  assign brand_heading_main   = section.settings.brand_heading_main   | default: 'Train harder.'
+  assign brand_heading_accent = section.settings.brand_heading_accent | default: 'Recover smarter.'
+  assign brand_tagline        = section.settings.brand_tagline        | default: 'Premium home gym equipment. Built to last.'
+  assign feature_1            = section.settings.feature_1            | default: 'Exclusive member discounts'
+  assign feature_2            = section.settings.feature_2            | default: 'Order tracking and history'
+  assign feature_3            = section.settings.feature_3            | default: 'Early access to new products'
+  assign logo_dark            = section.settings.logo_dark
+  assign logo_light           = section.settings.logo_light
+  assign side_image           = section.settings.side_image
+  assign image_side           = section.settings.image_side           | default: 'left'
+  assign show_brand_panel     = section.settings.show_brand_panel
+  assign card_radius          = section.settings.card_radius          | default: 24
+
+  assign bg_dark              = section.settings.bg_color_dark        | default: '#000f1c'
+  assign card_bg_dark         = section.settings.card_bg_dark         | default: '#001a2e'
+  assign text_dark            = section.settings.text_color_dark      | default: '#eaf4f5'
+  assign accent_dark          = section.settings.accent_color_dark    | default: '#07d16e'
+  assign border_dark          = section.settings.border_color_dark    | default: '#1a3a50'
+  assign muted_dark           = text_dark  | color_modify: 'alpha', 0.55
+
+  assign bg_light             = section.settings.bg_color_light       | default: '#eaf4f5'
+  assign card_bg_light        = section.settings.card_bg_light        | default: '#ffffff'
+  assign text_light           = section.settings.text_color_light     | default: '#001a2e'
+  assign accent_light         = section.settings.accent_color_light   | default: '#07d16e'
+  assign border_light         = section.settings.border_color_light   | default: '#c8dce4'
+  assign muted_light          = text_light | color_modify: 'alpha', 0.58
+
+  assign enable_anims         = section.settings.enable_animations
+  assign enable_mesh          = section.settings.enable_mesh
+  assign enable_particles     = section.settings.enable_particles
+
+  assign padding_top          = section.settings.padding_top          | default: 80
+  assign padding_bottom       = section.settings.padding_bottom       | default: 80
+  assign pt_mob               = section.settings.padding_top_mobile   | default: 48
+  assign pb_mob               = section.settings.padding_bottom_mobile | default: 48
+-%}
+
+{% style %}
+
+/* ── Reset ── */
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark mode tokens ── */
+#{{ section_id }} {
+  --lg-bg:         {{ bg_dark }};
+  --lg-card:       {{ card_bg_dark }};
+  --lg-text:       {{ text_dark }};
+  --lg-muted:      {{ muted_dark }};
+  --lg-accent:     {{ accent_dark }};
+  --lg-border:     {{ border_dark }};
+  --lg-glow:       rgba(7, 209, 110, 0.10);
+  --lg-ring:       rgba(7, 209, 110, 0.22);
+  --lg-input-bg:   rgba(255, 255, 255, 0.04);
+  --lg-error:      #ff5f5f;
+  --lg-radius:     {{ card_radius }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --lg-bg:         {{ bg_light }};
+  --lg-card:       {{ card_bg_light }};
+  --lg-text:       {{ text_light }};
+  --lg-muted:      {{ muted_light }};
+  --lg-accent:     {{ accent_light }};
+  --lg-border:     {{ border_light }};
+  --lg-glow:       rgba(7, 209, 110, 0.06);
+  --lg-ring:       rgba(7, 209, 110, 0.16);
+  --lg-input-bg:   rgba(0, 26, 46, 0.04);
+}
+
+/* ── Section root ── */
+#{{ section_id }} {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--lg-bg);
+  color: var(--lg-text);
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ pt_mob }}px !important;
+    padding-bottom: {{ pb_mob }}px !important;
+  }
+}
+
+/* ── Background layer ── */
+#{{ section_id }} .lg-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#{{ section_id }} .lg-glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+#{{ section_id }} .lg-glow-blob--1 {
+  width: 80rem;
+  height: 80rem;
+  background: radial-gradient(ellipse, rgba(7, 209, 110, 0.07) 0%, transparent 65%);
+  top: -25%;
+  {% if image_side == 'left' %}right: 5%;{% else %}left: 5%;{% endif %}
+}
+
+#{{ section_id }} .lg-glow-blob--2 {
+  width: 56rem;
+  height: 56rem;
+  background: radial-gradient(ellipse, rgba(51, 104, 112, 0.10) 0%, transparent 60%);
+  bottom: -20%;
+  {% if image_side == 'left' %}left: 10%;{% else %}right: 10%;{% endif %}
+}
+
+/* ── Animated dot mesh ── */
+{% if enable_mesh %}
+#{{ section_id }} .lg-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(7, 209, 110, 0.09) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
+  will-change: transform;
+}
+{% endif %}
+
+/* ── Particles host ── */
+#{{ section_id }} .lg-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--lg-accent);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ══════════════════════════════════════════════════
+   CONTAINER + GRID
+══════════════════════════════════════════════════ */
+#{{ section_id }} .lg-container {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(1.6rem, 5vw, 8rem);
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+/* Split grid — brand + form */
+#{{ section_id }} .lg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  border-radius: var(--lg-radius);
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(7, 209, 110, 0.06);
+  will-change: box-shadow;
+}
+
+{% if image_side == 'right' %}
+#{{ section_id }} .lg-brand-panel { order: 2; }
+#{{ section_id }} .lg-form-panel  { order: 1; }
+{% endif %}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .lg-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Solo form — no brand panel */
+#{{ section_id }} .lg-solo {
+  max-width: 52rem;
+  margin-inline: auto;
+  border-radius: var(--lg-radius);
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(7, 209, 110, 0.06);
+}
+
+/* ══════════════════════════════════════════════════
+   BRAND PANEL
+══════════════════════════════════════════════════ */
+#{{ section_id }} .lg-brand-panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(3.2rem, 5vw, 5.6rem) clamp(2.4rem, 4vw, 4.8rem);
+  min-height: clamp(40rem, 55vw, 80rem);
+  background: #001020;
+}
+
+/* Brand image */
+#{{ section_id }} .lg-brand-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+#{{ section_id }} .lg-brand-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Gradient overlay */
+#{{ section_id }} .lg-brand-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    165deg,
+    rgba(0, 10, 22, 0.45) 0%,
+    rgba(0, 26, 46, 0.88) 100%
+  );
+}
+
+/* Circuit board decoration */
+#{{ section_id }} .lg-circuit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 55%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.20;
+  overflow: visible;
+}
+
+#{{ section_id }} .lg-circuit path,
+#{{ section_id }} .lg-circuit line,
+#{{ section_id }} .lg-circuit polyline {
+  stroke-dasharray: 700;
+  stroke-dashoffset: 0;
+}
+
+/* Brand content */
+#{{ section_id }} .lg-brand-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Eyebrow */
+#{{ section_id }} .lg-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.9rem, 1.0vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lg-accent);
+  margin-bottom: clamp(1.4rem, 2.5vw, 2.2rem);
+}
+
+#{{ section_id }} .lg-eyebrow::before {
+  content: '';
+  display: block;
+  width: 2.6rem;
+  height: 2px;
+  background: var(--lg-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Brand heading */
+#{{ section_id }} .lg-brand-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4vw, 5rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: #eaf4f5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: clamp(1.2rem, 2vw, 1.8rem);
+}
+
+#{{ section_id }} .lg-brand-heading .lg-accent-line {
+  color: var(--lg-accent);
+  display: block;
+}
+
+/* Brand tagline */
+#{{ section_id }} .lg-brand-tagline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.4vw, 1.55rem);
+  line-height: 1.7;
+  color: rgba(234, 244, 245, 0.68);
+  max-width: 38rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: clamp(2.4rem, 3.5vw, 3.6rem);
+}
+
+/* Feature list */
+#{{ section_id }} .lg-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+#{{ section_id }} .lg-feature {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: rgba(234, 244, 245, 0.82);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#{{ section_id }} .lg-feature-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lg-accent);
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(7, 209, 110, 0.65);
+  will-change: box-shadow;
+}
+
+@media (max-width: 1024px) {
+  #{{ section_id }} .lg-brand-panel { display: none; }
+}
+
+/* ══════════════════════════════════════════════════
+   FORM PANEL
+══════════════════════════════════════════════════ */
+#{{ section_id }} .lg-form-panel {
+  background: var(--lg-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(3.2rem, 5vw, 6rem) clamp(2.4rem, 5vw, 5.6rem);
+  position: relative;
+  transition: background 0.35s ease;
+}
+
+/* Neon accent bar at top of form */
+#{{ section_id }} .lg-form-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--lg-accent) 35%, rgba(7, 209, 110, 0.45) 65%, transparent 100%);
+  border-radius: 0;
+  z-index: 2;
+}
+
+/* Form bolt icon */
+#{{ section_id }} .lg-bolt-icon {
+  color: var(--lg-accent);
+  margin-bottom: clamp(1.6rem, 2.5vw, 2.4rem);
+  display: block;
+}
+
+#{{ section_id }} .lg-bolt-icon svg {
+  width: 3rem;
+  height: 3rem;
+  display: block;
+}
+
+/* Logo (replaces bolt icon when uploaded) */
+#{{ section_id }} .lg-logo-wrap {
+  margin-bottom: clamp(1.6rem, 2.5vw, 2.4rem);
+  display: block;
+}
+
+#{{ section_id }} .lg-logo {
+  height: 48px;
+  width: auto;
+  max-width: 200px;
+  display: block;
+  object-fit: contain;
+}
+
+#{{ section_id }} .lg-logo--dark  { display: block; }
+#{{ section_id }} .lg-logo--light { display: none; }
+
+[data-theme="light"] #{{ section_id }} .lg-logo--dark  { display: none; }
+[data-theme="light"] #{{ section_id }} .lg-logo--light { display: block; }
+
+/* Form heading */
+#{{ section_id }} .lg-form-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 3.5vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--lg-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 0.8rem;
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .lg-form-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--lg-muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.6;
+  margin-bottom: clamp(2.4rem, 3.5vw, 3.2rem);
+  transition: color 0.35s ease;
+}
+
+#{{ section_id }} .lg-form-sub a {
+  color: var(--lg-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#{{ section_id }} .lg-form-sub a:hover {
+  text-decoration: underline;
+}
+
+/* ── Toggle: login / recover ── */
+#{{ section_id }} .lg-login-section,
+#{{ section_id }} .lg-recover-section {
+  will-change: opacity, transform;
+}
+
+#{{ section_id }} .lg-recover-section {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#{{ section_id }} .lg-recover-section.lg-visible {
+  display: block;
+}
+
+#{{ section_id }} .lg-recover-section.lg-shown {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+#{{ section_id }} .lg-login-section.lg-hidden {
+  display: none;
+}
+
+#{{ section_id }} .lg-recover-heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--lg-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 0.8rem;
+}
+
+#{{ section_id }} .lg-recover-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--lg-muted);
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: clamp(2rem, 3vw, 2.8rem);
+}
+
+/* ── Error / success box ── */
+#{{ section_id }} .lg-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.6rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 95, 95, 0.3);
+  background: rgba(255, 95, 95, 0.07);
+}
+
+#{{ section_id }} .lg-alert--success {
+  border-color: rgba(7, 209, 110, 0.3);
+  background: rgba(7, 209, 110, 0.07);
+}
+
+#{{ section_id }} .lg-alert svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+#{{ section_id }} .lg-alert p,
+#{{ section_id }} .lg-alert ul,
+#{{ section_id }} .lg-alert li,
+#{{ section_id }} .lg-alert a {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem);
+  color: var(--lg-error);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#{{ section_id }} .lg-alert--success p,
+#{{ section_id }} .lg-alert--success li {
+  color: var(--lg-accent);
+}
+
+/* ── Field (float label) ── */
+#{{ section_id }} .lg-field {
+  position: relative;
+  margin-bottom: clamp(1.6rem, 2.5vw, 2rem);
+}
+
+#{{ section_id }} .lg-field-label {
+  position: absolute;
+  top: 50%;
+  left: 1.6rem;
+  transform: translateY(-50%);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--lg-muted);
+  pointer-events: none;
+  transition:
+    top 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    font-size 0.24s ease,
+    color 0.24s ease,
+    background 0.24s ease;
+  z-index: 1;
+  padding-inline: 0.4rem;
+  background: transparent;
+  line-height: 1;
+}
+
+#{{ section_id }} .lg-field-input:focus ~ .lg-field-label,
+#{{ section_id }} .lg-field-input:not(:placeholder-shown) ~ .lg-field-label,
+#{{ section_id }} .lg-field.lg-filled .lg-field-label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: clamp(1rem, 1.05vw, 1.15rem);
+  color: var(--lg-accent);
+  background: var(--lg-card);
+}
+
+#{{ section_id }} .lg-field-input {
+  width: 100%;
+  background: var(--lg-input-bg);
+  border: 1.5px solid var(--lg-border);
+  border-radius: 12px;
+  padding: 1.4rem 1.6rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  color: var(--lg-text);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  will-change: box-shadow;
+}
+
+#{{ section_id }} .lg-field-input::placeholder {
+  color: transparent;
+}
+
+#{{ section_id }} .lg-field-input:focus {
+  border-color: var(--lg-accent);
+  box-shadow: 0 0 0 4px var(--lg-ring), 0 0 24px rgba(7, 209, 110, 0.10);
+}
+
+/* Password wrapper */
+#{{ section_id }} .lg-field--pw .lg-field-input {
+  padding-right: 5rem;
+}
+
+#{{ section_id }} .lg-pw-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--lg-muted);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+#{{ section_id }} .lg-pw-toggle:hover { color: var(--lg-accent); }
+
+#{{ section_id }} .lg-pw-toggle svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  pointer-events: none;
+  display: block;
+}
+
+#{{ section_id }} .lg-pw-toggle .lg-icon-eye-off { display: none; }
+#{{ section_id }} .lg-pw-toggle.is-shown .lg-icon-eye    { display: none; }
+#{{ section_id }} .lg-pw-toggle.is-shown .lg-icon-eye-off { display: block; }
+
+/* Forgot link */
+#{{ section_id }} .lg-forgot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.6rem;
+  margin-bottom: 1rem;
+}
+
+#{{ section_id }} .lg-forgot button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.25vw, 1.35rem);
+  color: var(--lg-muted);
+  cursor: pointer;
+  transition: color 0.22s ease;
+}
+
+#{{ section_id }} .lg-forgot button:hover { color: var(--lg-accent); }
+
+/* ── Primary button ── */
+#{{ section_id }} .lg-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1.4rem 2.4rem;
+  background: var(--lg-accent);
+  color: #001a2e;
+  border: none;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .lg-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#{{ section_id }} .lg-btn:hover {
+  background: rgba(7, 209, 110, 0.88);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(7, 209, 110, 0.40);
+}
+
+#{{ section_id }} .lg-btn:hover::after { transform: translateX(100%); }
+#{{ section_id }} .lg-btn:active { transform: translateY(0) scale(0.98); }
+
+#{{ section_id }} .lg-btn svg {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Ghost variant */
+#{{ section_id }} .lg-btn--ghost {
+  background: transparent;
+  color: var(--lg-muted);
+  border: 1.5px solid var(--lg-border);
+  font-weight: 500;
+  margin-top: 0.8rem;
+}
+
+#{{ section_id }} .lg-btn--ghost:hover {
+  background: transparent;
+  color: var(--lg-text);
+  border-color: var(--lg-text);
+  box-shadow: none;
+}
+
+/* ── Form actions stack ── */
+#{{ section_id }} .lg-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: clamp(2rem, 3vw, 2.8rem);
+}
+
+/* ── Divider (for Shop Pay separator) ── */
+#{{ section_id }} .lg-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-block: clamp(1.6rem, 2.5vw, 2.2rem);
+}
+
+#{{ section_id }} .lg-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--lg-border);
+  transition: background 0.35s ease;
+}
+
+#{{ section_id }} .lg-divider-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.1rem, 1.2vw, 1.3rem);
+  color: var(--lg-muted);
+  white-space: nowrap;
+}
+
+/* ── Return to store ── */
+#{{ section_id }} .lg-return {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.25vw, 1.4rem);
+  color: var(--lg-muted);
+  text-decoration: none;
+  margin-top: clamp(2rem, 3vw, 2.8rem);
+  width: 100%;
+  transition: color 0.22s ease;
+}
+
+#{{ section_id }} .lg-return:hover { color: var(--lg-accent); }
+
+#{{ section_id }} .lg-return svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* ── Guest section ── */
+#{{ section_id }} .lg-guest {
+  margin-top: clamp(2rem, 3vw, 3rem);
+  padding-top: clamp(2rem, 3vw, 3rem);
+  border-top: 1px solid var(--lg-border);
+}
+
+#{{ section_id }} .lg-guest-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.3rem, 1.35vw, 1.5rem);
+  font-weight: 600;
+  color: var(--lg-text);
+  margin-bottom: 1.2rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════ */
+{% if enable_anims %}
+
+@keyframes lg-card-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lg-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lg-blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(20px, -16px) scale(1.06); }
+  70%       { transform: translate(-14px, 10px) scale(0.95); }
+}
+
+@keyframes lg-mesh-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(-6px, -8px); }
+  66%       { transform: translate(8px, 4px); }
+}
+
+@keyframes lg-circuit-draw {
+  from { stroke-dashoffset: 700; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes lg-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 209, 110, 0.55), 0 0 10px rgba(7, 209, 110, 0.65); }
+  50%       { box-shadow: 0 0 0 8px rgba(7, 209, 110, 0), 0 0 20px rgba(7, 209, 110, 0.9); }
+}
+
+@keyframes lg-particle-float {
+  0%   { transform: translateY(0) scale(1);   opacity: var(--p-opacity-start, 0.3); }
+  50%  { transform: translateY(-28px) scale(1.3); opacity: calc(var(--p-opacity-start, 0.3) * 2.2); }
+  100% { transform: translateY(0) scale(1);   opacity: var(--p-opacity-start, 0.3); }
+}
+
+@keyframes lg-glow-pulse {
+  0%, 100% { box-shadow: 0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(7,209,110,0.06); }
+  50%       { box-shadow: 0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(7,209,110,0.18), 0 0 60px rgba(7,209,110,0.04); }
+}
+
+/* Blob drift */
+#{{ section_id }} .lg-glow-blob--1 {
+  animation: lg-blob-drift 16s ease-in-out infinite;
+}
+#{{ section_id }} .lg-glow-blob--2 {
+  animation: lg-blob-drift 20s ease-in-out infinite;
+  animation-delay: -8s;
+}
+
+/* Mesh drift */
+{% if enable_mesh %}
+#{{ section_id }} .lg-mesh {
+  animation: lg-mesh-drift 14s ease-in-out infinite;
+}
+{% endif %}
+
+/* Card entrance */
+#{{ section_id }} .lg-grid,
+#{{ section_id }} .lg-solo {
+  animation: lg-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) both,
+             lg-glow-pulse 5s ease-in-out 1s infinite;
+}
+
+/* Form content stagger */
+#{{ section_id }} .lg-bolt-icon,
+#{{ section_id }} .lg-logo-wrap  { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.20s both; will-change: transform, opacity; }
+#{{ section_id }} .lg-form-heading { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.26s both; will-change: transform, opacity; }
+#{{ section_id }} .lg-form-sub   { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.32s both; will-change: transform, opacity; }
+
+#{{ section_id }} .lg-login-section .lg-field:nth-child(1) { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.38s both; will-change: transform, opacity; }
+#{{ section_id }} .lg-login-section .lg-field:nth-child(2) { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.44s both; will-change: transform, opacity; }
+#{{ section_id }} .lg-actions     { animation: lg-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.50s both; will-change: transform, opacity; }
+
+/* Brand panel */
+#{{ section_id }} .lg-brand-content {
+  animation: lg-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  will-change: transform, opacity;
+}
+
+/* Circuit draw */
+#{{ section_id }} .lg-circuit path,
+#{{ section_id }} .lg-circuit line,
+#{{ section_id }} .lg-circuit polyline {
+  stroke-dashoffset: 700;
+  animation: lg-circuit-draw 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+/* Feature dot pulse */
+#{{ section_id }} .lg-feature-dot {
+  animation: lg-dot-pulse 2.8s ease-in-out infinite;
+}
+#{{ section_id }} .lg-feature:nth-child(2) .lg-feature-dot { animation-delay: 0.9s; }
+#{{ section_id }} .lg-feature:nth-child(3) .lg-feature-dot { animation-delay: 1.8s; }
+
+/* Particle float */
+#{{ section_id }} .lg-particle {
+  animation: lg-particle-float linear infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .lg-grid,
+  #{{ section_id }} .lg-solo,
+  #{{ section_id }} .lg-bolt-icon,
+  #{{ section_id }} .lg-form-heading,
+  #{{ section_id }} .lg-form-sub,
+  #{{ section_id }} .lg-field,
+  #{{ section_id }} .lg-actions,
+  #{{ section_id }} .lg-brand-content,
+  #{{ section_id }} .lg-glow-blob--1,
+  #{{ section_id }} .lg-glow-blob--2,
+  #{{ section_id }} .lg-mesh,
+  #{{ section_id }} .lg-feature-dot,
+  #{{ section_id }} .lg-particle {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  #{{ section_id }} .lg-circuit path,
+  #{{ section_id }} .lg-circuit line,
+  #{{ section_id }} .lg-circuit polyline {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+}
+
+{% else %}
+
+/* Animations disabled — ensure everything visible */
+#{{ section_id }} .lg-circuit path,
+#{{ section_id }} .lg-circuit line,
+#{{ section_id }} .lg-circuit polyline {
+  stroke-dashoffset: 0;
+}
+
+{% endif %}
+
+/* Shopify editor override */
+.shopify-design-mode #{{ section_id }} .lg-grid,
+.shopify-design-mode #{{ section_id }} .lg-solo,
+.shopify-design-mode #{{ section_id }} .lg-bolt-icon,
+.shopify-design-mode #{{ section_id }} .lg-logo-wrap,
+.shopify-design-mode #{{ section_id }} .lg-form-heading,
+.shopify-design-mode #{{ section_id }} .lg-form-sub,
+.shopify-design-mode #{{ section_id }} .lg-field,
+.shopify-design-mode #{{ section_id }} .lg-actions,
+.shopify-design-mode #{{ section_id }} .lg-brand-content {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.45) !important;
+}
+
+/* ── Theme transitions ── */
+#{{ section_id }} .lg-form-panel,
+#{{ section_id }} .lg-field-input,
+#{{ section_id }} .lg-field-label,
+#{{ section_id }} .lg-form-heading,
+#{{ section_id }} .lg-form-sub,
+#{{ section_id }} .lg-divider-line,
+#{{ section_id }} .lg-guest {
+  transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  #{{ section_id }} .lg-form-heading {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+  }
+  #{{ section_id }} .lg-form-panel {
+    padding: clamp(2.4rem, 6vw, 3.2rem) clamp(1.6rem, 5vw, 2.4rem);
+  }
+  #{{ section_id }} .lg-grid,
+  #{{ section_id }} .lg-solo {
+    border-radius: clamp(12px, 3vw, 20px);
+  }
+}
+
+@media (max-width: 300px) {
+  #{{ section_id }} .lg-container { padding-inline: 1rem; }
+  #{{ section_id }} .lg-form-panel { padding: 2rem 1.2rem; }
+}
+
+{% endstyle %}
+
+{%- comment -%}Detect if recover form was just posted{%- endcomment -%}
+{%- assign recover_posted = false -%}
+{%- form 'recover_customer_password' -%}
+  {%- if form.posted_successfully? -%}{%- assign recover_posted = true -%}{%- endif -%}
+{%- endform -%}
+
+<section
+  id="{{ section_id }}"
+  aria-label="Customer login"
+>
+
+  <!-- Background -->
+  <div class="lg-bg" aria-hidden="true">
+    {% if enable_mesh %}<div class="lg-mesh"></div>{% endif %}
+    <div class="lg-glow-blob lg-glow-blob--1"></div>
+    <div class="lg-glow-blob lg-glow-blob--2"></div>
+    {% if enable_particles %}<div class="lg-particles-host"></div>{% endif %}
+  </div>
+
+  <div class="lg-container">
+
+    {% if show_brand_panel %}
+      <div class="lg-grid">
+    {% else %}
+      <div class="lg-solo">
+    {% endif %}
+
+      {% if show_brand_panel %}
+        <!-- Brand panel -->
+        <div class="lg-brand-panel">
+
+          {% if side_image %}
+            <div class="lg-brand-img">
+              <img
+                src="{{ side_image | image_url: width: 1200 }}"
+                srcset="{{ side_image | image_url: width: 800 }} 800w,
+                        {{ side_image | image_url: width: 1200 }} 1200w"
+                sizes="50vw"
+                alt=""
+                loading="eager"
+                decoding="async"
+                width="{{ side_image.width }}"
+                height="{{ side_image.height }}"
+              >
+            </div>
+          {% endif %}
+
+          <div class="lg-brand-overlay"></div>
+
+          <!-- Circuit decoration -->
+          <svg class="lg-circuit" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 304 L16 210 L72 210 L72 164 L138 164 L138 104 L196 104 L196 48 L304 48" stroke="#07d16e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M304 136 L228 136 L228 192 L164 192 L164 252 L96 252" stroke="#07d16e" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+            <circle cx="72"  cy="210" r="4.5" fill="#07d16e"/>
+            <circle cx="138" cy="164" r="4.5" fill="#07d16e"/>
+            <circle cx="196" cy="104" r="4.5" fill="#07d16e"/>
+            <circle cx="228" cy="192" r="3"   fill="#07d16e" opacity="0.55"/>
+            <circle cx="164" cy="252" r="3"   fill="#07d16e" opacity="0.55"/>
+            <line x1="56" y1="16" x2="56" y2="80" stroke="#07d16e" stroke-width="1" opacity="0.35" stroke-linecap="round"/>
+            <line x1="96" y1="16" x2="96" y2="60" stroke="#07d16e" stroke-width="1" opacity="0.35" stroke-linecap="round"/>
+            <circle cx="56" cy="80" r="3" fill="#07d16e" opacity="0.45"/>
+            <circle cx="96" cy="60" r="3" fill="#07d16e" opacity="0.45"/>
+            <line x1="240" y1="280" x2="280" y2="280" stroke="#07d16e" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+            <circle cx="240" cy="280" r="2.5" fill="#07d16e" opacity="0.4"/>
+          </svg>
+
+          <!-- Brand content -->
+          <div class="lg-brand-content">
+            {% if eyebrow_text != blank %}
+              <div class="lg-eyebrow">{{ eyebrow_text | escape }}</div>
+            {% endif %}
+
+            <h2 class="lg-brand-heading">
+              {{ brand_heading_main | escape }}
+              <span class="lg-accent-line">{{ brand_heading_accent | escape }}</span>
+            </h2>
+
+            {% if brand_tagline != blank %}
+              <p class="lg-brand-tagline">{{ brand_tagline | escape }}</p>
+            {% endif %}
+
+            {%- assign has_features = false -%}
+            {%- if feature_1 != blank or feature_2 != blank or feature_3 != blank -%}
+              {%- assign has_features = true -%}
+            {%- endif -%}
+
+            {% if has_features %}
+              <ul class="lg-features">
+                {% if feature_1 != blank %}
+                  <li class="lg-feature">
+                    <span class="lg-feature-dot" aria-hidden="true"></span>
+                    {{ feature_1 | escape }}
+                  </li>
+                {% endif %}
+                {% if feature_2 != blank %}
+                  <li class="lg-feature">
+                    <span class="lg-feature-dot" aria-hidden="true"></span>
+                    {{ feature_2 | escape }}
+                  </li>
+                {% endif %}
+                {% if feature_3 != blank %}
+                  <li class="lg-feature">
+                    <span class="lg-feature-dot" aria-hidden="true"></span>
+                    {{ feature_3 | escape }}
+                  </li>
+                {% endif %}
+              </ul>
+            {% endif %}
+          </div>
+
+        </div>
+      {% endif %}
+
+      <!-- Form panel -->
+      <div class="lg-form-panel">
+
+        <!-- Logo / Bolt icon -->
+        {%- if logo_dark or logo_light -%}
+          <div class="lg-logo-wrap">
+            {%- if logo_dark and logo_light -%}
+              <img class="lg-logo lg-logo--dark"  src="{{ logo_dark  | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+              <img class="lg-logo lg-logo--light" src="{{ logo_light | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- elsif logo_dark -%}
+              <img class="lg-logo" src="{{ logo_dark  | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- else -%}
+              <img class="lg-logo" src="{{ logo_light | image_url: height: 96 }}" alt="{{ shop.name }}" height="48" loading="eager" decoding="async">
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <div class="lg-bolt-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 2L6 18h11L15 30 28 14H17L18 2z"/>
+            </svg>
+          </div>
+        {%- endif -%}
+
+        <h1 class="lg-form-heading">{{ heading | escape }}</h1>
+        <p class="lg-form-sub">
+          {{ subheading | escape }}
+          &nbsp;&mdash;&nbsp;
+          <a href="{{ routes.account_register_url }}">{{ register_link_label | escape }}</a>
+        </p>
+
+        <!-- LOGIN FORM -->
+        <div class="lg-login-section" id="lg-login-{{ section.id }}">
+
+          {% form 'customer_login', id: 'lg-form-login-{{ section.id }}' %}
+
+            {%- if form.errors -%}
+              <div class="lg-alert" role="alert" tabindex="-1">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="7.5" stroke="#ff5f5f" stroke-width="1.4"/>
+                  <line x1="9" y1="5" x2="9" y2="10.5" stroke="#ff5f5f" stroke-width="1.4" stroke-linecap="round"/>
+                  <circle cx="9" cy="13" r="0.9" fill="#ff5f5f"/>
+                </svg>
+                <div>{{ form.errors | default_errors }}</div>
+              </div>
+            {%- endif -%}
+
+            {%- if shop.features.login_with_shop_classic_customer_accounts? -%}
+              <section name="sign-in-with-shop-provider">
+                {{ shop | login_button }}
+                <div class="lg-divider">
+                  <span class="lg-divider-line"></span>
+                  <span class="lg-divider-text">or sign in with email</span>
+                  <span class="lg-divider-line"></span>
+                </div>
+              </section>
+            {%- endif -%}
+
+            <div class="lg-field">
+              <input
+                type="email"
+                name="customer[email]"
+                id="lg-email-{{ section.id }}"
+                class="lg-field-input"
+                autocomplete="email"
+                autocorrect="off"
+                autocapitalize="off"
+                required
+                placeholder="{{ 'customer.login_page.email' | t }}"
+                {% if form.errors contains 'form' %}aria-invalid="true"{% endif %}
+                value="{{ form.email }}"
+              >
+              <label for="lg-email-{{ section.id }}" class="lg-field-label">
+                {{ 'customer.login_page.email' | t }}
+              </label>
+            </div>
+
+            {%- if form.password_needed -%}
+              <div class="lg-field lg-field--pw">
+                <input
+                  type="password"
+                  name="customer[password]"
+                  id="lg-pw-{{ section.id }}"
+                  class="lg-field-input"
+                  autocomplete="current-password"
+                  required
+                  placeholder="{{ 'customer.login_page.password' | t }}"
+                  {% if form.errors contains 'form' %}aria-invalid="true"{% endif %}
+                >
+                <label for="lg-pw-{{ section.id }}" class="lg-field-label">
+                  {{ 'customer.login_page.password' | t }}
+                </label>
+                <button type="button" class="lg-pw-toggle" id="lg-pwtoggle-{{ section.id }}" aria-label="{{ 'customer.login_page.password' | t }}">
+                  <svg class="lg-icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg class="lg-icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="lg-forgot">
+                <button type="button" id="lg-forgot-{{ section.id }}">
+                  {{ 'customer.login_page.forgot_password' | t }}
+                </button>
+              </div>
+            {%- endif -%}
+
+            <div class="lg-actions">
+              <button type="submit" class="lg-btn">
+                {{ 'customer.login_page.login' | t }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+
+          {% endform %}
+
+        </div><!-- /lg-login-section -->
+
+        <!-- RECOVER FORM -->
+        <div class="lg-recover-section" id="lg-recover-{{ section.id }}" aria-hidden="true">
+
+          <h2 class="lg-recover-heading">{{ 'customer.recover_password.title' | t }}</h2>
+          <p class="lg-recover-sub">{{ 'customer.recover_password.text' | t }}</p>
+
+          {% form 'recover_customer_password', id: 'lg-form-recover-{{ section.id }}' %}
+
+            {%- if form.errors -%}
+              <div class="lg-alert" role="alert">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="7.5" stroke="#ff5f5f" stroke-width="1.4"/>
+                  <line x1="9" y1="5" x2="9" y2="10.5" stroke="#ff5f5f" stroke-width="1.4" stroke-linecap="round"/>
+                  <circle cx="9" cy="13" r="0.9" fill="#ff5f5f"/>
+                </svg>
+                <div>{{ form.errors | default_errors }}</div>
+              </div>
+            {%- endif -%}
+
+            {%- if form.posted_successfully? -%}
+              <div class="lg-alert lg-alert--success" role="status">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="7.5" stroke="#07d16e" stroke-width="1.4"/>
+                  <polyline points="5,9 8,12.5 13,6.5" stroke="#07d16e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>{{ 'customer.recover_password.success' | t }}</p>
+              </div>
+            {%- endif -%}
+
+            <div class="lg-field">
+              <input
+                type="email"
+                name="email"
+                id="lg-recover-email-{{ section.id }}"
+                class="lg-field-input"
+                autocomplete="email"
+                autocorrect="off"
+                autocapitalize="off"
+                required
+                placeholder="{{ 'customer.login_page.email' | t }}"
+                {% if form.errors %}aria-invalid="true"{% endif %}
+              >
+              <label for="lg-recover-email-{{ section.id }}" class="lg-field-label">
+                {{ 'customer.login_page.email' | t }}
+              </label>
+            </div>
+
+            <div class="lg-actions">
+              <button type="submit" class="lg-btn">
+                {{ 'customer.login_page.submit' | t }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+              <button type="button" class="lg-btn lg-btn--ghost" id="lg-cancel-{{ section.id }}">
+                {{ 'customer.login_page.cancel' | t }}
+              </button>
+            </div>
+
+          {% endform %}
+
+        </div><!-- /lg-recover-section -->
+
+        <!-- Return to store -->
+        <a href="{{ routes.root_url }}" class="lg-return">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          {{ 'customer.login_page.return_to_store' | t }}
+        </a>
+
+        <!-- Guest checkout -->
+        {%- if shop.checkout.guest_login -%}
+          <div class="lg-guest">
+            <h2 class="lg-guest-title">{{ 'customer.login_page.guest_title' | t }}</h2>
+            {%- form 'guest_login' -%}
+              <button type="submit" class="lg-btn lg-btn--ghost">
+                {{ 'customer.login_page.guest_continue' | t }}
+              </button>
+            {%- endform -%}
+          </div>
+        {%- endif -%}
+
+      </div><!-- /lg-form-panel -->
+
+    {% if show_brand_panel %}
+      </div><!-- /lg-grid -->
+    {% else %}
+      </div><!-- /lg-solo -->
+    {% endif %}
+
+  </div><!-- /lg-container -->
+</section>
+
+<script>
+(function () {
+  var SEC = document.getElementById('{{ section_id }}');
+  if (!SEC) return;
+
+  var loginEl   = document.getElementById('lg-login-{{ section.id }}');
+  var recoverEl = document.getElementById('lg-recover-{{ section.id }}');
+  var forgotBtn = document.getElementById('lg-forgot-{{ section.id }}');
+  var cancelBtn = document.getElementById('lg-cancel-{{ section.id }}');
+  var pwToggle  = document.getElementById('lg-pwtoggle-{{ section.id }}');
+  var pwInput   = document.getElementById('lg-pw-{{ section.id }}');
+
+  /* ── Form toggle ── */
+  function showRecover() {
+    if (!loginEl || !recoverEl) return;
+    loginEl.classList.add('lg-hidden');
+    recoverEl.classList.add('lg-visible');
+    recoverEl.removeAttribute('aria-hidden');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        recoverEl.classList.add('lg-shown');
+      });
+    });
+    var emailField = recoverEl.querySelector('.lg-field-input');
+    if (emailField) setTimeout(function () { emailField.focus(); }, 80);
+  }
+
+  function showLogin() {
+    if (!loginEl || !recoverEl) return;
+    recoverEl.classList.remove('lg-shown');
+    setTimeout(function () {
+      recoverEl.classList.remove('lg-visible');
+      recoverEl.setAttribute('aria-hidden', 'true');
+      loginEl.classList.remove('lg-hidden');
+    }, 420);
+  }
+
+  if (forgotBtn) forgotBtn.addEventListener('click', showRecover);
+  if (cancelBtn) cancelBtn.addEventListener('click', showLogin);
+
+  /* Auto-show recover if URL hash or server says so */
+  if (window.location.hash === '#recover' || {{ recover_posted }}) {
+    showRecover();
+  }
+
+  /* ── Password toggle ── */
+  if (pwToggle && pwInput) {
+    pwToggle.addEventListener('click', function () {
+      var shown = pwToggle.classList.toggle('is-shown');
+      pwInput.type = shown ? 'text' : 'password';
+      pwToggle.setAttribute('aria-label', shown ? 'Hide password' : 'Show password');
+    });
+  }
+
+  /* ── Float label: autofill detection ── */
+  SEC.querySelectorAll('.lg-field-input').forEach(function (input) {
+    var field = input.closest('.lg-field');
+    if (!field) return;
+    function sync() {
+      field.classList.toggle('lg-filled', input.value.length > 0);
+    }
+    input.addEventListener('input', sync);
+    input.addEventListener('blur',  sync);
+    setTimeout(sync, 400); /* catch browser autofill */
+  });
+
+  /* ── Button press micro-animation ── */
+  SEC.querySelectorAll('.lg-btn').forEach(function (btn) {
+    btn.addEventListener('pointerdown', function () {
+      btn.style.transition = 'transform 0.08s ease';
+      btn.style.transform  = 'scale(0.97)';
+    });
+    btn.addEventListener('pointerup', function () {
+      btn.style.transition = '';
+      btn.style.transform  = '';
+    });
+    btn.addEventListener('pointerleave', function () {
+      btn.style.transform = '';
+    });
+  });
+
+  {% if enable_particles and enable_anims %}
+  /* ── Floating particles ── */
+  var host = SEC.querySelector('.lg-particles-host');
+  if (host) {
+    for (var i = 0; i < 14; i++) {
+      var p = document.createElement('div');
+      p.className = 'lg-particle';
+      var size   = 2 + Math.random() * 4;
+      var opBase = 0.15 + Math.random() * 0.35;
+      p.style.cssText =
+        'left:'                 + (Math.random() * 100)             + '%;' +
+        'top:'                  + (Math.random() * 100)             + '%;' +
+        'width:'                + size                              + 'px;' +
+        'height:'               + size                              + 'px;' +
+        'animation-duration:'   + (5 + Math.random() * 8)          + 's;' +
+        'animation-delay:'      + (-Math.random() * 10)             + 's;' +
+        '--p-opacity-start:'    + opBase                            + ';' +
+        'opacity:'              + opBase                            + ';';
+      host.appendChild(p);
+    }
+  }
+  {% endif %}
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Customer Login",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Form Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Form heading",
+      "default": "Welcome Back"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Form subheading",
+      "default": "Sign in to your BurnLab account"
+    },
+    {
+      "type": "text",
+      "id": "register_link_label",
+      "label": "Register link label",
+      "default": "Create an account"
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_dark",
+      "label": "Logo — dark mode",
+      "info": "Shown above the form heading in dark mode. If neither logo is set, a bolt icon is displayed as a fallback."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_light",
+      "label": "Logo — light mode",
+      "info": "Shown when the theme is in light mode. Falls back to the dark logo if not uploaded."
+    },
+    {
+      "type": "header",
+      "content": "Brand Panel"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_brand_panel",
+      "label": "Show brand panel",
+      "default": true,
+      "info": "Shows a split layout with brand content on one side and the login form on the other."
+    },
+    {
+      "type": "image_picker",
+      "id": "side_image",
+      "label": "Brand panel image",
+      "info": "Optional. If left empty the panel shows a dark background with decorative elements."
+    },
+    {
+      "type": "select",
+      "id": "image_side",
+      "label": "Brand panel side",
+      "options": [
+        { "value": "left",  "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow_text",
+      "label": "Eyebrow label",
+      "default": "Members Area"
+    },
+    {
+      "type": "text",
+      "id": "brand_heading_main",
+      "label": "Brand heading — first line",
+      "default": "Train harder."
+    },
+    {
+      "type": "text",
+      "id": "brand_heading_accent",
+      "label": "Brand heading — accent line (green)",
+      "default": "Recover smarter."
+    },
+    {
+      "type": "text",
+      "id": "brand_tagline",
+      "label": "Brand tagline",
+      "default": "Premium home gym equipment. Built to last."
+    },
+    {
+      "type": "header",
+      "content": "Member Benefits"
+    },
+    {
+      "type": "text",
+      "id": "feature_1",
+      "label": "Benefit 1",
+      "default": "Exclusive member discounts"
+    },
+    {
+      "type": "text",
+      "id": "feature_2",
+      "label": "Benefit 2",
+      "default": "Order tracking and history"
+    },
+    {
+      "type": "text",
+      "id": "feature_3",
+      "label": "Benefit 3",
+      "default": "Early access to new products"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Page background",
+      "default": "#000f1c"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Form card background",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_dark",
+      "label": "Border and input border",
+      "default": "#1a3a50"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Page background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Form card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "border_color_light",
+      "label": "Border and input border",
+      "default": "#c8dce4"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true,
+      "info": "Card materialise, staggered field reveals, circuit trace draw, and blob drift. Disabled for visitors with reduced motion preference."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_mesh",
+      "label": "Enable dot mesh background",
+      "default": true,
+      "info": "Subtle animated grid of dots behind the content."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_particles",
+      "label": "Enable floating particles",
+      "default": true,
+      "info": "Small green dots that float gently in the background."
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Customer Login",
+      "settings": {
+        "heading": "Welcome Back",
+        "subheading": "Sign in to your BurnLab account",
+        "show_brand_panel": true,
+        "image_side": "left",
+        "enable_animations": true,
+        "enable_mesh": true,
+        "enable_particles": true
+      }
+    }
+  ]
+}
+{% endschema %}

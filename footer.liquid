@@ -810,12 +810,13 @@
 
           <!-- Logo -->
           {% if logo %}
+            {%- assign logo_size_2x = logo_size | times: 2 -%}
             <a href="{{ routes.root_url }}" class="ft-logo-wrap" aria-label="{{ shop.name }} — home">
               <img
                 class="ft-logo-dark"
                 src="{{ logo | image_url: width: logo_size }}"
                 srcset="{{ logo | image_url: width: logo_size }} 1x,
-                        {{ logo | image_url: width: logo_size | times: 2 }} 2x"
+                        {{ logo | image_url: width: logo_size_2x }} 2x"
                 alt="{{ shop.name }}"
                 width="{{ logo_size }}"
                 height="auto"

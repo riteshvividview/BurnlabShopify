@@ -1,0 +1,185 @@
+{% style %}
+  .customer_account_wrapper {
+      padding-top: {{ section.settings.top_spacing }}px;
+      padding-bottom: {{ section.settings.bottom_spacing }}px;
+  }
+
+  @media screen and (max-width: 640px) {
+      .customer_account_wrapper {
+          padding-top: {{ section.settings.mob_top_spacing }}px;
+          padding-bottom: {{ section.settings.mob_bottom_spacing }}px;
+      }
+  }
+{% endstyle %}
+
+{{ 'customer-account.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="customer_account_wrapper color_scheme color-{{section.settings.color_scheme }}"
+  style="--border-radius: {{ section.settings.border_radius }}px;"
+>
+  <div class="container">
+    <div class="customer_account_inner">
+      <div class="customer_account_orders_wrapper">
+        <div class="customer_account_orders_header">
+          <h1>{{ 'customer.account.title' | t }}</h1>
+
+          {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+          <a class="btn" href="{{ routes.account_logout_url }}" aria-label="{{ 'customer.log_out' | t }}">
+            {{- 'customer.log_out' | t }}
+            {{ 'icon-logout.svg' | inline_asset_content -}}
+          </a>
+          {% if settings.enable_magnet %}</magnetic-button>{% endif %}
+        </div>
+
+        <div class="customer_account_order_details_wrapper">
+          <h4>{{ 'customer.orders.title' | t }}</h4>
+
+          {% if customer.orders.size > 0 %}
+            <div class="customer_account_orders for_desktop">
+              <div class="customer_order_block block_head">
+                <div class="order_number">{{ 'customer.account.order_name' | t }}</div>
+                <div class="order_date">{{ 'customer.account.order_date' | t }}</div>
+                <div class="payment_status">{{ 'customer.account.payment_status' | t }}</div>
+                <div class="fulfillment_status">{{ 'customer.account.fulfillment_status' | t }}</div>
+                <div class="total">{{ 'customer.account.order_total' | t }}</div>
+              </div>
+              {% for order in customer.orders %}
+                <div class="customer_order_block">
+                  <div class="order_number">
+                    <a aria-label="{{ order.name }}" href="{{ order.customer_url }}">{{ order.name }}</a>
+                  </div>
+                  <div class="order_date">{{ order.created_at | date: '%d-%m-%Y' }}</div>
+                  <div class="payment_status">{{ order.financial_status_label }}</div>
+                  <div class="fulfillment_status">{{ order.fulfillment_status_label }}</div>
+                  <div class="total">{{ order.total_net_amount | money_with_currency }}</div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="customer_account_orders for_mobile">
+              {% for order in customer.orders %}
+                <div class="customer_order_block">
+                  <div class="order_number">
+                    <span>{{ 'customer.account.order_name' | t }}</span>
+                    <a aria-label="{{ order.name }}" href="{{ order.customer_url }}">{{ order.name }}</a>
+                  </div>
+                  <div class="order_date">
+                    <span>{{ 'customer.account.order_date' | t }}</span>
+                    {{ order.created_at | date: '%d-%m-%Y' }}
+                  </div>
+                  <div class="payment_status">
+                    <span>{{ 'customer.account.payment_status' | t }}</span>
+                    {{ order.financial_status_label }}
+                  </div>
+                  <div class="fulfillment_status">
+                    <span>{{ 'customer.account.fulfillment_status' | t }}</span>
+                    {{ order.fulfillment_status_label }}
+                  </div>
+                  <div class="total">
+                    <span>{{ 'customer.account.order_total' | t }}</span>
+                    {{ order.total_net_amount | money_with_currency }}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="no_orders">{{ 'customer.orders.none' | t }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% if customer.addresses.size > 0 %}
+        <div class="customer_account_address_wrapper">
+          <h3>{{ 'customer.account.details' | t }}</h3>
+          <div class="customer_account_default_address">
+            {{ customer.default_address | format_address }}
+          </div>
+
+          <div class="customer_account_view_address_btn">
+            {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+            <a
+              class="btn btn-secondary"
+              href="{{ routes.account_addresses_url }}"
+              aria-label="{{ 'customer.account.view_addresses' | t }}"
+            >
+              {{- 'customer.account.view_addresses' | t }} ({{ customer.addresses_count }})</a
+            >
+            {% if settings.enable_magnet %}</magnetic-button>{% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Customer account",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "default": 10,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "id": "top_spacing",
+      "label": "Top spacing",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "Bottom spacing",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "id": "mob_top_spacing",
+      "label": "Top spacing",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "mob_bottom_spacing",
+      "label": "Bottom spacing",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20
+    }
+  ]
+}
+{% endschema %}
