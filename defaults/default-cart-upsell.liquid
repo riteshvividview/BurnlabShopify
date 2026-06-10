@@ -1,0 +1,54 @@
+{{ "product-card.css" | asset_url | stylesheet_tag }}
+<div class="cart_drawer_upsell_products">
+{% if recommendations.products.size > 0 %}
+  <div class="cart_upsell_items swiper">
+    <div class="swiper-wrapper">
+      {% for product in recommendations.products limit: 10 %}
+        <div class="cart_upsell_item swiper-slide">
+          {% render 'product-card',
+              product: product,
+              index: forloop.index,
+              card_bg: true,
+              card_bg_color: "#fff",
+              aspect_ratio: "square",
+              show_badges: false,                     
+              quick_view: false,
+              img_size: 'cover'          
+          %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="cu swiper-button-prev swiper-button-prev-{{ section.id }}" aria-label="Previous button" >
+      {% render 'icon-left' %}
+    </div>
+
+    <div class="cu swiper-button-next swiper-button-next-{{ section.id }}" aria-label="Next button" >
+      {% render 'icon-right' %}
+    </div>
+  </div>
+{% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Cart upsell",
+  "settings": [
+    {
+      "type": "select",
+      "id": "featured_style",
+      "label": "Featured style",
+      "options": [
+        {
+          "value": "style1",
+          "label": "Style 1"
+        },
+        {
+          "value": "style2",
+          "label": "Style 2"
+        }
+      ],
+      "default": "style1"
+    }
+  ]
+}
+{% endschema %}

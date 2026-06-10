@@ -97,6 +97,32 @@
   assign logo_size_scale  = logo_size_raw | divided_by: 100.0
   assign logo_opacity_raw = section.settings.logo_opacity | default: 100
   assign logo_opacity_dec = logo_opacity_raw | divided_by: 100.0
+
+  assign handle_color_hex  = section.settings.handle_color  | default: '#c41010'
+  assign plate_color_hex   = section.settings.plate_color   | default: '#111111'
+  assign rod_texture_url   = section.settings.rod_texture   | image_url: width: 512
+  assign plate_texture_url = section.settings.plate_texture | image_url: width: 512
+
+  assign plate_count        = section.settings.plate_count      | default: 3
+  assign plate_r1_dec       = section.settings.plate_r1         | default: 72  | divided_by: 100.0
+  assign plate_r2_dec       = section.settings.plate_r2         | default: 60  | divided_by: 100.0
+  assign plate_r3_dec       = section.settings.plate_r3         | default: 50  | divided_by: 100.0
+  assign plate_r4_dec       = section.settings.plate_r4         | default: 42  | divided_by: 100.0
+  assign plate_t1_dec       = section.settings.plate_t1         | default: 21  | divided_by: 100.0
+  assign plate_t2_dec       = section.settings.plate_t2         | default: 21  | divided_by: 100.0
+  assign plate_t3_dec       = section.settings.plate_t3         | default: 21  | divided_by: 100.0
+  assign plate_t4_dec       = section.settings.plate_t4         | default: 21  | divided_by: 100.0
+  assign plate_spacing_dec  = section.settings.plate_spacing    | default: 2   | divided_by: 100.0
+  assign handle_length_dec  = section.settings.handle_length    | default: 160 | divided_by: 100.0
+  assign handle_radius_dec  = section.settings.handle_radius    | default: 16  | divided_by: 100.0
+  assign handle_rough_dec   = section.settings.handle_roughness | default: 82  | divided_by: 100.0
+  assign handle_metal_dec   = section.settings.handle_metalness | default: 5   | divided_by: 100.0
+  assign weight_rough_dec   = section.settings.weight_roughness | default: 88  | divided_by: 100.0
+  assign weight_metal_dec   = section.settings.weight_metalness | default: 12  | divided_by: 100.0
+  assign collar_rough_dec   = section.settings.collar_roughness | default: 52  | divided_by: 100.0
+  assign collar_metal_dec   = section.settings.collar_metalness | default: 40  | divided_by: 100.0
+  assign collar_radius_dec  = section.settings.collar_radius    | default: 29  | divided_by: 100.0
+  assign collar_thick_dec   = section.settings.collar_thickness | default: 22  | divided_by: 100.0
 -%}
 
 <style>
@@ -692,8 +718,24 @@
   var SEC_ID   = '{{ section.id }}';
   var LAYOUT   = '{{ layout_mode }}';
   var LOGO_URL     = '{{ logo_image_url }}';
-  var LOGO_FACE    = 1.21 * {{ logo_size_scale }};
-  var LOGO_OPACITY = {{ logo_opacity_dec }};
+  var LOGO_SIZE_SCALE = {{ logo_size_scale }};
+  var LOGO_OPACITY    = {{ logo_opacity_dec }};
+
+  /* ── Dumbbell geometry & material parameters (all from schema) ── */
+  var PLATE_COUNT   = {{ plate_count }};
+  var PLATE_RADII   = [{{ plate_r1_dec }}, {{ plate_r2_dec }}, {{ plate_r3_dec }}, {{ plate_r4_dec }}];
+  var PLATE_THICK   = [{{ plate_t1_dec }}, {{ plate_t2_dec }}, {{ plate_t3_dec }}, {{ plate_t4_dec }}];
+  var PLATE_SPACING = {{ plate_spacing_dec }};
+  var HANDLE_LEN    = {{ handle_length_dec }};
+  var HANDLE_RAD    = {{ handle_radius_dec }};
+  var HANDLE_ROUGH  = {{ handle_rough_dec }};
+  var HANDLE_METAL  = {{ handle_metal_dec }};
+  var WEIGHT_ROUGH  = {{ weight_rough_dec }};
+  var WEIGHT_METAL  = {{ weight_metal_dec }};
+  var COLLAR_ROUGH  = {{ collar_rough_dec }};
+  var COLLAR_METAL  = {{ collar_metal_dec }};
+  var COLLAR_RAD    = {{ collar_radius_dec }};
+  var COLLAR_THICK  = {{ collar_thick_dec }};
 
   var root     = document.getElementById(SID);
   if (!root) return;
@@ -813,102 +855,175 @@
     var rafId = null, isVisible = false;
 
     /* ── Materials ─────────────────────────────────── */
-    var matBody, matHandle, matAccent, matGrip;
+    var matPlate, matRod, matCollar, matSpacer;
+
+    var HANDLE_COLOR  = '{{ handle_color_hex }}';
+    var PLATE_COLOR   = '{{ plate_color_hex }}';
+    var ROD_TEX_URL   = '{{ rod_texture_url }}';
+    var PLATE_TEX_URL = '{{ plate_texture_url }}';
 
     function createMats(){
       isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-      if (matBody) {
-        matBody.color.setHex(isDark ? 0x0b1c30 : 0xb2bec8);
-        matBody.metalness    = isDark ? 0.88 : 0.70;
-        matBody.roughness    = isDark ? 0.13 : 0.24;
-        matBody.needsUpdate  = true;
-        matHandle.color.setHex(isDark ? 0x060d18 : 0x9aaab6);
-        matHandle.needsUpdate = true;
-        matAccent.emissiveIntensity = isDark ? 0.22 : 0.05;
-        matAccent.needsUpdate = true;
-        matGrip.color.setHex(isDark ? 0x0e1620 : 0x1c2430);
-        matGrip.needsUpdate  = true;
+      var hCol = new THREE.Color(HANDLE_COLOR);
+      var pCol = new THREE.Color(PLATE_COLOR);
+      if (matPlate) {
+        matRod.color.copy(hCol);    matRod.needsUpdate    = true;
+        matCollar.color.copy(hCol); matCollar.needsUpdate = true;
+        matPlate.color.copy(pCol);  matPlate.needsUpdate  = true;
+        matSpacer.color.setHex(isDark ? 0x070707 : 0x141414); matSpacer.needsUpdate = true;
       } else {
-        matBody   = new THREE.MeshStandardMaterial({ color: isDark?0x0b1c30:0xb2bec8, metalness:isDark?0.88:0.70, roughness:isDark?0.13:0.24, envMapIntensity:1.1 });
-        matHandle = new THREE.MeshStandardMaterial({ color: isDark?0x060d18:0x9aaab6, metalness:0.95, roughness:0.06, envMapIntensity:1.2 });
-        matAccent = new THREE.MeshStandardMaterial({ color:0x07d16e, metalness:0.55, roughness:0.28, emissive:new THREE.Color(0x07d16e), emissiveIntensity:isDark?0.22:0.05 });
-        matGrip   = new THREE.MeshStandardMaterial({ color: isDark?0x0e1620:0x1c2430, metalness:0.25, roughness:0.72 });
+        matRod    = new THREE.MeshStandardMaterial({ color: hCol, metalness: HANDLE_METAL, roughness: HANDLE_ROUGH, envMapIntensity:0.25 });
+        matCollar = new THREE.MeshStandardMaterial({ color: hCol, metalness: COLLAR_METAL, roughness: COLLAR_ROUGH });
+        matPlate  = new THREE.MeshStandardMaterial({ color: pCol, metalness: WEIGHT_METAL, roughness: WEIGHT_ROUGH });
+        matSpacer = new THREE.MeshStandardMaterial({ color: isDark?0x070707:0x141414, metalness:0.40, roughness:0.65 });
       }
     }
     createMats();
 
-    /* ── Build dumbbell ────────────────────────────── */
+    /* ── Build dumbbell — all dimensions and materials from schema ─ */
     var dumbbell = new THREE.Group();
     dumbbell.scale.setScalar(MODEL_SCALE);
 
-    /* Bar — thick (0.17 radius) */
-    var barGeo  = new THREE.CylinderGeometry(0.17, 0.17, 2.2, 24);
-    var barMesh = new THREE.Mesh(barGeo, matHandle);
-    barMesh.rotation.z = Math.PI / 2;
-    barMesh.castShadow  = true;
+    /* Plate count clamped to 1–4 */
+    var nPlates = Math.min(Math.max(Math.round(PLATE_COUNT), 1), 4);
+
+    /* ── Bar ──────────────────────────────────────────────────── */
+    var barMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(HANDLE_RAD, HANDLE_RAD, HANDLE_LEN, 32),
+      matRod
+    );
+    barMesh.rotation.z = Math.PI / 2; barMesh.castShadow = true;
     dumbbell.add(barMesh);
 
-    /* Knurl rings — sized to thick bar */
-    for (var ki = -0.62; ki <= 0.62; ki += 0.14) {
-      var rg = new THREE.TorusGeometry(0.187, 0.012, 6, 24);
-      var rm = new THREE.Mesh(rg, matGrip);
-      rm.rotation.y = Math.PI / 2;
-      rm.position.x = ki;
-      dumbbell.add(rm);
+    /* Knurl rings — count and step proportional to handle dimensions */
+    var knurlR    = HANDLE_RAD + 0.013;
+    var knurlTu   = Math.max(HANDLE_RAD * 0.058, 0.006);
+    var knurlZone = HANDLE_LEN * 0.375;
+    var knurlStep = Math.max(HANDLE_RAD * 0.58, 0.04);
+    for (var ki = -knurlZone; ki <= knurlZone + 0.001; ki += knurlStep) {
+      var krm = new THREE.Mesh(new THREE.TorusGeometry(knurlR, knurlTu, 6, 32), matSpacer);
+      krm.rotation.y = Math.PI / 2;
+      krm.position.x = parseFloat(ki.toFixed(5));
+      dumbbell.add(krm);
     }
 
-    /* Collars */
-    var colGeo  = new THREE.CylinderGeometry(0.22, 0.22, 0.24, 18);
-    var lCollar = new THREE.Mesh(colGeo, matBody);
-    lCollar.rotation.z = Math.PI/2; lCollar.position.x = -0.96; lCollar.castShadow = true;
-    dumbbell.add(lCollar);
-    var rCollar = lCollar.clone(); rCollar.position.x = 0.96; dumbbell.add(rCollar);
-
-    /* Hex weight heads */
-    var hexGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.64, 6, 1);
-    var lHead  = new THREE.Mesh(hexGeo, matBody);
-    lHead.rotation.z = Math.PI/2; lHead.position.x = -1.41; lHead.castShadow = lHead.receiveShadow = true;
-    dumbbell.add(lHead);
-    var rHead = lHead.clone(); rHead.position.x = 1.41; dumbbell.add(rHead);
-
-    /* Accent rim rings */
-    var rimGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.025, 6);
-    [-1.10, 1.10].forEach(function(x){
-      var r = new THREE.Mesh(rimGeo, matAccent);
-      r.rotation.z = Math.PI/2; r.position.x = x; dumbbell.add(r);
+    /* ── Inner sleeve collars — proportional to handle ────────── */
+    var innerColLen = HANDLE_LEN * 0.10;
+    var innerColRad = HANDLE_RAD * 1.50;
+    var innerColCx  = HANDLE_LEN / 2 + innerColLen / 2;
+    var icGeo = new THREE.CylinderGeometry(innerColRad, innerColRad, innerColLen, 24);
+    [-innerColCx, innerColCx].forEach(function(x){
+      var ic = new THREE.Mesh(icGeo, matCollar);
+      ic.rotation.z = Math.PI / 2; ic.position.x = x; ic.castShadow = true;
+      dumbbell.add(ic);
     });
 
-    /* Outer accent caps (green ring) */
-    var faceAccGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.022, 6);
-    [-1.73, 1.73].forEach(function(x){
-      var r = new THREE.Mesh(faceAccGeo, matAccent);
-      r.rotation.z = Math.PI/2; r.position.x = x; dumbbell.add(r);
+    /* ── Plate stack — positions computed from PLATE_RADII / PLATE_THICK / PLATE_SPACING
+     *  plateEdge tracks the running outer X-boundary after each plate is placed.        */
+    var innerColOuter  = innerColCx + innerColLen / 2;
+    var rightPlateCfgs = [];
+    var plateEdge      = innerColOuter;
+    for (var pi = 0; pi < nPlates; pi++) {
+      var ht  = PLATE_THICK[pi] / 2;
+      var pcx = plateEdge + PLATE_SPACING + ht;
+      rightPlateCfgs.push({ x: pcx, r: PLATE_RADII[pi], ht: ht });
+      plateEdge = pcx + ht;
+    }
+
+    /* Build plates (both sides) + subtle edge rim on each */
+    rightPlateCfgs.concat(
+      rightPlateCfgs.map(function(c){ return { x: -c.x, r: c.r, ht: c.ht }; })
+    ).forEach(function(cfg){
+      var pl = new THREE.Mesh(
+        new THREE.CylinderGeometry(cfg.r, cfg.r, cfg.ht * 2, 48, 1), matPlate
+      );
+      pl.rotation.z = Math.PI / 2; pl.position.x = cfg.x;
+      pl.castShadow = pl.receiveShadow = true;
+      dumbbell.add(pl);
+
+      var rim = new THREE.Mesh(
+        new THREE.CylinderGeometry(cfg.r + 0.005, cfg.r + 0.005, 0.014, 48), matSpacer
+      );
+      rim.rotation.z = Math.PI / 2; rim.position.x = cfg.x;
+      dumbbell.add(rim);
     });
 
-    /* Solid end caps — named references needed for DecalGeometry targeting */
-    var capGeo = new THREE.CylinderGeometry(0.70, 0.70, 0.04, 6);
-    var lCap   = new THREE.Mesh(capGeo, matBody);
-    lCap.rotation.z = Math.PI/2; lCap.position.x = -1.754; dumbbell.add(lCap);
-    var rCap   = new THREE.Mesh(capGeo, matBody);
-    rCap.rotation.z = Math.PI/2; rCap.position.x =  1.754; dumbbell.add(rCap);
+    /* Washer spacers between adjacent plates */
+    for (var wi = 0; wi < rightPlateCfgs.length - 1; wi++) {
+      var wR   = Math.min(rightPlateCfgs[wi].r, rightPlateCfgs[wi + 1].r) + 0.01;
+      var wGap = rightPlateCfgs[wi].x + rightPlateCfgs[wi].ht + PLATE_SPACING * 0.5;
+      [-wGap, wGap].forEach(function(wx){
+        var wsh = new THREE.Mesh(
+          new THREE.CylinderGeometry(wR, wR, 0.010, 40), matSpacer
+        );
+        wsh.rotation.z = Math.PI / 2; wsh.position.x = wx;
+        dumbbell.add(wsh);
+      });
+    }
 
-    {% comment %} /* BURNLAB text on bar — toggle, size, and colour from schema */
-    if (SHOW_BAR_TEXT) {
-      var tc   = document.createElement('canvas');
-      tc.width = 512; tc.height = 80;
-      var tctx = tc.getContext('2d');
-      tctx.clearRect(0,0,512,80);
-      tctx.font = 'bold ' + BAR_TEXT_SIZE + 'px "Archivo Black","Arial Black",sans-serif';
-      tctx.textAlign = 'center'; tctx.textBaseline = 'middle';
-      tctx.fillStyle = BAR_TEXT_COLOR;
-      tctx.fillText('BURNLAB', 256, 40);
-      var barTex   = new THREE.CanvasTexture(tc);
-      var barTxMat = new THREE.MeshBasicMaterial({ map:barTex, transparent:true, depthWrite:false });
-      var barTxGeo = new THREE.PlaneGeometry(0.82, 0.14);
-      var barLabel = new THREE.Mesh(barTxGeo, barTxMat);
-      barLabel.position.set(0, 0.178, 0.001);
-      dumbbell.add(barLabel);
-    } {% endcomment %}
+    /* ── Adjustable locking collar — centre beyond the outermost plate face ── */
+    var lockCxMag = plateEdge + 0.03 + COLLAR_THICK / 2;
+    [-lockCxMag, lockCxMag].forEach(function(cx){
+      var side = cx > 0 ? 1 : -1;
+
+      /* Red collar body */
+      var cb = new THREE.Mesh(
+        new THREE.CylinderGeometry(COLLAR_RAD, COLLAR_RAD * 0.895, COLLAR_THICK, 20), matCollar
+      );
+      cb.rotation.z = Math.PI / 2; cb.position.x = cx; cb.castShadow = true;
+      dumbbell.add(cb);
+
+      /* Dark center groove band */
+      var bg = new THREE.Mesh(
+        new THREE.CylinderGeometry(COLLAR_RAD + 0.007, COLLAR_RAD + 0.007, COLLAR_THICK * 0.25, 20), matSpacer
+      );
+      bg.rotation.z = Math.PI / 2; bg.position.x = cx;
+      dumbbell.add(bg);
+
+      /* Outer locking wheel — 10-sided = faceted gear appearance */
+      var lw = new THREE.Mesh(
+        new THREE.CylinderGeometry(COLLAR_RAD * 1.115, COLLAR_RAD * 1.045, COLLAR_THICK * 0.355, 10), matCollar
+      );
+      lw.rotation.z = Math.PI / 2; lw.position.x = cx + side * (COLLAR_THICK * 0.455);
+      dumbbell.add(lw);
+
+      /* Dark serration ring on locking wheel */
+      var tr = new THREE.Mesh(
+        new THREE.CylinderGeometry(COLLAR_RAD * 1.130, COLLAR_RAD * 1.130, COLLAR_THICK * 0.136, 10), matSpacer
+      );
+      tr.rotation.z = Math.PI / 2; tr.position.x = cx + side * (COLLAR_THICK * 0.455);
+      dumbbell.add(tr);
+
+      /* Black inner sleeve post */
+      var sp2 = new THREE.Mesh(
+        new THREE.CylinderGeometry(HANDLE_RAD + 0.007, HANDLE_RAD + 0.007, COLLAR_THICK * 0.5, 16), matSpacer
+      );
+      sp2.rotation.z = Math.PI / 2; sp2.position.x = cx + side * (COLLAR_THICK * 0.718);
+      dumbbell.add(sp2);
+    });
+
+    /* Closure vars for the async logo texture callback below */
+    var logoFaceX = plateEdge + 0.003;
+    var logoSize  = PLATE_RADII[nPlates - 1] * 2 * LOGO_SIZE_SCALE;
+
+    /* Optional textures from schema image pickers */
+    (function(){
+      var tl = new THREE.TextureLoader();
+      if (ROD_TEX_URL) {
+        tl.load(ROD_TEX_URL, function(t){
+          if (THREE.SRGBColorSpace !== undefined) t.colorSpace = THREE.SRGBColorSpace;
+          t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 1);
+          matRod.map = t; matRod.needsUpdate = true;
+        });
+      }
+      if (PLATE_TEX_URL) {
+        tl.load(PLATE_TEX_URL, function(t){
+          if (THREE.SRGBColorSpace !== undefined) t.colorSpace = THREE.SRGBColorSpace;
+          t.wrapS = t.wrapT = THREE.RepeatWrapping;
+          matPlate.map = t; matPlate.needsUpdate = true;
+        });
+      }
+    }());
 
     scene.add(dumbbell);
 
@@ -950,18 +1065,19 @@
             side: THREE.FrontSide,
           });
 
-          /* LOGO_FACE = hex inscribed diameter × size% from schema */
-          var logoGeo = new THREE.PlaneGeometry(LOGO_FACE, LOGO_FACE);
+          /* logoSize = outer plate diameter × logo-size% from schema
+           * logoFaceX = outer face of outermost plate (computed at build time) */
+          var logoGeo = new THREE.PlaneGeometry(logoSize, logoSize);
 
           var lLogo = new THREE.Mesh(logoGeo, logoMat);
           lLogo.rotation.y = -Math.PI / 2;
-          lLogo.position.x = -1.776;
+          lLogo.position.x = -logoFaceX;
           lLogo.renderOrder = 2;
           dumbbell.add(lLogo);
 
           var rLogo = new THREE.Mesh(logoGeo, logoMat.clone());
           rLogo.rotation.y =  Math.PI / 2;
-          rLogo.position.x =  1.776;
+          rLogo.position.x =  logoFaceX;
           rLogo.renderOrder = 2;
           dumbbell.add(rLogo);
         }
@@ -1479,6 +1595,248 @@
       "step": 5,
       "unit": "%",
       "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Dumbbell Colors & Textures"
+    },
+    {
+      "type": "color",
+      "id": "handle_color",
+      "label": "Handle & Collar Color",
+      "default": "#c41010",
+      "info": "Color of the center bar and red collar pieces."
+    },
+    {
+      "type": "color",
+      "id": "plate_color",
+      "label": "Weight Plate Color",
+      "default": "#111111",
+      "info": "Color of the three weight plates on each side."
+    },
+    {
+      "type": "image_picker",
+      "id": "rod_texture",
+      "label": "Handle Texture Image",
+      "info": "Optional texture for the handle bar — wraps around the cylinder. Leave blank for solid color."
+    },
+    {
+      "type": "image_picker",
+      "id": "plate_texture",
+      "label": "Weight Plate Texture Image",
+      "info": "Optional texture for the weight plates — wraps around the plate edge. Leave blank for solid color."
+    },
+    {
+      "type": "header",
+      "content": "Dumbbell Geometry"
+    },
+    {
+      "type": "range",
+      "id": "plate_count",
+      "label": "Plates Per Side",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 3,
+      "info": "Number of weight plates shown on each side of the handle (1–4)."
+    },
+    {
+      "type": "header",
+      "content": "Plate Radii (value ÷ 100 = 3D units)"
+    },
+    {
+      "type": "range",
+      "id": "plate_r1",
+      "label": "Inner Plate Radius",
+      "min": 20,
+      "max": 120,
+      "step": 1,
+      "default": 72,
+      "info": "Radius of the innermost (largest) plate. Default 72 = 0.72 units."
+    },
+    {
+      "type": "range",
+      "id": "plate_r2",
+      "label": "Middle Plate Radius",
+      "min": 20,
+      "max": 120,
+      "step": 1,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "plate_r3",
+      "label": "Outer Plate Radius",
+      "min": 20,
+      "max": 120,
+      "step": 1,
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "plate_r4",
+      "label": "4th Plate Radius (if plates = 4)",
+      "min": 20,
+      "max": 110,
+      "step": 1,
+      "default": 42
+    },
+    {
+      "type": "header",
+      "content": "Plate Thicknesses (value ÷ 100 = 3D units)"
+    },
+    {
+      "type": "range",
+      "id": "plate_t1",
+      "label": "Inner Plate Thickness",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 21
+    },
+    {
+      "type": "range",
+      "id": "plate_t2",
+      "label": "Middle Plate Thickness",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 21
+    },
+    {
+      "type": "range",
+      "id": "plate_t3",
+      "label": "Outer Plate Thickness",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 21
+    },
+    {
+      "type": "range",
+      "id": "plate_t4",
+      "label": "4th Plate Thickness (if plates = 4)",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 21
+    },
+    {
+      "type": "range",
+      "id": "plate_spacing",
+      "label": "Gap Between Plates",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 2,
+      "info": "Visible gap between each plate. Default 2 = 0.02 units."
+    },
+    {
+      "type": "header",
+      "content": "Handle Dimensions (value ÷ 100 = 3D units)"
+    },
+    {
+      "type": "range",
+      "id": "handle_length",
+      "label": "Handle Length",
+      "min": 80,
+      "max": 280,
+      "step": 4,
+      "default": 160,
+      "info": "Length of the center bar. Default 160 = 1.60 units."
+    },
+    {
+      "type": "range",
+      "id": "handle_radius",
+      "label": "Handle Radius",
+      "min": 8,
+      "max": 30,
+      "step": 1,
+      "default": 16,
+      "info": "Radius of the center bar. Default 16 = 0.16 units."
+    },
+    {
+      "type": "header",
+      "content": "Locking Collar Dimensions (value ÷ 100 = 3D units)"
+    },
+    {
+      "type": "range",
+      "id": "collar_radius",
+      "label": "Collar Outer Radius",
+      "min": 15,
+      "max": 60,
+      "step": 1,
+      "default": 29
+    },
+    {
+      "type": "range",
+      "id": "collar_thickness",
+      "label": "Collar Body Length",
+      "min": 10,
+      "max": 50,
+      "step": 1,
+      "default": 22
+    },
+    {
+      "type": "header",
+      "content": "Dumbbell Materials"
+    },
+    {
+      "type": "range",
+      "id": "handle_roughness",
+      "label": "Handle Roughness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 82,
+      "info": "0 = mirror-smooth, 100 = fully matte. High values give a rubber/grip appearance."
+    },
+    {
+      "type": "range",
+      "id": "handle_metalness",
+      "label": "Handle Metalness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 5,
+      "info": "0 = plastic/rubber, 100 = fully metallic. Keep low for a grip-textured look."
+    },
+    {
+      "type": "range",
+      "id": "weight_roughness",
+      "label": "Weight Plate Roughness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 88,
+      "info": "Surface roughness of the weight plates. High values give matte rubber finish."
+    },
+    {
+      "type": "range",
+      "id": "weight_metalness",
+      "label": "Weight Plate Metalness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "collar_roughness",
+      "label": "Collar Roughness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 52
+    },
+    {
+      "type": "range",
+      "id": "collar_metalness",
+      "label": "Collar Metalness",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 40
     },
     {
       "type": "range",

@@ -34,7 +34,15 @@
   assign drawer_txt_dark = section.settings.drawer_text_dark | default: '#eaf4f5'
   assign drawer_txt_light = section.settings.drawer_text_light | default: '#001a2e'
   assign drawer_accent    = section.settings.drawer_accent    | default: '#07d16e'
-  assign drawer_logo_size = section.settings.drawer_logo_size | default: 40
+  assign drawer_logo_size        = section.settings.drawer_logo_size        | default: 40
+  assign drawer_account_label    = section.settings.drawer_account_label    | default: 'My Account'
+  assign drawer_account_position = section.settings.drawer_account_position | default: 'end'
+  assign drawer_show_account     = section.settings.drawer_show_account
+  if customer
+    assign acct_dest = routes.account_url
+  else
+    assign acct_dest = routes.account_login_url
+  endif
 -%}
 
 {% style %}
@@ -348,8 +356,8 @@ body {
   object-fit: contain !important;
 }
 
-/* ── Hide account icon at bottom of drawer ── */
-{% if section.settings.drawer_hide_account %}
+/* ── Always hide the theme's native account utility-links ──
+   The BurnLab custom account button is injected by JS instead.    */
 #mobile_menu_drawer .menu-drawer__utility-links,
 #mobile_menu_drawer [class*="utility-links"],
 #mobile_menu_drawer [class*="customer-account"],
@@ -359,7 +367,73 @@ body {
 .menu-drawer shopify-account {
   display: none !important;
 }
-{% endif %}
+
+/* ── BurnLab custom account nav button (injected via JS) ── */
+.bl-drawer-acct-wrap {
+  border-top: 1px solid var(--bl-drawer-border) !important;
+  margin-top: 0.4rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+}
+
+.bl-drawer-acct-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1.2rem !important;
+  width: 100% !important;
+  padding: 1.35rem 2rem !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 1.55rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  color: var(--bl-drawer-accent) !important;
+  text-decoration: none !important;
+  background: rgba(7, 209, 110, 0.05) !important;
+  transition: color 0.22s ease, background 0.22s ease, padding-left 0.22s ease !important;
+}
+
+.bl-drawer-acct-link:hover {
+  background: rgba(7, 209, 110, 0.10) !important;
+  padding-left: 2.4rem !important;
+}
+
+.bl-drawer-acct-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 3.2rem !important;
+  height: 3.2rem !important;
+  border-radius: 50% !important;
+  background: rgba(7, 209, 110, 0.12) !important;
+  flex-shrink: 0 !important;
+}
+
+.bl-drawer-acct-icon svg {
+  width: 1.7rem !important;
+  height: 1.7rem !important;
+  color: var(--bl-drawer-accent) !important;
+  stroke: var(--bl-drawer-accent) !important;
+}
+
+.bl-drawer-acct-label {
+  flex: 1 !important;
+  color: var(--bl-drawer-accent) !important;
+}
+
+.bl-drawer-acct-chevron {
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+  color: var(--bl-drawer-accent) !important;
+  stroke: var(--bl-drawer-accent) !important;
+  opacity: 0.55 !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.22s ease !important;
+}
+
+.bl-drawer-acct-link:hover .bl-drawer-acct-chevron {
+  transform: translateX(3px) !important;
+  opacity: 1 !important;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SECTION SCOPED STYLES
@@ -1177,11 +1251,11 @@ document.addEventListener('DOMContentLoaded', function () {
         el.style.setProperty('background',       bg, 'important');
       });
 
-      /* All text-bearing elements */
+      /* All text-bearing elements — skip custom account button */
       drawer.querySelectorAll(
         'a, summary, button, span, p, h1, h2, h3, h4, h5, label'
       ).forEach(function(el) {
-        if (!el.classList.contains('visually-hidden')) {
+        if (!el.classList.contains('visually-hidden') && !el.closest('.bl-drawer-acct-wrap')) {
           el.style.setProperty('color', txt, 'important');
         }
       });
@@ -1191,13 +1265,17 @@ document.addEventListener('DOMContentLoaded', function () {
         el.style.setProperty('border-bottom-color', border, 'important');
       });
 
-      /* SVG icons — set both color + stroke so stroked icons are visible */
+      /* SVG icons — skip custom account button's SVGs */
       drawer.querySelectorAll('svg').forEach(function(el) {
-        el.style.setProperty('color',  txt, 'important');
-        el.style.setProperty('stroke', txt, 'important');
+        if (!el.closest('.bl-drawer-acct-wrap')) {
+          el.style.setProperty('color',  txt, 'important');
+          el.style.setProperty('stroke', txt, 'important');
+        }
       });
       drawer.querySelectorAll('svg path, svg line, svg polyline, svg circle, svg rect').forEach(function(el) {
-        el.style.setProperty('stroke', txt, 'important');
+        if (!el.closest('.bl-drawer-acct-wrap')) {
+          el.style.setProperty('stroke', txt, 'important');
+        }
       });
 
       /* Close button (X) — accent green so it's always findable */
@@ -1226,8 +1304,94 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // ─── Custom account button injection ──────────────────────────
+  var BL_ACCT_URL      = {{ acct_dest | json }};
+  var BL_ACCT_LABEL    = {{ drawer_account_label | json }};
+  var BL_ACCT_POSITION = '{{ drawer_account_position }}';
+  var BL_ACCT_SHOW     = {% if drawer_show_account == false %}false{% else %}true{% endif %};
+
+  function injectAccountButton() {
+    if (!BL_ACCT_SHOW) return;
+
+    var drawer = document.querySelector('#mobile_menu_drawer, .menu-drawer, [id*="MenuDrawer"]');
+    if (!drawer) return;
+
+    /* Remove old injection so it can be re-applied cleanly */
+    var old = drawer.querySelector('.bl-drawer-acct-wrap');
+    if (old) old.remove();
+
+    /* Find the nav list — try most-specific selectors first.
+       .menu-drawer__navigation-items IS the ul (not a parent of one). */
+    var navList = null;
+    var selectors = [
+      '.menu-drawer__navigation-items',
+      '.menu-drawer__navigation > ul',
+      '[class*="navigation-items"]',
+      'nav > ul',
+      '.menu-drawer__navigation ul'
+    ];
+    for (var si = 0; si < selectors.length; si++) {
+      navList = drawer.querySelector(selectors[si]);
+      if (navList) break;
+    }
+    /* Last resort: any ul that already has li children */
+    if (!navList) {
+      var uls = drawer.querySelectorAll('ul');
+      for (var ui = 0; ui < uls.length; ui++) {
+        if (uls[ui].children.length > 0) { navList = uls[ui]; break; }
+      }
+    }
+    if (!navList) return;
+
+    var wrap = document.createElement('li');
+    wrap.className = 'bl-drawer-acct-wrap';
+    wrap.setAttribute('role', 'none');
+
+    wrap.innerHTML =
+      '<a href="' + BL_ACCT_URL + '" class="bl-drawer-acct-link">' +
+        '<span class="bl-drawer-acct-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"' +
+          ' stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>' +
+            '<circle cx="12" cy="7" r="4"/>' +
+          '</svg>' +
+        '</span>' +
+        '<span class="bl-drawer-acct-label">' + BL_ACCT_LABEL + '</span>' +
+        '<svg class="bl-drawer-acct-chevron" viewBox="0 0 24 24" fill="none"' +
+        ' stroke="currentColor" stroke-width="2" stroke-linecap="round"' +
+        ' stroke-linejoin="round" aria-hidden="true">' +
+          '<polyline points="9 18 15 12 9 6"/>' +
+        '</svg>' +
+      '</a>';
+
+    if (BL_ACCT_POSITION === 'start') {
+      navList.insertBefore(wrap, navList.firstChild);
+    } else {
+      navList.appendChild(wrap);
+    }
+
+    /* Force green colours inline — prevents applyDrawerTheme from overriding */
+    var acctLink = wrap.querySelector('.bl-drawer-acct-link');
+    if (acctLink) {
+      acctLink.style.setProperty('color',      DRAWER_ACCENT, 'important');
+      acctLink.style.setProperty('background', 'rgba(7,209,110,0.05)', 'important');
+    }
+    wrap.querySelectorAll('svg').forEach(function(svg) {
+      svg.style.setProperty('color',  DRAWER_ACCENT, 'important');
+      svg.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+    });
+    wrap.querySelectorAll('svg path, svg circle, svg polyline, svg line').forEach(function(el) {
+      el.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+    });
+    var label = wrap.querySelector('.bl-drawer-acct-label');
+    if (label) label.style.setProperty('color', DRAWER_ACCENT, 'important');
+    var icon = wrap.querySelector('.bl-drawer-acct-icon');
+    if (icon) icon.style.setProperty('background', 'rgba(7,209,110,0.12)', 'important');
+  }
+
   /* 1. Apply immediately */
   applyDrawerTheme();
+  injectAccountButton();
 
   /* 2. Re-apply when any drawer trigger is clicked — three passes:
         60ms catches renders that happen right after click;
@@ -1238,6 +1402,9 @@ document.addEventListener('DOMContentLoaded', function () {
       setTimeout(applyDrawerTheme, 60);
       setTimeout(applyDrawerTheme, 300);
       setTimeout(applyDrawerTheme, 700);
+      setTimeout(injectAccountButton, 80);
+      setTimeout(injectAccountButton, 350);
+      setTimeout(injectAccountButton, 800);
       // Stagger animation: remove + re-add class so animation replays on every open
       document.body.classList.remove('bl-drawer-stagger');
       requestAnimationFrame(function () {
@@ -1271,7 +1438,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       return false;
     });
-    if (hit) setTimeout(applyDrawerTheme, 40);
+    if (hit) { setTimeout(applyDrawerTheme, 40); setTimeout(injectAccountButton, 80); }
   });
   blDrawerWatcher.observe(document.body, {
     childList: true, subtree: true,
@@ -1281,7 +1448,10 @@ document.addEventListener('DOMContentLoaded', function () {
   /* 4. Re-apply whenever data-theme changes */
   var themeObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
-      if (m.attributeName === 'data-theme') applyDrawerTheme();
+      if (m.attributeName === 'data-theme') {
+        applyDrawerTheme();
+        setTimeout(injectAccountButton, 50); /* re-apply green after theme colours reset */
+      }
     });
   });
   themeObserver.observe(document.documentElement, { attributes: true });
@@ -1552,13 +1722,6 @@ document.addEventListener('DOMContentLoaded', function () {
       "default": "#07d16e"
     },
     {
-      "type": "checkbox",
-      "id": "drawer_hide_account",
-      "label": "Hide account icon in drawer",
-      "default": true,
-      "info": "Removes the account or contact icon that some themes show at the bottom of the mobile drawer."
-    },
-    {
       "type": "range",
       "id": "drawer_logo_size",
       "label": "Logo height in drawer",
@@ -1568,6 +1731,33 @@ document.addEventListener('DOMContentLoaded', function () {
       "unit": "px",
       "default": 40,
       "info": "Height of the brand logo shown at the top of the mobile menu drawer. Width scales automatically."
+    },
+    {
+      "type": "header",
+      "content": "Account Button in Drawer"
+    },
+    {
+      "type": "checkbox",
+      "id": "drawer_show_account",
+      "label": "Show account button",
+      "default": true,
+      "info": "Adds a styled account button to the drawer navigation. Uses the accent green to stand out from other nav items."
+    },
+    {
+      "type": "text",
+      "id": "drawer_account_label",
+      "label": "Button label",
+      "default": "My Account"
+    },
+    {
+      "type": "select",
+      "id": "drawer_account_position",
+      "label": "Button position",
+      "options": [
+        { "value": "end",   "label": "After last menu item" },
+        { "value": "start", "label": "Before first menu item" }
+      ],
+      "default": "end"
     },
     {
       "type": "header",

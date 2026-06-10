@@ -1,0 +1,785 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Cart Drawer Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Volt Slide — panel springs in from right
+  Note: id="cart_drawer" hooks into Evolve theme drawer system
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-cdr-' | append: section.id -%}
+
+{%- liquid
+  assign drawer_title         = section.settings.drawer_title         | default: 'Your Cart'
+  assign checkout_label       = section.settings.checkout_label       | default: 'Checkout'
+  assign view_cart_label      = section.settings.view_cart_label      | default: 'View Full Cart'
+  assign empty_title          = section.settings.empty_title          | default: 'No gear yet'
+  assign empty_subtitle       = section.settings.empty_subtitle       | default: 'Add equipment to get started.'
+  assign empty_btn_label      = section.settings.empty_btn_label      | default: 'Shop Now'
+  assign free_ship_threshold  = section.settings.free_ship_threshold  | default: 5000
+  assign show_free_ship_bar   = section.settings.show_free_ship_bar
+  assign show_upsell          = section.settings.show_upsell
+  assign enable_anims         = section.settings.enable_animations
+  assign bg_dark              = section.settings.bg_dark              | default: '#001828'
+  assign bg_light             = section.settings.bg_light             | default: '#f0f5f8'
+  assign text_dark            = section.settings.text_dark            | default: '#eaf4f5'
+  assign text_light           = section.settings.text_light           | default: '#001a2e'
+  assign accent_color         = section.settings.accent_color         | default: '#07d16e'
+  assign item_bg_dark         = section.settings.item_bg_dark         | default: '#001a2e'
+  assign item_bg_light        = section.settings.item_bg_light        | default: '#ffffff'
+  assign drawer_width         = section.settings.drawer_width         | default: 420
+-%}
+
+{% style %}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Variables ── */
+#{{ section_id }} {
+  --cdr-bg:       {{ bg_dark }};
+  --cdr-text:     {{ text_dark }};
+  --cdr-accent:   {{ accent_color }};
+  --cdr-item-bg:  {{ item_bg_dark }};
+  --cdr-border:   rgba(51,104,112,0.22);
+  --cdr-muted:    rgba(234,244,245,0.50);
+  --cdr-inp-bg:   rgba(255,255,255,0.04);
+  --cdr-shadow:   -8px 0 48px rgba(0,0,0,0.48);
+  --cdr-width:    {{ drawer_width }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --cdr-bg:      {{ bg_light }};
+  --cdr-text:    {{ text_light }};
+  --cdr-item-bg: {{ item_bg_light }};
+  --cdr-border:  rgba(0,26,46,0.12);
+  --cdr-muted:   rgba(0,26,46,0.50);
+  --cdr-inp-bg:  rgba(0,26,46,0.04);
+  --cdr-shadow:  -8px 0 48px rgba(0,26,46,0.18);
+}
+
+/* ── Drawer root (full-screen fixed layer) ── */
+#{{ section_id }} {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+/* Show when Evolve opens it */
+#cart_drawer.is-open #{{ section_id }},
+#cart_drawer[open] #{{ section_id }},
+#cart_drawer[aria-hidden="false"] #{{ section_id }},
+#{{ section_id }}.cdr-open {
+  pointer-events: all;
+}
+
+/* ── Overlay ── */
+#{{ section_id }} .cdr-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,10,20,0.72);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+#{{ section_id }}.cdr-open .cdr-overlay,
+#cart_drawer.is-open #{{ section_id }} .cdr-overlay,
+#cart_drawer[open] #{{ section_id }} .cdr-overlay {
+  opacity: 1;
+}
+
+/* ── Panel ── */
+#{{ section_id }} .cdr-panel {
+  position: absolute;
+  top: 0; right: 0;
+  width: min(var(--cdr-width), 100vw);
+  height: 100%;
+  background: var(--cdr-bg);
+  color: var(--cdr-text);
+  font-family: 'DM Sans', sans-serif;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
+  will-change: transform;
+  overflow: hidden;
+  border-left: 1px solid var(--cdr-border);
+  box-shadow: var(--cdr-shadow);
+}
+
+#{{ section_id }}.cdr-open .cdr-panel,
+#cart_drawer.is-open #{{ section_id }} .cdr-panel,
+#cart_drawer[open] #{{ section_id }} .cdr-panel {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .cdr-panel { transition: transform 0.2s ease; }
+}
+
+/* ── Header ── */
+#{{ section_id }} .cdr-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.6rem 1.8rem;
+  border-bottom: 1px solid var(--cdr-border);
+  flex-shrink: 0;
+}
+#{{ section_id }} .cdr-title {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.6rem, 2vw, 2rem); letter-spacing: -0.01em;
+  color: var(--cdr-text); display: flex; align-items: baseline; gap: 0.8rem;
+}
+#{{ section_id }} .cdr-count {
+  font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 500;
+  color: var(--cdr-muted); background: var(--cdr-item-bg);
+  border: 1px solid var(--cdr-border); border-radius: 100px;
+  padding: 0.2rem 0.8rem;
+}
+#{{ section_id }} .cdr-close {
+  width: 3.6rem; height: 3.6rem;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(7,209,110,0.07);
+  border: 1px solid rgba(7,209,110,0.2); border-radius: 50%;
+  color: var(--cdr-accent); cursor: pointer;
+  transition: background 0.22s ease, transform 0.22s ease;
+  flex-shrink: 0;
+}
+#{{ section_id }} .cdr-close:hover {
+  background: rgba(7,209,110,0.14);
+  transform: rotate(90deg) scale(1.05);
+}
+#{{ section_id }} .cdr-close svg { width: 1.6rem; height: 1.6rem; pointer-events: none; }
+
+/* ── Free shipping bar ── */
+#{{ section_id }} .cdr-ship-bar {
+  padding: 0.9rem 1.8rem 1rem;
+  border-bottom: 1px solid var(--cdr-border);
+  flex-shrink: 0;
+}
+#{{ section_id }} .cdr-ship-bar__label {
+  font-size: clamp(1rem, 1.2vw, 1.2rem); color: var(--cdr-muted);
+  margin-bottom: 0.5rem; overflow-wrap: break-word;
+}
+#{{ section_id }} .cdr-ship-bar__label strong { color: var(--cdr-accent); }
+#{{ section_id }} .cdr-ship-bar__track {
+  height: 4px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden;
+}
+[data-theme="light"] #{{ section_id }} .cdr-ship-bar__track { background: rgba(0,26,46,0.08); }
+#{{ section_id }} .cdr-ship-bar__fill {
+  height: 100%; background: var(--cdr-accent); border-radius: 100px;
+  width: 0%; transition: width 1.1s cubic-bezier(0.16,1,0.3,1);
+  will-change: width;
+}
+
+/* ── Items scroll area ── */
+#{{ section_id }} .cdr-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 1.2rem 1.8rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  scroll-behavior: smooth;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(7,209,110,0.35) transparent;
+}
+#{{ section_id }} .cdr-body::-webkit-scrollbar { width: 4px; }
+#{{ section_id }} .cdr-body::-webkit-scrollbar-thumb { background: rgba(7,209,110,0.35); border-radius: 4px; }
+
+/* ── Cart item ── */
+#{{ section_id }} .cdr-item {
+  display: grid;
+  grid-template-columns: 6.4rem 1fr;
+  gap: 1.2rem; align-items: start;
+  background: var(--cdr-item-bg);
+  border: 1px solid var(--cdr-border);
+  border-radius: 10px; padding: 1.2rem;
+  transition: border-color 0.2s ease;
+  will-change: transform;
+}
+#{{ section_id }} .cdr-item:hover { border-color: rgba(7,209,110,0.25); }
+#{{ section_id }} .cdr-item--nested { margin-left: 1rem; border-left: 2px solid rgba(7,209,110,0.2); }
+
+#{{ section_id }} .cdr-item__img {
+  width: 100%; aspect-ratio: 1;
+  border-radius: 6px; overflow: hidden;
+  background: rgba(255,255,255,0.04);
+}
+#{{ section_id }} .cdr-item__img a { display: block; width: 100%; height: 100%; }
+#{{ section_id }} .cdr-item__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+#{{ section_id }} .cdr-item__body { display: flex; flex-direction: column; gap: 0.5rem; }
+
+#{{ section_id }} .cdr-item__title {
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem); font-weight: 600;
+  color: var(--cdr-text); line-height: 1.3;
+  overflow-wrap: break-word; word-break: break-word;
+}
+#{{ section_id }} .cdr-item__title a { color: inherit; text-decoration: none; }
+#{{ section_id }} .cdr-item__title a:hover { color: var(--cdr-accent); }
+
+#{{ section_id }} .cdr-item__price {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.2rem, 1.4vw, 1.5rem); color: var(--cdr-text);
+}
+#{{ section_id }} .cdr-item__price s { font-size: 0.82em; color: var(--cdr-muted); text-decoration: line-through; margin-left: 0.3rem; }
+#{{ section_id }} .cdr-item__price--sale { color: var(--cdr-accent) !important; }
+
+#{{ section_id }} .cdr-item__opts {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+}
+#{{ section_id }} .cdr-item__opt {
+  font-size: 1.1rem; color: var(--cdr-muted);
+  background: rgba(255,255,255,0.05); border: 1px solid var(--cdr-border);
+  border-radius: 3px; padding: 0.1rem 0.5rem; overflow-wrap: break-word;
+}
+[data-theme="light"] #{{ section_id }} .cdr-item__opt { background: rgba(0,26,46,0.05); }
+
+#{{ section_id }} .cdr-item__actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap;
+}
+
+#{{ section_id }} .cdr-qty {
+  display: inline-flex; align-items: center;
+  background: var(--cdr-inp-bg);
+  border: 1px solid var(--cdr-border); border-radius: 7px; overflow: hidden;
+}
+#{{ section_id }} .cdr-qty button {
+  width: 3rem; height: 3rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--cdr-text); cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+#{{ section_id }} .cdr-qty button:hover:not([disabled]) { color: var(--cdr-accent); background: rgba(7,209,110,0.08); }
+#{{ section_id }} .cdr-qty button[disabled] { opacity: 0.3; cursor: not-allowed; }
+#{{ section_id }} .cdr-qty button svg { width: 1.2rem; height: 1.2rem; pointer-events: none; }
+#{{ section_id }} .cdr-qty input {
+  width: 3.4rem; height: 3rem;
+  background: transparent; border: none;
+  border-left: 1px solid var(--cdr-border);
+  border-right: 1px solid var(--cdr-border);
+  color: var(--cdr-text); font-family: 'DM Sans', sans-serif;
+  font-size: 1.3rem; font-weight: 600; text-align: center; outline: none;
+}
+
+#{{ section_id }} .cdr-remove {
+  display: inline-flex; align-items: center;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--cdr-muted); text-decoration: none; padding: 0;
+  transition: color 0.2s ease;
+}
+#{{ section_id }} .cdr-remove:hover { color: #ff5c5c; }
+#{{ section_id }} .cdr-remove svg { width: 1.3rem; height: 1.3rem; }
+
+/* ── Empty state ── */
+#{{ section_id }} .cdr-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; gap: 1.2rem; padding: 3rem 2rem;
+}
+#{{ section_id }} .cdr-empty__icon {
+  width: 6rem; height: 6rem; border-radius: 50%;
+  background: rgba(7,209,110,0.08); border: 1px solid rgba(7,209,110,0.2);
+  display: flex; align-items: center; justify-content: center;
+}
+#{{ section_id }} .cdr-empty__icon svg { width: 2.6rem; height: 2.6rem; color: var(--cdr-accent); }
+#{{ section_id }} .cdr-empty__title {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -0.02em;
+  color: var(--cdr-text); overflow-wrap: break-word;
+}
+#{{ section_id }} .cdr-empty__sub {
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem); color: var(--cdr-muted);
+  line-height: 1.6; overflow-wrap: break-word;
+}
+#{{ section_id }} .cdr-empty__btn {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 1rem 2rem;
+  background: var(--cdr-accent); border-radius: 8px; border: none;
+  color: #001a2e;
+  font-family: 'DM Sans', sans-serif; font-size: clamp(1.2rem, 1.4vw, 1.4rem); font-weight: 700;
+  text-decoration: none; cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#{{ section_id }} .cdr-empty__btn:hover { opacity: 0.88; transform: translateY(-1px); }
+#{{ section_id }} .cdr-empty__btn svg { width: 1.4rem; height: 1.4rem; }
+
+/* ── Footer ── */
+#{{ section_id }} .cdr-footer {
+  padding: 1.4rem 1.8rem 1.8rem;
+  border-top: 1px solid var(--cdr-border);
+  flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 1rem;
+  background: var(--cdr-bg);
+}
+
+#{{ section_id }} .cdr-subtotal {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+#{{ section_id }} .cdr-subtotal__label {
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem); color: var(--cdr-muted);
+}
+#{{ section_id }} .cdr-subtotal__price {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.6rem, 2vw, 2rem); color: var(--cdr-accent);
+}
+
+#{{ section_id }} .cdr-checkout-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.7rem;
+  width: 100%; padding: 1.3rem 2rem;
+  background: var(--cdr-accent); border: none; border-radius: 9px;
+  color: #001a2e;
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.3rem, 1.5vw, 1.5rem); letter-spacing: 0.01em;
+  text-decoration: none; cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: opacity 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+  will-change: transform;
+}
+#{{ section_id }} .cdr-checkout-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%);
+  pointer-events: none;
+}
+#{{ section_id }} .cdr-checkout-btn:hover {
+  opacity: 0.9; transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(7,209,110,0.38);
+}
+#{{ section_id }} .cdr-checkout-btn svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+
+#{{ section_id }} .cdr-view-cart {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  width: 100%; padding: 0.9rem;
+  background: transparent; border: 1px solid var(--cdr-border); border-radius: 9px;
+  color: var(--cdr-text); font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem); font-weight: 500;
+  text-decoration: none; cursor: pointer;
+  transition: border-color 0.22s ease, color 0.22s ease;
+}
+#{{ section_id }} .cdr-view-cart:hover { border-color: var(--cdr-accent); color: var(--cdr-accent); }
+#{{ section_id }} .cdr-view-cart svg { width: 1.3rem; height: 1.3rem; }
+
+#{{ section_id }} .cdr-additional-btns {
+  border-top: 1px solid var(--cdr-border); padding-top: 0.8rem;
+}
+
+/* ── Item stagger animation ── */
+{% if enable_anims %}
+#{{ section_id }} .cdr-item {
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 0.38s ease, transform 0.38s cubic-bezier(0.16,1,0.3,1);
+}
+#{{ section_id }}.cdr-open .cdr-item,
+#cart_drawer.is-open #{{ section_id }} .cdr-item {
+  opacity: 1; transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .cdr-item { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+{% else %}
+#{{ section_id }} .cdr-item { opacity: 1; }
+{% endif %}
+
+.shopify-design-mode #{{ section_id }} .cdr-item { opacity: 1 !important; transform: none !important; }
+
+{% endstyle %}
+
+<div id="{{ section_id }}">
+  <div class="cdr-overlay" id="cdr-overlay-{{ section.id }}" aria-hidden="true"></div>
+  <div class="cdr-panel" role="dialog" aria-modal="true" aria-label="{{ drawer_title | escape }}">
+
+    {%- comment -%}── Header ──{%- endcomment -%}
+    <div class="cdr-header">
+      <h2 class="cdr-title">
+        {{ drawer_title | escape }}
+        <span class="cdr-count cc_cart_count">{{ cart.item_count }}</span>
+      </h2>
+      <button class="cdr-close" id="cdr-close-{{ section.id }}"
+        type="button" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    {%- if show_free_ship_bar -%}
+      {%- assign threshold_cents = free_ship_threshold | times: 100 -%}
+      <div class="cdr-ship-bar">
+        {%- if cart.total_price >= threshold_cents -%}
+          <p class="cdr-ship-bar__label"><strong>Free shipping unlocked!</strong></p>
+          <div class="cdr-ship-bar__track">
+            <div class="cdr-ship-bar__fill cdr-bar-fill" style="width:100%;"></div>
+          </div>
+        {%- else -%}
+          {%- assign remaining = threshold_cents | minus: cart.total_price -%}
+          <p class="cdr-ship-bar__label">
+            <strong>{{ remaining | money }}</strong> away from free shipping
+          </p>
+          <div class="cdr-ship-bar__track">
+            <div class="cdr-ship-bar__fill cdr-bar-fill" style="width:0%;"></div>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- comment -%}── Body: items or empty state ──{%- endcomment -%}
+    <cart-contents>
+      {%- if cart == empty -%}
+        <div class="cdr-empty">
+          <div class="cdr-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+          </div>
+          <p class="cdr-empty__title">{{ empty_title | escape }}</p>
+          <p class="cdr-empty__sub">{{ empty_subtitle | escape }}</p>
+          <a href="{{ routes.all_products_collection_url }}" class="cdr-empty__btn"
+            id="cdr-empty-shop-{{ section.id }}">
+            {{ empty_btn_label | escape }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      {%- else -%}
+        <div class="cdr-body" id="cart_drawer_items">
+          {%- for item in cart.items -%}
+            <div class="cdr-item{% if item.parent_relationship.parent != null %} cdr-item--nested{% endif %}"
+              data-parent-key="{{ item.parent_relationship.parent.key }}"
+              style="{% if enable_anims %}transition-delay: {{ forloop.index | times: 0.06 }}s;{% endif %}">
+
+              <div class="cdr-item__img">
+                <a href="{{ item.url }}" aria-label="{{ item.title | escape }}" tabindex="-1">
+                  {%- if item.image != blank -%}
+                    {{ item.image | image_url: width: 200 | image_tag: loading: 'lazy', alt: item.title }}
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag }}
+                  {%- endif -%}
+                </a>
+              </div>
+
+              <div class="cdr-item__body">
+                <p class="cdr-item__title">
+                  <a href="{{ item.url }}">{{ item.product.title | escape }}</a>
+                </p>
+                <p class="cdr-item__price{% if item.original_line_price != item.final_line_price %} cdr-item__price--sale{% endif %}">
+                  {%- if item.original_line_price != item.final_line_price -%}
+                    {{ item.final_line_price | money }}<s>{{ item.original_line_price | money }}</s>
+                  {%- else -%}
+                    {{ item.final_line_price | money }}
+                  {%- endif -%}
+                </p>
+                {%- unless item.product.has_only_default_variant -%}
+                  <div class="cdr-item__opts">
+                    {%- for option in item.options_with_values -%}
+                      <span class="cdr-item__opt">{{ option.value }}</span>
+                    {%- endfor -%}
+                  </div>
+                {%- endunless -%}
+                <div class="cdr-item__actions">
+                  <item-quantity data-line="{{ forloop.index }}">
+                    <div class="cdr-qty">
+                      <button type="button" class="btn_minus" data-minus
+                        aria-label="Decrease"
+                        data-quantity="{{ item.quantity | minus: 1 }}"
+                        {% if item.quantity == item.variant.quantity_rule.min %}disabled{% endif %}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                      <input type="text" name="quantity"
+                        value="{{ item.quantity }}"
+                        min="{{ item.variant.quantity_rule.min }}"
+                        data-min="{{ item.variant.quantity_rule.min }}"
+                        {% if item.variant.quantity_rule.max %}
+                          data-max="{{ item.variant.quantity_rule.max }}"
+                          max="{{ item.variant.quantity_rule.max }}"
+                        {% endif %}
+                        step="{{ item.variant.quantity_rule.increment }}"
+                        aria-label="{{ 'products.product.quantity' | t }}">
+                      <button type="button" class="btn_plus" data-plus
+                        aria-label="Increase"
+                        data-quantity="{{ item.quantity | plus: 1 }}"
+                        {% if item.quantity == item.variant.quantity_rule.max %}disabled{% endif %}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                    </div>
+                  </item-quantity>
+                  <item-remove data-line="{{ forloop.index }}">
+                    <a class="cdr-remove"
+                      href="{{ item.url_to_remove }}"
+                      aria-label="{{ 'drawers.cart_drawer.remove' | t }}"
+                      data-remove data-quantity="0">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"/>
+                      </svg>
+                    </a>
+                  </item-remove>
+                </div>
+              </div>
+
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {%- comment -%}── Footer ──{%- endcomment -%}
+        <div class="cdr-footer">
+          <div class="cdr-subtotal">
+            <span class="cdr-subtotal__label">{{ 'drawers.cart_drawer.subtotal' | t }}</span>
+            <span class="cdr-subtotal__price cc_subtotal">{{ cart.total_price | money }}</span>
+          </div>
+          <a href="{{ routes.root_url }}checkout" class="cdr-checkout-btn" aria-label="{{ checkout_label | escape }}">
+            {{ checkout_label | escape }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="{{ routes.cart_url }}" class="cdr-view-cart">
+            {{ view_cart_label | escape }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          {%- if additional_checkout_buttons -%}
+            <div class="cdr-additional-btns">{{ content_for_additional_checkout_buttons }}</div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </cart-contents>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var SECTION_EL = document.getElementById('{{ section_id }}');
+  if (!SECTION_EL) return;
+
+  // ── Open / close logic ──
+  // Works standalone AND with Evolve's drawer system (which adds .is-open or aria-hidden).
+  // We also watch for Evolve opening #cart_drawer (our ancestor) and mirror that state.
+
+  function openDrawer() {
+    SECTION_EL.classList.add('cdr-open');
+    document.body.style.overflow = 'hidden';
+    SECTION_EL.querySelector('.cdr-panel').focus();
+    {% if enable_anims %}
+    // Stagger items
+    SECTION_EL.querySelectorAll('.cdr-item').forEach(function(item, i) {
+      item.style.transitionDelay = (0.06 + i * 0.06) + 's';
+    });
+    {% endif %}
+    {% if show_free_ship_bar %}
+    var fill = SECTION_EL.querySelector('.cdr-bar-fill');
+    if (fill && fill.style.width === '0%') {
+      var threshold = {{ free_ship_threshold | times: 100 }};
+      var total = {{ cart.total_price }};
+      var pct = threshold > 0 ? Math.min(total / threshold * 100, 100) : 100;
+      setTimeout(function() { fill.style.width = pct + '%'; }, 200);
+    }
+    {% endif %}
+  }
+
+  function closeDrawer() {
+    SECTION_EL.classList.remove('cdr-open');
+    document.body.style.overflow = '';
+  }
+
+  // Close button
+  var closeBtn = document.getElementById('cdr-close-{{ section.id }}');
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+
+  // Overlay click closes
+  var overlay = document.getElementById('cdr-overlay-{{ section.id }}');
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && SECTION_EL.classList.contains('cdr-open')) closeDrawer();
+  });
+
+  // Empty state shop button — close drawer then navigate
+  var emptyBtn = document.getElementById('cdr-empty-shop-{{ section.id }}');
+  if (emptyBtn) {
+    emptyBtn.addEventListener('click', function() { closeDrawer(); });
+  }
+
+  // ── Hook into Evolve's drawer trigger system ──
+  // Evolve looks for [data-drawer="cart_drawer"] and opens #cart_drawer.
+  // Since our section wraps to id="cart_drawer" via the outer Evolve section wrapper,
+  // we also listen for clicks on any .drawer_open_btn[data-drawer="cart_drawer"].
+  document.addEventListener('click', function(e) {
+    var trigger = e.target.closest('[data-drawer="cart_drawer"], .cart_drawer_btn, #cart-icon-bubble');
+    if (trigger) {
+      e.preventDefault();
+      openDrawer();
+    }
+  });
+
+  // ── Watch for Evolve setting is-open via MutationObserver ──
+  // If Evolve's own JS manipulates the parent #cart_drawer element.
+  var parentDrawer = document.getElementById('cart_drawer');
+  if (parentDrawer && parentDrawer !== SECTION_EL) {
+    var parentObs = new MutationObserver(function(muts) {
+      muts.forEach(function(m) {
+        if (m.attributeName === 'class' || m.attributeName === 'aria-hidden') {
+          var isOpen = parentDrawer.classList.contains('is-open') ||
+                       parentDrawer.getAttribute('aria-hidden') === 'false';
+          if (isOpen) { openDrawer(); } else { closeDrawer(); }
+        }
+      });
+    });
+    parentObs.observe(parentDrawer, { attributes: true });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "BurnLab Cart Drawer",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "drawer_title",
+      "label": "Drawer heading",
+      "default": "Your Cart"
+    },
+    {
+      "type": "text",
+      "id": "checkout_label",
+      "label": "Checkout button label",
+      "default": "Checkout"
+    },
+    {
+      "type": "text",
+      "id": "view_cart_label",
+      "label": "View cart link label",
+      "default": "View Full Cart"
+    },
+    {
+      "type": "header",
+      "content": "Empty Cart State"
+    },
+    {
+      "type": "text",
+      "id": "empty_title",
+      "label": "Empty heading",
+      "default": "No gear yet"
+    },
+    {
+      "type": "text",
+      "id": "empty_subtitle",
+      "label": "Empty message",
+      "default": "Add equipment to get started."
+    },
+    {
+      "type": "text",
+      "id": "empty_btn_label",
+      "label": "Empty state button label",
+      "default": "Shop Now"
+    },
+    {
+      "type": "header",
+      "content": "Free Shipping Bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_free_ship_bar",
+      "label": "Show free shipping progress bar",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "free_ship_threshold",
+      "label": "Free shipping threshold (whole number in store currency)",
+      "default": 5000
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "drawer_width",
+      "label": "Drawer panel width",
+      "min": 320,
+      "max": 560,
+      "step": 10,
+      "unit": "px",
+      "default": 420
+    },
+    {
+      "type": "checkbox",
+      "id": "show_upsell",
+      "label": "Show upsell recommendations",
+      "default": false,
+      "info": "Requires the BurnLab Cart Upsell section to be added to the cart-drawer template."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_dark",
+      "label": "Panel background (dark mode)",
+      "default": "#001828"
+    },
+    {
+      "type": "color",
+      "id": "bg_light",
+      "label": "Panel background (light mode)",
+      "default": "#f0f5f8"
+    },
+    {
+      "type": "color",
+      "id": "text_dark",
+      "label": "Text color (dark mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_light",
+      "label": "Text color (light mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "item_bg_dark",
+      "label": "Item card background (dark mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "item_bg_light",
+      "label": "Item card background (light mode)",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Cart Drawer"
+    }
+  ]
+}
+{% endschema %}

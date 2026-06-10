@@ -1,0 +1,611 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Cart Upsell Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Animation: Conveyor Belt — horizontal scroll with edge fade
+  Used inside the cart drawer or cart page to show recommendations
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-cups-' | append: section.id -%}
+
+{%- liquid
+  assign section_title    = section.settings.section_title    | default: 'Complete Your Setup'
+  assign section_subtitle = section.settings.section_subtitle | default: 'Gear that pairs perfectly with your order.'
+  assign btn_label        = section.settings.btn_label        | default: 'Add to Cart'
+  assign show_price       = section.settings.show_price
+  assign show_vendor      = section.settings.show_vendor
+  assign card_limit       = section.settings.card_limit       | default: 8
+  assign enable_anims     = section.settings.enable_animations
+  assign bg_dark          = section.settings.bg_dark          | default: '#001a2e'
+  assign bg_light         = section.settings.bg_light         | default: '#eaf4f5'
+  assign text_dark        = section.settings.text_dark        | default: '#eaf4f5'
+  assign text_light       = section.settings.text_light       | default: '#001a2e'
+  assign accent_color     = section.settings.accent_color     | default: '#07d16e'
+  assign card_dark        = section.settings.card_dark        | default: '#001828'
+  assign card_light       = section.settings.card_light       | default: '#ffffff'
+  assign padding_top      = section.settings.padding_top      | default: 24
+  assign padding_bottom   = section.settings.padding_bottom   | default: 24
+-%}
+
+{% style %}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+#{{ section_id }} {
+  --cups-bg:     {{ bg_dark }};
+  --cups-text:   {{ text_dark }};
+  --cups-accent: {{ accent_color }};
+  --cups-card:   {{ card_dark }};
+  --cups-border: rgba(51,104,112,0.22);
+  --cups-muted:  rgba(234,244,245,0.50);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--cups-bg);
+  color: var(--cups-text);
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.35s ease, color 0.35s ease;
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --cups-bg:     {{ bg_light }};
+  --cups-text:   {{ text_light }};
+  --cups-card:   {{ card_light }};
+  --cups-border: rgba(0,26,46,0.12);
+  --cups-muted:  rgba(0,26,46,0.50);
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ section.settings.padding_top_mobile }}px !important;
+    padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+  }
+}
+
+/* ── Header ── */
+#{{ section_id }} .cups-head {
+  padding-inline: clamp(1.6rem, 4vw, 3.2rem);
+  margin-bottom: 1.6rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  flex-wrap: wrap;
+}
+
+#{{ section_id }} .cups-head__text {}
+
+#{{ section_id }} .cups-title {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  letter-spacing: -0.01em; color: var(--cups-text);
+  overflow-wrap: break-word; word-break: break-word;
+}
+
+#{{ section_id }} .cups-title::before {
+  content: '';
+  display: inline-block;
+  width: 0.3em; height: 0.3em;
+  background: var(--cups-accent);
+  border-radius: 50%;
+  margin-right: 0.5em;
+  vertical-align: 0.2em;
+}
+
+#{{ section_id }} .cups-subtitle {
+  font-size: clamp(1.1rem, 1.3vw, 1.3rem);
+  color: var(--cups-muted); margin-top: 0.3rem; line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+/* ── Scroll track ── */
+#{{ section_id }} .cups-track-wrap {
+  position: relative;
+}
+
+/* Edge fade overlays — visual cue that list continues */
+#{{ section_id }} .cups-track-wrap::before,
+#{{ section_id }} .cups-track-wrap::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0; width: 3.2rem;
+  pointer-events: none; z-index: 2;
+}
+#{{ section_id }} .cups-track-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--cups-bg) 0%, transparent 100%);
+}
+#{{ section_id }} .cups-track-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--cups-bg) 0%, transparent 100%);
+}
+
+#{{ section_id }} .cups-track {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  padding: 0.4rem clamp(1.6rem, 4vw, 3.2rem) 1rem;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+}
+#{{ section_id }} .cups-track::-webkit-scrollbar { display: none; }
+#{{ section_id }} .cups-track:active { cursor: grabbing; }
+
+/* ── Product card ── */
+#{{ section_id }} .cups-card {
+  flex-shrink: 0;
+  width: clamp(14rem, 22vw, 19rem);
+  background: var(--cups-card);
+  border: 1px solid var(--cups-border);
+  border-radius: 12px; overflow: hidden;
+  text-decoration: none; color: inherit;
+  display: flex; flex-direction: column;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+  will-change: transform;
+}
+#{{ section_id }} .cups-card:hover {
+  border-color: rgba(7,209,110,0.3);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.24);
+  transform: translateY(-3px);
+}
+
+@media (max-width: 480px) {
+  #{{ section_id }} .cups-card { width: clamp(14rem, 60vw, 18rem); }
+}
+
+/* ── Card image ── */
+#{{ section_id }} .cups-card__img-wrap {
+  position: relative; aspect-ratio: 1; overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+#{{ section_id }} .cups-card__img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+#{{ section_id }} .cups-card:hover .cups-card__img { transform: scale(1.04); }
+
+/* ── Sale badge ── */
+#{{ section_id }} .cups-badge {
+  position: absolute; top: 0.8rem; left: 0.8rem;
+  font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700;
+  color: #001a2e; background: var(--cups-accent);
+  border-radius: 4px; padding: 0.2rem 0.6rem;
+  z-index: 1;
+}
+
+/* ── Card body ── */
+#{{ section_id }} .cups-card__body {
+  padding: 1.2rem 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1;
+}
+
+#{{ section_id }} .cups-card__vendor {
+  font-size: 1rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--cups-accent);
+  overflow-wrap: break-word;
+}
+
+#{{ section_id }} .cups-card__title {
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem); font-weight: 600;
+  color: var(--cups-text); line-height: 1.3;
+  overflow-wrap: break-word; word-break: break-word;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+#{{ section_id }} .cups-card__price {
+  font-family: 'Archivo Black', sans-serif; font-weight: 400;
+  font-size: clamp(1.3rem, 1.5vw, 1.5rem); color: var(--cups-text);
+  display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
+}
+#{{ section_id }} .cups-card__price s { font-size: 0.82em; color: var(--cups-muted); text-decoration: line-through; }
+#{{ section_id }} .cups-card__price--sale .cups-card__current { color: var(--cups-accent); }
+
+#{{ section_id }} .cups-card__btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.8rem 1rem; margin-top: auto;
+  background: rgba(7,209,110,0.08);
+  border: 1px solid rgba(7,209,110,0.2);
+  border-radius: 7px; cursor: pointer;
+  color: var(--cups-accent);
+  font-family: 'DM Sans', sans-serif; font-size: clamp(1.1rem, 1.3vw, 1.3rem); font-weight: 600;
+  text-align: center; text-decoration: none;
+  transition: background 0.22s ease, border-color 0.22s ease, transform 0.18s ease;
+  will-change: transform;
+}
+#{{ section_id }} .cups-card__btn:hover {
+  background: rgba(7,209,110,0.16); border-color: var(--cups-accent); transform: translateY(-1px);
+}
+#{{ section_id }} .cups-card__btn[data-added] { background: var(--cups-accent); color: #001a2e; border-color: var(--cups-accent); }
+#{{ section_id }} .cups-card__btn svg { width: 1.3rem; height: 1.3rem; flex-shrink: 0; }
+
+/* ── Nav arrows ── */
+#{{ section_id }} .cups-nav {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 0.6rem; padding-inline: clamp(1.6rem, 4vw, 3.2rem);
+  margin-top: 0.6rem;
+}
+#{{ section_id }} .cups-nav-btn {
+  width: 3.4rem; height: 3.4rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cups-card); border: 1px solid var(--cups-border); border-radius: 50%;
+  color: var(--cups-text); cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+#{{ section_id }} .cups-nav-btn:hover { border-color: var(--cups-accent); color: var(--cups-accent); background: rgba(7,209,110,0.08); }
+#{{ section_id }} .cups-nav-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+#{{ section_id }} .cups-nav-btn svg { width: 1.6rem; height: 1.6rem; pointer-events: none; }
+
+/* ── Empty state ── */
+#{{ section_id }} .cups-empty {
+  padding: 2.4rem clamp(1.6rem,4vw,3.2rem);
+  text-align: center; color: var(--cups-muted);
+  font-size: clamp(1.2rem, 1.4vw, 1.4rem);
+}
+
+/* ── Animations ── */
+{% if enable_anims %}
+#{{ section_id }} .cups-head { opacity: 0; transform: translateY(-10px); transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+#{{ section_id }} .cups-head.bl-in { opacity: 1; transform: none; }
+#{{ section_id }} .cups-card { opacity: 0; transform: translateY(12px); transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.22s ease, box-shadow 0.22s ease; }
+#{{ section_id }} .cups-card.bl-in { opacity: 1; transform: none; }
+#{{ section_id }} .cups-card:hover { transform: translateY(-3px) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .cups-head,
+  #{{ section_id }} .cups-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+  #{{ section_id }} .cups-card:hover { transform: none !important; }
+}
+{% else %}
+#{{ section_id }} .cups-head,
+#{{ section_id }} .cups-card { opacity: 1; }
+{% endif %}
+
+.shopify-design-mode #{{ section_id }} .cups-head,
+.shopify-design-mode #{{ section_id }} .cups-card { opacity: 1 !important; transform: none !important; }
+
+{% endstyle %}
+
+{%- if recommendations.performed and recommendations.products.size > 0 -%}
+<div id="{{ section_id }}" style="padding-top: {{ padding_top }}px; padding-bottom: {{ padding_bottom }}px;">
+
+  <div class="cups-head">
+    <div class="cups-head__text">
+      <h3 class="cups-title">{{ section_title | escape }}</h3>
+      {%- if section_subtitle != blank -%}
+        <p class="cups-subtitle">{{ section_subtitle | escape }}</p>
+      {%- endif -%}
+    </div>
+    <div class="cups-nav" aria-label="Scroll recommendations">
+      <button class="cups-nav-btn" id="cups-prev-{{ section.id }}" type="button" aria-label="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="cups-nav-btn" id="cups-next-{{ section.id }}" type="button" aria-label="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="cups-track-wrap">
+    <div class="cups-track" id="cups-track-{{ section.id }}">
+      {%- for product in recommendations.products limit: card_limit -%}
+        {%- assign is_on_sale = false -%}
+        {%- if product.compare_at_price > product.price -%}{%- assign is_on_sale = true -%}{%- endif -%}
+
+        <div class="cups-card">
+          <div class="cups-card__img-wrap">
+            <a href="{{ product.url }}" aria-label="{{ product.title | escape }}" tabindex="-1">
+              {%- if product.featured_image != blank -%}
+                {{ product.featured_image | image_url: width: 400 | image_tag:
+                  class: 'cups-card__img',
+                  loading: 'lazy',
+                  alt: product.title }}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'cups-card__img' }}
+              {%- endif -%}
+            </a>
+            {%- if is_on_sale -%}
+              {%- assign save_pct = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price -%}
+              <span class="cups-badge" aria-label="On sale">-{{ save_pct }}%</span>
+            {%- endif -%}
+          </div>
+
+          <div class="cups-card__body">
+            {%- if show_vendor and product.vendor != blank -%}
+              <p class="cups-card__vendor">{{ product.vendor | escape }}</p>
+            {%- endif -%}
+            <a href="{{ product.url }}" class="cups-card__title" aria-label="{{ product.title | escape }}">
+              {{ product.title | escape }}
+            </a>
+            {%- if show_price -%}
+              <div class="cups-card__price{% if is_on_sale %} cups-card__price--sale{% endif %}">
+                <span class="cups-card__current">{{ product.price | money }}</span>
+                {%- if is_on_sale -%}
+                  <s>{{ product.compare_at_price | money }}</s>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+
+            {%- if product.available -%}
+              <button
+                class="cups-card__btn"
+                type="button"
+                data-variant-id="{{ product.first_available_variant.id }}"
+                aria-label="{{ btn_label | escape }}: {{ product.title | escape }}"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.69l1.43-8.31H6"/>
+                </svg>
+                {{ btn_label | escape }}
+              </button>
+            {%- else -%}
+              <span class="cups-card__btn" style="opacity:0.45;cursor:not-allowed;">Sold Out</span>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+
+</div>
+{%- else -%}
+<div id="{{ section_id }}"><div class="cups-empty"></div></div>
+{%- endif -%}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  {% if enable_anims %}
+  // ── Conveyor Belt: reveal on scroll ──
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('bl-in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  var head = root.querySelector('.cups-head');
+  if (head) io.observe(head);
+
+  root.querySelectorAll('.cups-card').forEach(function(card, i) {
+    card.style.transitionDelay = (0.05 + i * 0.05) + 's';
+    io.observe(card);
+  });
+  {% endif %}
+
+  // ── Arrow navigation ──
+  var track = document.getElementById('cups-track-{{ section.id }}');
+  var prev  = document.getElementById('cups-prev-{{ section.id }}');
+  var next  = document.getElementById('cups-next-{{ section.id }}');
+
+  if (track && prev && next) {
+    var cardWidth = function() {
+      var c = track.querySelector('.cups-card');
+      return c ? c.offsetWidth + 12 : 200;
+    };
+
+    prev.addEventListener('click', function() {
+      track.scrollBy({ left: -cardWidth() * 2, behavior: 'smooth' });
+    });
+    next.addEventListener('click', function() {
+      track.scrollBy({ left: cardWidth() * 2, behavior: 'smooth' });
+    });
+
+    // Drag-to-scroll
+    var isDragging = false, startX = 0, scrollLeft = 0;
+    track.addEventListener('mousedown', function(e) {
+      isDragging = true; startX = e.pageX - track.offsetLeft; scrollLeft = track.scrollLeft;
+    });
+    track.addEventListener('mouseleave', function() { isDragging = false; });
+    track.addEventListener('mouseup', function() { isDragging = false; });
+    track.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      var x = e.pageX - track.offsetLeft;
+      track.scrollLeft = scrollLeft - (x - startX);
+    });
+  }
+
+  // ── AJAX Add to Cart ──
+  root.querySelectorAll('.cups-card__btn[data-variant-id]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var variantId = btn.getAttribute('data-variant-id');
+      if (!variantId || btn.hasAttribute('data-added')) return;
+
+      var origHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adding...';
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: variantId, quantity: 1 })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.id) {
+          btn.setAttribute('data-added', '');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Added!';
+          // Update cart count badges
+          fetch('/cart.js')
+            .then(function(r) { return r.json(); })
+            .then(function(cart) {
+              document.querySelectorAll('.cc_text').forEach(function(el) {
+                el.textContent = cart.item_count;
+              });
+              document.querySelectorAll('.bl-cart-badge').forEach(function(el) {
+                el.textContent = cart.item_count;
+                el.setAttribute('data-count', cart.item_count);
+              });
+            });
+          setTimeout(function() {
+            btn.removeAttribute('data-added');
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+          }, 2200);
+        }
+      })
+      .catch(function() {
+        btn.innerHTML = 'Error — retry';
+        btn.disabled = false;
+        setTimeout(function() { btn.innerHTML = origHTML; }, 2000);
+      });
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "BurnLab Cart Upsell",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Text"
+    },
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section heading",
+      "default": "Complete Your Setup"
+    },
+    {
+      "type": "text",
+      "id": "section_subtitle",
+      "label": "Section subtext",
+      "default": "Gear that pairs perfectly with your order."
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Add to cart button label",
+      "default": "Add to Cart"
+    },
+    {
+      "type": "header",
+      "content": "Card Options"
+    },
+    {
+      "type": "range",
+      "id": "card_limit",
+      "label": "Max products shown",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "Show product price",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show product vendor",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_dark",
+      "label": "Background (dark mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "bg_light",
+      "label": "Background (light mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_dark",
+      "label": "Text (dark mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_light",
+      "label": "Text (light mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "card_dark",
+      "label": "Card background (dark mode)",
+      "default": "#001828"
+    },
+    {
+      "type": "color",
+      "id": "card_light",
+      "label": "Card background (light mode)",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable animations",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0, "max": 60, "step": 4, "unit": "px", "default": 16
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0, "max": 60, "step": 4, "unit": "px", "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Cart Upsell"
+    }
+  ]
+}
+{% endschema %}

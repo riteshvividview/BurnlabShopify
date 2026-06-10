@@ -14,6 +14,11 @@
   assign section_heading     = section.settings.heading           | default: 'Real Results. Real People.'
   assign section_subheading  = section.settings.subheading        | default: 'Built for those who push limits every single day.'
   assign center_image        = section.settings.center_image
+  assign center_media_type     = section.settings.center_media_type    | default: 'image'
+  assign center_video_url      = section.settings.center_video_url     | default: ''
+  assign center_video_controls = section.settings.center_video_controls
+  assign center_video_loop     = section.settings.center_video_loop
+  assign center_video_autoplay = section.settings.center_video_autoplay
   assign center_badge_image  = section.settings.center_badge_image
   assign center_badge_text   = section.settings.center_badge_text | default: '5000+ Happy Athletes'
   assign cta_label           = section.settings.cta_label         | default: 'Shop Equipment'
@@ -229,14 +234,16 @@
   aspect-ratio: 3/4;
   box-shadow: 0 24px 64px rgba(0,0,0,0.45);
 }
-#{{ section_id }} .sti-center-img-wrap img {
+#{{ section_id }} .sti-center-img-wrap img,
+#{{ section_id }} .sti-center-img-wrap video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   transition: transform 0.6s ease;
 }
-#{{ section_id }} .sti-center-img-wrap:hover img {
+#{{ section_id }} .sti-center-img-wrap:hover img,
+#{{ section_id }} .sti-center-img-wrap:hover video {
   transform: scale(1.04);
 }
 #{{ section_id }} .sti-center-gradient {
@@ -292,15 +299,16 @@
   transition: transform 0.4s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1)),
               box-shadow 0.4s ease;
 }
-#{{ section_id }} .sti-img-card img {
+#{{ section_id }} .sti-img-card img,
+#{{ section_id }} .sti-img-card video {
   width: 100%;
   height: auto;
   display: block;
   object-fit: cover;
 }
-#{{ section_id }} .sti-img-card--tall img { aspect-ratio: 3/4; }
-#{{ section_id }} .sti-img-card--wide img { aspect-ratio: 4/3; }
-#{{ section_id }} .sti-img-card--square img { aspect-ratio: 1/1; }
+#{{ section_id }} .sti-img-card--tall img,   #{{ section_id }} .sti-img-card--tall video   { aspect-ratio: 3/4; }
+#{{ section_id }} .sti-img-card--wide img,   #{{ section_id }} .sti-img-card--wide video   { aspect-ratio: 4/3; }
+#{{ section_id }} .sti-img-card--square img, #{{ section_id }} .sti-img-card--square video { aspect-ratio: 1/1; }
 #{{ section_id }} .sti-img-card:hover {
   transform: translateY(-4px) scale(1.01);
   box-shadow: 0 16px 48px rgba(0,0,0,0.35);
@@ -687,7 +695,16 @@
         {% for block in section.blocks %}
           {% if block.type == 'left_image' %}
             <div class="sti-img-card sti-img-card--{{ block.settings.image_ratio | default: 'tall' }} sti-reveal--left" {{ block.shopify_attributes }}>
-              {% if block.settings.image %}
+              {% if block.settings.media_type == 'video' and block.settings.video_url != blank %}
+                <video
+                  {% if block.settings.video_autoplay %}autoplay muted{% endif %}
+                  {% if block.settings.video_loop %}loop{% endif %}
+                  {% if block.settings.video_controls %}controls{% endif %}
+                  playsinline
+                >
+                  <source src="{{ block.settings.video_url }}" type="video/mp4">
+                </video>
+              {% elsif block.settings.image %}
                 {{ block.settings.image | image_url: width: 800 | image_tag: loading: 'lazy', alt: block.settings.image.alt | default: '' }}
               {% else %}
                 <div style="background: linear-gradient(135deg,#0a2236,#336870); aspect-ratio:3/4; width:100%;"></div>
@@ -757,7 +774,16 @@
       <!-- ── Center column ────────────────────────────── -->
       <div class="sti-col sti-col--center">
         <div class="sti-center-img-wrap sti-reveal">
-          {% if center_image %}
+          {% if center_media_type == 'video' and center_video_url != blank %}
+            <video
+              {% if center_video_autoplay %}autoplay muted{% endif %}
+              {% if center_video_loop %}loop{% endif %}
+              {% if center_video_controls %}controls{% endif %}
+              playsinline
+            >
+              <source src="{{ center_video_url }}" type="video/mp4">
+            </video>
+          {% elsif center_image %}
             {{ center_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: center_image.alt | default: section_heading }}
           {% else %}
             <div style="background: linear-gradient(160deg, #001a2e 0%, #336870 100%); width:100%; height:100%; min-height:50rem;"></div>
@@ -819,7 +845,16 @@
         {% for block in section.blocks %}
           {% if block.type == 'right_image' %}
             <div class="sti-img-card sti-img-card--{{ block.settings.image_ratio | default: 'wide' }} sti-reveal--right" {{ block.shopify_attributes }}>
-              {% if block.settings.image %}
+              {% if block.settings.media_type == 'video' and block.settings.video_url != blank %}
+                <video
+                  {% if block.settings.video_autoplay %}autoplay muted{% endif %}
+                  {% if block.settings.video_loop %}loop{% endif %}
+                  {% if block.settings.video_controls %}controls{% endif %}
+                  playsinline
+                >
+                  <source src="{{ block.settings.video_url }}" type="video/mp4">
+                </video>
+              {% elsif block.settings.image %}
                 {{ block.settings.image | image_url: width: 800 | image_tag: loading: 'lazy', alt: block.settings.image.alt | default: '' }}
               {% else %}
                 <div style="background: linear-gradient(135deg,#336870,#0a2236); aspect-ratio:4/3; width:100%;"></div>
@@ -1029,6 +1064,40 @@
       "type": "image_picker",
       "id": "center_image",
       "label": "Center Hero Image"
+    },
+    {
+      "type": "select",
+      "id": "center_media_type",
+      "label": "Center Media Type",
+      "options": [
+        { "value": "image", "label": "Image" },
+        { "value": "video", "label": "Video" }
+      ],
+      "default": "image"
+    },
+    {
+      "type": "text",
+      "id": "center_video_url",
+      "label": "Center Video URL (MP4)",
+      "info": "Direct .mp4 URL. Used only when Center Media Type is Video."
+    },
+    {
+      "type": "checkbox",
+      "id": "center_video_controls",
+      "label": "Show Video Controls",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "center_video_loop",
+      "label": "Loop Video",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "center_video_autoplay",
+      "label": "Autoplay Video",
+      "default": true
     },
     {
       "type": "image_picker",
@@ -1298,9 +1367,43 @@
       "name": "Left Column - Image",
       "settings": [
         {
+          "type": "select",
+          "id": "media_type",
+          "label": "Media Type",
+          "options": [
+            { "value": "image", "label": "Image" },
+            { "value": "video", "label": "Video" }
+          ],
+          "default": "image"
+        },
+        {
           "type": "image_picker",
           "id": "image",
           "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "video_url",
+          "label": "Video URL (MP4)",
+          "info": "Direct .mp4 URL. Used only when Media Type is Video."
+        },
+        {
+          "type": "checkbox",
+          "id": "video_controls",
+          "label": "Show Video Controls",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "video_loop",
+          "label": "Loop Video",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "video_autoplay",
+          "label": "Autoplay Video",
+          "default": true
         },
         {
           "type": "select",
@@ -1415,9 +1518,43 @@
       "name": "Right Column - Image",
       "settings": [
         {
+          "type": "select",
+          "id": "media_type",
+          "label": "Media Type",
+          "options": [
+            { "value": "image", "label": "Image" },
+            { "value": "video", "label": "Video" }
+          ],
+          "default": "image"
+        },
+        {
           "type": "image_picker",
           "id": "image",
           "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "video_url",
+          "label": "Video URL (MP4)",
+          "info": "Direct .mp4 URL. Used only when Media Type is Video."
+        },
+        {
+          "type": "checkbox",
+          "id": "video_controls",
+          "label": "Show Video Controls",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "video_loop",
+          "label": "Loop Video",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "video_autoplay",
+          "label": "Autoplay Video",
+          "default": true
         },
         {
           "type": "select",

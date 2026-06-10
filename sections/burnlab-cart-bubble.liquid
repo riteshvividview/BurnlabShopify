@@ -1,0 +1,144 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Cart Bubble Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Renders the cart item count badge used by the header.
+  The cc_text class is preserved for Evolve AJAX cart updates.
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-cbbl-' | append: section.id -%}
+
+{%- liquid
+  assign accent_color = section.settings.accent_color | default: '#07d16e'
+  assign badge_text   = section.settings.badge_text   | default: '#001a2e'
+  assign badge_size   = section.settings.badge_size   | default: 18
+-%}
+
+{% style %}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+#{{ section_id }} {
+  display: contents;
+}
+
+#{{ section_id }} .cbbl-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: {{ badge_size }}px;
+  height: {{ badge_size }}px;
+  background: {{ accent_color }};
+  color: {{ badge_text }};
+  font-family: 'DM Sans', sans-serif;
+  font-size: {{ badge_size | times: 0.6 | round }}px;
+  font-weight: 700;
+  border-radius: 50%;
+  line-height: 1;
+  padding: 0 4px;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
+  will-change: transform;
+}
+
+#{{ section_id }} .cbbl-wrap[data-count="0"] {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+#{{ section_id }} .cbbl-wrap[data-count]:not([data-count="0"]) {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Pop animation when count changes */
+@keyframes cbbl-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+#{{ section_id }} .cbbl-wrap.cbbl-pop {
+  animation: cbbl-pop 0.38s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .cbbl-wrap,
+  #{{ section_id }} .cbbl-wrap.cbbl-pop { animation: none !important; transition: none !important; }
+}
+
+{% endstyle %}
+
+<div id="{{ section_id }}">
+  <div class="cbbl-wrap" data-count="{{ cart.item_count }}" aria-hidden="true">
+    <span class="cc_text">{{ cart.item_count }}</span>
+  </div>
+  <span class="visually-hidden">
+    {{ 'sections.header.cart_count' | t: count: cart.item_count }}
+  </span>
+</div>
+
+<script>
+(function() {
+  var wrap = document.querySelector('#{{ section_id }} .cbbl-wrap');
+  if (!wrap) return;
+
+  // Pop animation whenever the cart count element value changes
+  var observer = new MutationObserver(function() {
+    wrap.classList.remove('cbbl-pop');
+    void wrap.offsetWidth; // reflow to restart animation
+    wrap.classList.add('cbbl-pop');
+    var txt = wrap.querySelector('.cc_text');
+    var count = txt ? (parseInt(txt.textContent, 10) || 0) : 0;
+    wrap.setAttribute('data-count', count);
+  });
+
+  var txt = wrap.querySelector('.cc_text');
+  if (txt) {
+    observer.observe(txt, { childList: true, subtree: true, characterData: true });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "BurnLab Cart Bubble",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Badge Appearance"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Badge background color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "badge_text",
+      "label": "Badge text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "range",
+      "id": "badge_size",
+      "label": "Badge size",
+      "min": 14,
+      "max": 28,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    }
+  ],
+  "presets": [
+    {
+      "name": "BurnLab Cart Bubble"
+    }
+  ]
+}
+{% endschema %}
