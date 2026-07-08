@@ -15,7 +15,6 @@
   assign logo_size       = section.settings.logo_size        | default: 48
   assign logo_size_mob   = section.settings.logo_size_mobile | default: 44
   assign menu_handle     = section.settings.menu             | default: 'main-menu'
-  assign acct_menu       = section.settings.customer_account_menu | default: 'customer-account-main-menu'
   assign enable_anims    = section.settings.enable_animations
   assign default_theme   = section.settings.default_theme    | default: 'dark'
   assign nav_size        = section.settings.nav_font_size    | default: 13
@@ -88,10 +87,15 @@
   --bl-drawer-border:    rgba(0, 26, 46, 0.12);
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   background-color: var(--bl-mode-body-bg);
   color: var(--bl-mode-text);
   transition: background-color 0.35s ease, color 0.35s ease;
+  overflow-x: clip;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -454,12 +458,24 @@ body {
 #shopify-section-group-header-group {
   position: relative !important;
   z-index: 9999 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
 }
 
 /* Shopify section wrapper (.shopify-section.header_block) */
 .header_block {
   position: relative !important;
   z-index: 9999 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
 }
 
 /* Custom element wrapper (<header-element>) */
@@ -467,7 +483,13 @@ header-element {
   display: block;
   position: relative !important;
   z-index: 9999 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  transform: none !important;
 }
+
+/* Fixed/sticky header — left:0;right:0 already spans full viewport,
+   no vw tricks needed (they cause a left-margin gap on mobile) */
 
 #{{ section_id }} *,
 #{{ section_id }} *::before,
@@ -477,7 +499,16 @@ header-element {
   padding: 0;
 }
 
-#{{ section_id }} { position: relative; isolation: isolate; z-index: 9999 !important; }
+#{{ section_id }} {
+  position: relative;
+  isolation: isolate;
+  z-index: 9999 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  left: 0 !important;
+}
 
 /* ─── Outer positioning ──────────────────────────────────────── */
 
@@ -485,12 +516,25 @@ header-element {
   {% if header_position == 'sticky' %}
     position: sticky; top: 0;
   {% elsif header_position == 'fixed' %}
-    position: fixed; top: 0; left: 0; right: 0;
+    position: fixed; top: 0; left: 0 !important; right: 0 !important;
   {% else %}
     position: relative;
   {% endif %}
   z-index: 200;
-  width: 100%;
+  /* Use auto width so left:0 + right:0 stretches edge-to-edge
+     without any margin-left offset interfering */
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#{{ section_id }} .bl-hdr-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 {% if header_position == 'fixed' %}
@@ -941,10 +985,11 @@ header-element {
   #{{ section_id }} .bl-toggle-icon svg { width: 1.6rem; height: 1.6rem; }
 }
 
-/* Mobile hamburger position */
-{% if menu_side == 'right' %}
+/* Mobile hamburger position — burger is last in DOM by default (right side).
+   Only needs order override when placed on the left. */
+{% if menu_side == 'left' %}
   @media (max-width: 1024px) {
-    #{{ section_id }} .bl-gym-menu-btn { order: 99; }
+    #{{ section_id }} .bl-gym-menu-btn { order: -1; }
   }
 {% endif %}
 
@@ -985,6 +1030,111 @@ header-element {
 /* Shopify editor */
 .shopify-design-mode #{{ section_id }} .bl-nav-item { opacity: 1; animation: none; }
 
+/* ─── All Categories Mega Menu ──────────────────────────────── */
+
+#{{ section_id }} .bl-nav-item--mega { position: relative; }
+
+#{{ section_id }} .bl-mega-categories {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  width: min(780px, calc(100vw - 4rem));
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+  z-index: 300;
+  will-change: opacity, transform;
+}
+
+/* Invisible bridge — keeps hover alive as cursor moves down */
+#{{ section_id }} .bl-mega-categories::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 1rem;
+}
+
+#{{ section_id }} .bl-nav-item--mega:hover .bl-mega-categories,
+#{{ section_id }} .bl-nav-item--mega:focus-within .bl-mega-categories {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+
+#{{ section_id }} .bl-mega-cat-grid {
+  display: grid;
+  grid-template-columns: repeat({{ section.settings.mega_columns | default: 3 }}, 1fr);
+  row-gap: {{ section.settings.mega_row_gap | default: 4 }}px;
+  column-gap: {{ section.settings.mega_col_gap | default: 4 }}px;
+}
+
+#{{ section_id }} .bl-mega-cat-item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #1a1a2e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+#{{ section_id }} .bl-mega-cat-item:hover {
+  background: #f0f7f5;
+  color: #07d16e;
+}
+
+#{{ section_id }} .bl-mega-cat-img-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f5f9fa;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#{{ section_id }} .bl-mega-cat-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#{{ section_id }} .bl-mega-cat-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+}
+
+#{{ section_id }} .bl-mega-cat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1.3;
+}
+
 {% endstyle %}
 
 {%- comment -%}Anti-FOUC — sets data-theme before first paint{%- endcomment -%}
@@ -997,6 +1147,17 @@ header-element {
   else if(d==='system'){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
   else{t=d||'dark';}
   document.documentElement.setAttribute('data-theme',t);
+
+  /* Prevent any home-page section (parallax text, canvas, etc.) from
+     creating horizontal overflow that shifts the sticky/fixed header.
+     Runs before Lenis / Three.js / GSAP so it can't be overridden by them. */
+  var root = document.documentElement;
+  root.style.overflowX = 'clip';
+  /* Re-enforce after everything else has loaded, in case a script resets it */
+  window.addEventListener('load', function () {
+    root.style.overflowX = 'clip';
+    if (document.body) document.body.style.overflowX = 'clip';
+  });
 }());
 </script>
 
@@ -1014,34 +1175,6 @@ header-element {
     >
       <div class="bl-hdr-wrapper">
         <div class="bl-hdr-inner">
-
-          {%- comment -%}── Mobile: Dumbbell-rows hamburger button ──{%- endcomment -%}
-          <button
-            class="bl-gym-menu-btn drawer_open_btn"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-            aria-controls="mobile_menu_drawer"
-            data-drawer="mobile_menu_drawer"
-            type="button"
-          >
-            <svg viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <rect x="0"    y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-              <rect x="4.5"  y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="7.5"  y="3"    width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
-              <rect x="22.5" y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="25.5" y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-              <rect x="0"    y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-              <rect x="4.5"  y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="7.5"  y="11.5" width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
-              <rect x="22.5" y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="25.5" y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-              <rect x="0"    y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-              <rect x="4.5"  y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="7.5"  y="20"   width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
-              <rect x="22.5" y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
-              <rect x="25.5" y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
-            </svg>
-          </button>
 
           {%- comment -%}── Brand logo image (dark + light variants) ──{%- endcomment -%}
           <div class="bl-logo-area">
@@ -1087,10 +1220,48 @@ header-element {
 
           {%- comment -%}── Desktop Navigation ──{%- endcomment -%}
           {%- if menu_handle != blank -%}
+            {%- assign categories_trigger = section.settings.categories_nav_label | downcase | strip -%}
+            {%- assign cat_blocks = section.blocks | where: 'type', 'category_item' -%}
             <nav class="bl-nav" role="navigation" aria-label="Main navigation">
               {%- for link in linklists[menu_handle].links -%}
-                <div class="bl-nav-item">
-                  {%- if link.links != blank -%}
+                {%- assign link_lower = link.title | downcase | strip -%}
+                {%- assign is_mega = false -%}
+                {%- if link_lower == categories_trigger and cat_blocks.size > 0 -%}
+                  {%- assign is_mega = true -%}
+                {%- endif -%}
+                <div class="bl-nav-item{% if is_mega %} bl-nav-item--mega{% endif %}">
+                  {%- if is_mega -%}
+                    <a href="{{ link.url }}" class="bl-nav-link" aria-haspopup="true" aria-expanded="false">
+                      {{- link.title | escape -}}
+                      <svg class="bl-nav-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1.5,3 5,7 8.5,3"/>
+                      </svg>
+                    </a>
+                    <div class="bl-mega-categories" role="region" aria-label="All categories">
+                      <div class="bl-mega-cat-grid">
+                        {%- for block in cat_blocks -%}
+                          <a href="{{ block.settings.category_link | default: '#' }}" class="bl-mega-cat-item" {{ block.shopify_attributes }}>
+                            <div class="bl-mega-cat-img-wrap">
+                              {%- if block.settings.category_image != blank -%}
+                                <img
+                                  src="{{ block.settings.category_image | image_url: width: 120 }}"
+                                  alt="{{ block.settings.category_name | default: '' | escape }}"
+                                  loading="lazy"
+                                  width="56"
+                                  height="56"
+                                >
+                              {%- else -%}
+                                <span class="bl-mega-cat-img-placeholder" aria-hidden="true">
+                                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                </span>
+                              {%- endif -%}
+                            </div>
+                            <span class="bl-mega-cat-label">{{ block.settings.category_name | escape }}</span>
+                          </a>
+                        {%- endfor -%}
+                      </div>
+                    </div>
+                  {%- elsif link.links != blank -%}
                     <a
                       href="{{ link.url }}"
                       class="bl-nav-link"
@@ -1157,16 +1328,6 @@ header-element {
               <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
             </a>
 
-            {%- if shop.customer_accounts_enabled -%}
-              <div class="bl-icon-btn bl-icon-btn--account header_account--icon" style="padding:0;">
-                <shopify-account menu="{{ acct_menu }}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                </shopify-account>
-              </div>
-            {%- endif -%}
 
             {%- comment -%}
               Theme toggle — green circular button.
@@ -1201,6 +1362,35 @@ header-element {
             </button>
 
           </div>
+
+          {%- comment -%}── Mobile hamburger — placed LAST in DOM so logo is always first
+              even before CSS order:99 kicks in (prevents FOUC logo-shift) ──{%- endcomment -%}
+          <button
+            class="bl-gym-menu-btn drawer_open_btn"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="mobile_menu_drawer"
+            data-drawer="mobile_menu_drawer"
+            type="button"
+          >
+            <svg viewBox="0 0 30 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="0"    y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="3"    width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="2.5"  width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="1"    width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="0"    y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="11.5" width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="11"   width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="9.5"  width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="0"    y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+              <rect x="4.5"  y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="7.5"  y="20"   width="15"  height="1.5" rx="0.75" fill="currentColor" opacity="0.8"/>
+              <rect x="22.5" y="19.5" width="3"   height="2"   rx="1"   fill="currentColor"/>
+              <rect x="25.5" y="18"   width="4.5" height="5"   rx="1.5" fill="currentColor"/>
+            </svg>
+          </button>
 
         </div>
 
@@ -1582,6 +1772,46 @@ document.addEventListener('DOMContentLoaded', function () {
       "default": 13
     },
     {
+      "type": "text",
+      "id": "categories_nav_label",
+      "label": "\"All Categories\" nav item trigger",
+      "default": "All Categories",
+      "info": "Exact label of the nav item that shows the categories mega menu (case-insensitive). Must match your menu item name in Shopify Admin."
+    },
+    {
+      "type": "header",
+      "content": "Categories Mega Menu Grid"
+    },
+    {
+      "type": "range",
+      "id": "mega_columns",
+      "label": "Number of columns",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "mega_row_gap",
+      "label": "Row gap",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "mega_col_gap",
+      "label": "Column gap",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    },
+    {
       "type": "link_list",
       "id": "customer_account_menu",
       "label": "Customer account menu",
@@ -1828,6 +2058,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   ],
   "blocks": [
+    {
+      "name": "Category Item",
+      "type": "category_item",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "category_image",
+          "label": "Category image",
+          "info": "Shown as a small square thumbnail (56×56px). Use a square image for best results."
+        },
+        {
+          "type": "text",
+          "id": "category_name",
+          "label": "Category name"
+        },
+        {
+          "type": "url",
+          "id": "category_link",
+          "label": "Category link",
+          "info": "URL that opens when the category is clicked."
+        }
+      ]
+    },
     {
       "name": "Mega menu",
       "type": "mega_menu",

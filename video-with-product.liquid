@@ -11,8 +11,8 @@
 
 {%- liquid
   assign show_eyebrow    = section.settings.show_eyebrow
-  assign eyebrow         = section.settings.eyebrow              | default: 'In Action'
-  assign heading         = section.settings.heading              | default: 'See It Move'
+  assign eyebrow         = section.settings.eyebrow             
+  assign heading         = section.settings.heading              
   assign subheading      = section.settings.subheading
   assign heading_size    = section.settings.heading_size         | default: 44
   assign columns         = section.settings.columns              | default: 4
@@ -34,6 +34,7 @@
   assign card_bg_light   = section.settings.card_bg_light        | default: '#ffffff'
   assign panel_bg_light  = section.settings.panel_bg_light       | default: '#ecf3f5'
   assign border_light    = section.settings.border_light         | default: '#d6e3ea'
+  assign content_align   = section.settings.content_alignment  | default: 'left'
   assign enable_anims    = section.settings.enable_animations
   assign padding_top     = section.settings.padding_top          | default: 80
   assign padding_bottom  = section.settings.padding_bottom       | default: 80
@@ -144,7 +145,16 @@
   flex-wrap: wrap;
 }
 
-#{{ section_id }} .vwp-header-text { flex: 1; min-width: 0; }
+#{{ section_id }} .vwp-header-text {
+  flex: 1;
+  min-width: 0;
+  text-align: {{ content_align }};
+}
+{% if content_align == 'center' %}
+#{{ section_id }} .vwp-subheading { margin-inline: auto; }
+{% elsif content_align == 'right' %}
+#{{ section_id }} .vwp-subheading { margin-inline-start: auto; }
+{% endif %}
 
 #{{ section_id }} .vwp-eyebrow {
   display: inline-flex;
@@ -247,14 +257,15 @@
   display: flex;
   gap: var(--vwp-gap);
   overflow-x: auto;
+  overflow-y: hidden; /* prevent horizontal scrollbar from adding page height */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.6rem;
+  padding-bottom: 4px; /* minimal room for thin scrollbar thumb */
   scrollbar-width: thin;
   scrollbar-color: rgba(7, 209, 110, 0.35) transparent;
 }
 
-#{{ section_id }} .vwp-track::-webkit-scrollbar { height: 4px; }
+#{{ section_id }} .vwp-track::-webkit-scrollbar { height: 3px; }
 #{{ section_id }} .vwp-track::-webkit-scrollbar-track { background: transparent; }
 #{{ section_id }} .vwp-track::-webkit-scrollbar-thumb { background: rgba(7, 209, 110, 0.35); border-radius: 4px; }
 
@@ -320,15 +331,37 @@
   }
 }
 
+@media (max-width: 768px) {
+  #{{ section_id }} .vwp-card {
+    flex: 0 0 min(78vw, 300px);
+    max-width: none; min-width: 0;
+  }
+  /* Videos: cap height so they don't dominate on small screens */
+  #{{ section_id }} .vwp-media {
+    max-height: 52vw;
+  }
+}
+
 @media (max-width: 640px) {
   #{{ section_id }} .vwp-track {
     scroll-padding-left: var(--vwp-gap);
+    padding-inline: clamp(1rem, 4vw, 1.6rem);
+    /* Make track edge-to-edge so first card peeks nicely */
+    margin-inline: calc(-1 * clamp(1.6rem, 5vw, 8rem));
+    padding-inline: clamp(1.6rem, 5vw, 8rem);
   }
   #{{ section_id }} .vwp-card {
-    flex: 0 0 calc(100% - calc(var(--vwp-gap) * 2));
-    max-width: none;
-    min-width: 0;
+    flex: 0 0 min(82vw, 280px);
+    max-width: none; min-width: 0;
   }
+  #{{ section_id }} .vwp-media {
+    max-height: 55vw;
+  }
+}
+
+@media (max-width: 400px) {
+  #{{ section_id }} .vwp-card { flex: 0 0 88vw; }
+  #{{ section_id }} .vwp-media { max-height: 60vw; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -712,13 +745,17 @@
 }
 
 @media (max-width: 480px) {
-  #{{ section_id }} .vwp-arrow { width: 3.8rem; height: 3.8rem; }
-  #{{ section_id }} .vwp-panel { padding: 1rem; }
-  #{{ section_id }} .vwp-product-thumb { width: 3.2rem; height: 3.2rem; }
+  #{{ section_id }} .vwp-arrow { width: 3.4rem; height: 3.4rem; }
+  #{{ section_id }} .vwp-panel { padding: 0.9rem; }
+  #{{ section_id }} .vwp-product-thumb { width: 3rem; height: 3rem; }
+  #{{ section_id }} .vwp-title { font-size: 1.15rem; }
+  #{{ section_id }} .vwp-product-name,
+  #{{ section_id }} .vwp-price { font-size: 1rem; }
   {% if show_shop_btn %}
-  #{{ section_id }} .vwp-shop-btn { opacity: 1; transform: none; pointer-events: auto; margin-top: 0.6rem; padding: 0.55rem 1.2rem; }
+  #{{ section_id }} .vwp-shop-btn { opacity: 1; transform: none; pointer-events: auto; margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
   {% endif %}
   #{{ section_id }} .vwp-desc-wrap { grid-template-rows: 1fr; }
+  #{{ section_id }} .vwp-description { font-size: 1.1rem; -webkit-line-clamp: 2; }
 }
 
 @media (max-width: 300px) {
@@ -1125,6 +1162,18 @@ document.addEventListener('DOMContentLoaded', function () {
       "step": 2,
       "unit": "px",
       "default": 44
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content alignment",
+      "options": [
+        { "value": "left",   "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right",  "label": "Right" }
+      ],
+      "default": "left",
+      "info": "Aligns the eyebrow label, heading, and subheading together."
     },
     {
       "type": "header",

@@ -1,0 +1,1350 @@
+{% comment %}
+  ============================================================
+  BURNLAB — STICKY PROMO (Pin & Cover Scroll Effect)
+  Supports: Shopify OS 2.0 | Min Width: 300px
+
+  Desktop (>=1025px) when "enable_sticky_scroll" is on:
+    The section pins in place for an extra scroll distance.
+    During the pin, the scroll image + button slide up from
+    below and cover the content. Once the button is fully
+    visible, normal scrolling resumes.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id = 'burnlab-sticky-promo-' | append: section.id
+
+  assign head            = section.settings.head
+  assign font_style      = section.settings.font_style       | default: 'heading'
+  assign font_size_key   = section.settings['font-size']      | default: 'h2'
+  assign body_text       = section.settings.text
+  assign head_align      = section.settings.head_align       | default: 'left'
+  assign show_icon_txt   = section.settings.show_icon_txt
+
+  assign cover_image     = section.settings.image
+  assign cover_ratio     = cover_image.aspect_ratio | default: 1.6
+  assign btn_label       = section.settings.btn_label
+  assign btn_link        = section.settings.btn_link
+  assign new_tab         = section.settings.new_tab
+  assign btn_style       = section.settings.style            | default: 'primary'
+
+  assign pt_desk = section.settings.padding_top          | default: 40
+  assign pb_desk = section.settings.padding_bottom       | default: 40
+  assign pt_mob  = section.settings.padding_top_mobile   | default: 30
+  assign pb_mob  = section.settings.padding_bottom_mobile | default: 30
+
+  assign enable_sticky   = section.settings.enable_sticky_scroll
+  assign pin_height      = section.settings.pin_height            | default: 100
+  assign scroll_distance = section.settings.scroll_distance       | default: 150
+  assign scroll_hold     = section.settings.scroll_hold           | default: 30
+  assign scroll_smooth   = section.settings.scroll_smoothness     | default: 35
+  assign cover_width     = section.settings.cover_width           | default: 100
+  assign cover_height    = section.settings.cover_height          | default: 100
+  assign cover_radius    = section.settings['border-radius']      | default: 20
+  assign overlay_pct     = section.settings.cover_overlay_opacity | default: 0
+  assign overlay_alpha   = overlay_pct | divided_by: 100.0
+  assign enable_anim     = section.settings.enable_animations
+
+  assign details_heading_size = section.settings.details_heading_size | default: 26
+  assign details_price_size   = section.settings.details_price_size   | default: 20
+  assign details_text_size    = section.settings.details_text_size    | default: 17
+  assign details_heading_min  = details_heading_size | times: 0.7  | round
+  assign details_price_min    = details_price_size   | times: 0.8  | round
+  assign details_text_min     = details_text_size    | times: 0.9  | round
+
+  assign bg_dark     = section.settings.bg_color_dark      | default: '#001a2e'
+  assign text_dark   = section.settings.text_color_dark    | default: '#eaf4f5'
+  assign accent_dark = section.settings.accent_color_dark  | default: '#07d16e'
+  assign bg_light     = section.settings.bg_color_light     | default: '#eaf4f5'
+  assign text_light   = section.settings.text_color_light   | default: '#001a2e'
+  assign accent_light = section.settings.accent_color_light | default: '#07d16e'
+
+  assign muted_dark  = text_dark | color_modify: 'alpha', 0.62
+  assign muted_light = text_light | color_modify: 'alpha', 0.62
+  assign line_dark   = text_dark | color_modify: 'alpha', 0.12
+  assign line_light  = text_light | color_modify: 'alpha', 0.12
+
+  case font_size_key
+    when 'XXXL'
+      assign heading_clamp = 'clamp(2.6rem, 6vw, 6rem)'
+    when 'h1'
+      assign heading_clamp = 'clamp(2.2rem, 5vw, 4.5rem)'
+    when 'h2'
+      assign heading_clamp = 'clamp(1.8rem, 4vw, 3.4rem)'
+    when 'h3'
+      assign heading_clamp = 'clamp(1.5rem, 3vw, 2.4rem)'
+    when 'h4'
+      assign heading_clamp = 'clamp(1.25rem, 2.4vw, 1.9rem)'
+    when 'h5'
+      assign heading_clamp = 'clamp(1.1rem, 2vw, 1.5rem)'
+    else
+      assign heading_clamp = 'clamp(1.8rem, 4vw, 3.4rem)'
+  endcase
+
+  case btn_style
+    when 'primary'
+      assign btn_class = 'bl-btn-pill bl-btn-pill--green'
+    when 'btn-secondary'
+      assign btn_class = 'bl-btn-pill bl-btn-pill--outline'
+    when 'btn-link'
+      assign btn_class = 'stp-btn-link'
+    else
+      assign btn_class = 'stp-btn-wave'
+  endcase
+
+  assign icon_blocks = section.blocks | where: 'type', 'icon-with-text'
+-%}
+
+<style>
+  /* ── RESET ─────────────────────────────────────────────── */
+  #{{ section_id }} *,
+  #{{ section_id }} *::before,
+  #{{ section_id }} *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* ── ROOT VARIABLES & SHELL ───────────────────────────── */
+  #{{ section_id }} {
+    --stp-bg:           {{ bg_dark }};
+    --stp-text:         {{ text_dark }};
+    --stp-accent:       {{ accent_dark }};
+    --stp-muted:        {{ muted_dark }};
+    --stp-line:         {{ line_dark }};
+    --stp-cover-w:      {{ cover_width }}%;
+    --stp-cover-h:      {{ cover_height }}%;
+    --stp-cover-radius: {{ cover_radius }}px;
+    --stp-overlay-alpha: {{ overlay_alpha }};
+
+    position: relative;
+    isolation: isolate;
+    /* No overflow:hidden here on purpose — an ancestor with overflow other
+       than visible breaks position:sticky on .stp-pin below. Clipping is
+       handled locally by .stp-cover / .stp-secondary-image instead. */
+    background-color: var(--stp-bg);
+    color: var(--stp-text);
+    font-family: var(--bl-font-secondary);
+    transition: background-color 0.35s ease, color 0.35s ease;
+    padding-top: {{ pt_desk }}px;
+    padding-bottom: {{ pb_desk }}px;
+  }
+
+  /* ── Light theme override ─────────────────────────────── */
+  [data-theme="light"] #{{ section_id }} {
+    --stp-bg:     {{ bg_light }};
+    --stp-text:   {{ text_light }};
+    --stp-accent: {{ accent_light }};
+    --stp-muted:  {{ muted_light }};
+    --stp-line:   {{ line_light }};
+  }
+
+  /* ── CONTAINER ─────────────────────────────────────────── */
+  #{{ section_id }} .stp-container {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  /* ── STAGE / PIN (base = in-flow, no pin) ─────────────── */
+  #{{ section_id }} .stp-stage { position: relative; width: 100%; }
+  #{{ section_id }} .stp-pin   { position: relative; width: 100%; }
+
+  /* ── CONTENT ───────────────────────────────────────────── */
+  #{{ section_id }} .stp-content {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.75rem, 3.5vw, 3rem);
+  }
+
+  /* Header */
+  #{{ section_id }} .stp-header { display: flex; flex-direction: column; gap: 1rem; }
+  #{{ section_id }} .stp-header[data-align="center"] { text-align: center; align-items: center; }
+  #{{ section_id }} .stp-header[data-align="right"]  { text-align: right;  align-items: flex-end; }
+
+  #{{ section_id }} .stp-heading {
+    font-family: var(--bl-font-primary);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-size: {{ heading_clamp }};
+  }
+  #{{ section_id }} .stp-heading.stp-body-style {
+    font-family: var(--bl-font-secondary);
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+  #{{ section_id }} .stp-text {
+    font-size: clamp(0.95rem, 1.1vw, 1.15rem);
+    line-height: 1.7;
+    color: var(--stp-muted);
+    max-width: 60ch;
+  }
+  #{{ section_id }} .stp-header[data-align="center"] .stp-text { margin-inline: auto; }
+
+  /* Icon-with-text grid */
+  #{{ section_id }} .stp-icon-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  }
+  #{{ section_id }} .stp-icon-item { display: flex; flex-direction: column; gap: 0.7rem; }
+  #{{ section_id }} .stp-icon-item img { width: 44px; height: 44px; object-fit: contain; }
+  #{{ section_id }} .stp-icon-heading {
+    font-family: var(--bl-font-primary);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  }
+  #{{ section_id }} .stp-icon-heading.stp-body-style { font-family: var(--bl-font-secondary); font-weight: 700; letter-spacing: normal; }
+  #{{ section_id }} .stp-icon-text {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--stp-muted);
+  }
+
+  /* Inline featured text */
+  #{{ section_id }} .stp-featured-inline {
+    display: block;
+    font-family: var(--bl-font-primary);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--stp-fi-color, var(--stp-text));
+    font-size: var(--stp-fi-size, clamp(1.6rem, 4vw, 3rem));
+  }
+  #{{ section_id }} .stp-featured-inline[data-align="center"] { text-align: center; }
+  #{{ section_id }} .stp-featured-inline[data-align="right"]  { text-align: right; }
+  #{{ section_id }} .stp-featured-inline.stp-body-style { font-family: var(--bl-font-secondary); font-weight: 700; letter-spacing: normal; }
+
+  /* Secondary image block */
+  #{{ section_id }} .stp-secondary-image {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  #{{ section_id }} .stp-secondary-image img,
+  #{{ section_id }} .stp-secondary-image svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Product details */
+  #{{ section_id }} .stp-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    border-top: 1px solid var(--stp-line);
+  }
+  #{{ section_id }} .stp-details-col[data-align="center"] { text-align: center; }
+  #{{ section_id }} .stp-details-col[data-align="right"]  { text-align: right; }
+  #{{ section_id }} .stp-details-heading {
+    font-family: var(--bl-font-primary);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    font-size: clamp({{ details_heading_min }}px, 2.2vw, {{ details_heading_size }}px);
+    margin-bottom: 0.4rem;
+  }
+  #{{ section_id }} .stp-details-price {
+    font-family: var(--bl-font-secondary);
+    font-weight: 700;
+    color: var(--stp-accent);
+    font-size: clamp({{ details_price_min }}px, 1.8vw, {{ details_price_size }}px);
+    margin-bottom: 0.85rem;
+  }
+  #{{ section_id }} .stp-details-text {
+    font-size: clamp({{ details_text_min }}px, 1.3vw, {{ details_text_size }}px);
+    line-height: 1.7;
+    color: var(--stp-muted);
+    margin-bottom: 1.1rem;
+  }
+  #{{ section_id }} .stp-details-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    border-radius: var(--bl-radius-pill);
+    border: 1.5px solid var(--stp-line);
+    color: var(--stp-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color var(--bl-t-base, 0.3s) ease, color var(--bl-t-base, 0.3s) ease;
+  }
+  #{{ section_id }} .stp-details-btn:hover {
+    border-color: var(--stp-accent);
+    color: var(--stp-accent);
+  }
+
+  /* ── COVER (scroll image + button) ────────────────────── */
+  #{{ section_id }} .stp-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: {{ cover_ratio }};
+    border-radius: var(--stp-cover-radius);
+    overflow: hidden;
+  }
+  #{{ section_id }} .stp-cover-media,
+  #{{ section_id }} .stp-cover-overlay,
+  #{{ section_id }} .stp-cover-featured {
+    position: absolute;
+    inset: 0;
+  }
+  #{{ section_id }} .stp-cover-media { z-index: 0; }
+  #{{ section_id }} .stp-cover-media img,
+  #{{ section_id }} .stp-cover-media svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  #{{ section_id }} .stp-cover-overlay {
+    z-index: 1;
+    background: rgba(0, 0, 0, var(--stp-overlay-alpha));
+    pointer-events: none;
+  }
+  #{{ section_id }} .stp-cover-featured {
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8%;
+    pointer-events: none;
+  }
+  #{{ section_id }} .stp-cover-featured-text {
+    font-family: var(--bl-font-primary);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--stp-fi-color, #fff);
+    font-size: var(--stp-fi-size, clamp(2rem, 6vw, 5rem));
+  }
+  #{{ section_id }} .stp-cover-featured-text[data-align="left"]  { text-align: left; }
+  #{{ section_id }} .stp-cover-featured-text[data-align="right"] { text-align: right; }
+  #{{ section_id }} .stp-cover-featured-text.stp-body-style { font-family: var(--bl-font-secondary); font-weight: 700; letter-spacing: normal; }
+
+  #{{ section_id }} .stp-cover-cta {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.25rem, 4vw, 2.5rem);
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+  #{{ section_id }} .stp-btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--bl-font-secondary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.85rem 1.8rem;
+    border-radius: var(--bl-radius-pill);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: color var(--bl-t-base, 0.3s) ease, background var(--bl-t-base, 0.3s) ease;
+  }
+  #{{ section_id }} .stp-btn-link:hover { color: var(--bl-green); background: rgba(0, 0, 0, 0.6); }
+
+  #{{ section_id }} .stp-cover-cta .bl-btn-pill,
+  #{{ section_id }} .stp-cover-cta .stp-btn-link,
+  #{{ section_id }} .stp-cover-cta .stp-btn-wave {
+    padding: 1rem 2.5rem;
+  }
+
+  /* Wavy / liquid-fill button */
+  #{{ section_id }} .stp-btn-wave {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--bl-radius-pill);
+    border: 1.5px solid var(--bl-green);
+    font-family: var(--bl-font-secondary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: color var(--bl-t-base, 0.4s) ease;
+  }
+  #{{ section_id }} .stp-btn-wave__label { position: relative; z-index: 2; }
+  #{{ section_id }} .stp-btn-wave__fill,
+  #{{ section_id }} .stp-btn-wave__fill--2 {
+    position: absolute;
+    left: -15%;
+    right: -15%;
+    bottom: -68%;
+    height: 100%;
+    border-radius: 45%;
+    background: var(--bl-green);
+    z-index: 1;
+    transition: bottom 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+    animation: stp-wave-bob 5s ease-in-out infinite;
+  }
+  #{{ section_id }} .stp-btn-wave__fill {
+    opacity: 0.9;
+  }
+  #{{ section_id }} .stp-btn-wave__fill--2 {
+    opacity: 0.4;
+    bottom: -74%;
+    animation-duration: 7s;
+    animation-direction: reverse;
+  }
+  #{{ section_id }} .stp-btn-wave:hover .stp-btn-wave__fill,
+  #{{ section_id }} .stp-btn-wave:focus-visible .stp-btn-wave__fill {
+    bottom: -8%;
+  }
+  #{{ section_id }} .stp-btn-wave:hover .stp-btn-wave__fill--2,
+  #{{ section_id }} .stp-btn-wave:focus-visible .stp-btn-wave__fill--2 {
+    bottom: -14%;
+  }
+  #{{ section_id }} .stp-btn-wave:hover,
+  #{{ section_id }} .stp-btn-wave:focus-visible {
+    color: var(--bl-navy);
+  }
+  @keyframes stp-wave-bob {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    50%      { transform: translateX(-4%) rotate(3deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .stp-btn-wave__fill,
+    #{{ section_id }} .stp-btn-wave__fill--2 {
+      animation: none;
+    }
+  }
+
+  /* ── REVEAL ────────────────────────────────────────────── */
+  #{{ section_id }} .stp-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    will-change: transform, opacity;
+    transition: opacity 0.75s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1)),
+                transform 0.75s var(--bl-ease-expo, cubic-bezier(0.16,1,0.3,1));
+  }
+  #{{ section_id }} .stp-reveal.is-visible { opacity: 1; transform: none; }
+  #{{ section_id }}.is-visible .stp-reveal,
+  .shopify-design-mode #{{ section_id }} .stp-reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     DESKTOP — PIN & COVER SCROLL EFFECT
+     ════════════════════════════════════════════════════════ */
+  {%- if enable_sticky -%}
+  @media (min-width: 1025px) {
+    #{{ section_id }} .stp-stage {
+      height: calc({{ pin_height }}vh + {{ scroll_distance }}vh);
+    }
+    #{{ section_id }} .stp-pin {
+      position: sticky;
+      top: 0;
+      height: {{ pin_height }}vh;
+      overflow: hidden;
+      --stp-progress: 0;
+    }
+    #{{ section_id }} .stp-container {
+      position: absolute;
+      inset: 0;
+      display: block;
+      padding-block: clamp(2rem, 5vw, 4rem);
+    }
+    #{{ section_id }} .stp-content {
+      position: absolute;
+      inset: 0;
+      justify-content: center;
+      padding-inline: clamp(1.5rem, 4vw, 4rem);
+      max-height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      transform-origin: center top;
+      transform: scale(calc(1 - var(--stp-progress, 0) * 0.06));
+      opacity: calc(1 - var(--stp-progress, 0) * 0.5);
+      will-change: transform, opacity;
+    }
+    #{{ section_id }} .stp-content::-webkit-scrollbar { display: none; }
+    #{{ section_id }} .stp-cover {
+      position: absolute;
+      left: calc((100% - var(--stp-cover-w)) / 2);
+      /* Sits fully below the pinned area at rest (--stp-progress: 0) and
+         slides up to its centered resting spot as progress reaches 1 —
+         i.e. it always enters the content from the bottom. */
+      top: calc(100% - (100% + var(--stp-cover-h)) * 0.5 * var(--stp-progress, 0));
+      width: var(--stp-cover-w);
+      height: var(--stp-cover-h);
+      min-height: 0;
+      z-index: 20;
+      will-change: top;
+    }
+  }
+  /* Editor: show static stacked layout so blocks remain editable */
+  .shopify-design-mode #{{ section_id }} .stp-stage { height: auto !important; }
+  .shopify-design-mode #{{ section_id }} .stp-pin   { position: relative !important; height: auto !important; overflow: visible !important; }
+  .shopify-design-mode #{{ section_id }} .stp-container,
+  .shopify-design-mode #{{ section_id }} .stp-content,
+  .shopify-design-mode #{{ section_id }} .stp-cover {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .shopify-design-mode #{{ section_id }} .stp-cover { aspect-ratio: {{ cover_ratio }}; margin-top: clamp(2rem, 6vw, 5rem); }
+  {%- else -%}
+  /* Sticky effect disabled — simple two-column layout on desktop */
+  @media (min-width: 1025px) {
+    #{{ section_id }} .stp-container { flex-direction: row; align-items: center; gap: clamp(3rem, 5vw, 6rem); }
+    #{{ section_id }} .stp-content { flex: 1.1; }
+    #{{ section_id }} .stp-cover   { flex: 0.9; }
+  }
+  {%- endif -%}
+
+  /* ── REDUCED MOTION ────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .stp-stage { height: auto !important; }
+    #{{ section_id }} .stp-pin   { position: relative !important; height: auto !important; overflow: visible !important; }
+    #{{ section_id }} .stp-container,
+    #{{ section_id }} .stp-content,
+    #{{ section_id }} .stp-cover {
+      position: relative !important;
+      inset: auto !important;
+      width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    #{{ section_id }} .stp-cover { aspect-ratio: {{ cover_ratio }}; }
+    #{{ section_id }} .stp-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+  /* ── TABLET (max-width: 1024px) ───────────────────────── */
+  @media (max-width: 1024px) {
+    #{{ section_id }} .stp-icon-grid { grid-template-columns: repeat(2, 1fr); }
+    #{{ section_id }} .stp-details   { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── MOBILE / TABLET (max-width: 768px) ───────────────── */
+  @media (max-width: 768px) {
+    #{{ section_id }} {
+      padding-top: {{ pt_mob }}px !important;
+      padding-bottom: {{ pb_mob }}px !important;
+    }
+  }
+
+  /* ── SMALL MOBILE (max-width: 480px) ──────────────────── */
+  @media (max-width: 480px) {
+    #{{ section_id }} .stp-heading { font-size: clamp(2rem, 8vw, 3rem); }
+    #{{ section_id }} .stp-icon-grid { grid-template-columns: 1fr; }
+    #{{ section_id }} .stp-details   { grid-template-columns: 1fr; }
+    #{{ section_id }} .stp-cover-cta { width: calc(100% - 2rem); }
+    #{{ section_id }} .stp-cover-cta .bl-btn-pill,
+    #{{ section_id }} .stp-cover-cta .stp-btn-link {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<section id="{{ section_id }}" class="stp-section" data-section-id="{{ section.id }}">
+  <div class="stp-stage">
+    <div class="stp-pin">
+      <div class="stp-container">
+
+        <div class="stp-content stp-reveal">
+
+          <div class="stp-header" data-align="{{ head_align }}">
+            {%- if head != blank -%}
+              <h2 class="stp-heading {% if font_style == 'body' %}stp-body-style{% endif %}">{{ head }}</h2>
+            {%- endif -%}
+            {%- if body_text != blank -%}
+              <div class="stp-text">{{ body_text }}</div>
+            {%- endif -%}
+          </div>
+
+          {%- if show_icon_txt and icon_blocks.size > 0 -%}
+            <div class="stp-icon-grid">
+              {%- for block in icon_blocks -%}
+                <div class="stp-icon-item" {{ block.shopify_attributes }}>
+                  {%- if block.settings.icon != blank -%}
+                    {{ block.settings.icon | image_url: width: 96 | image_tag: loading: 'lazy', sizes: '44px', alt: block.settings.head | strip_html }}
+                  {%- endif -%}
+                  {%- if block.settings.head != blank -%}
+                    <h3 class="stp-icon-heading {% if block.settings.font_style == 'body' %}stp-body-style{% endif %}">{{ block.settings.head }}</h3>
+                  {%- endif -%}
+                  {%- if block.settings.text != blank -%}
+                    <div class="stp-icon-text">{{ block.settings.text }}</div>
+                  {%- endif -%}
+                </div>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+
+          {%- for block in section.blocks -%}
+            {%- case block.type -%}
+
+              {%- when 'featuredtext' -%}
+                {%- if block.settings.featuredtext != blank and block.settings['block-position'] == 'text' -%}
+                  <span
+                    {{ block.shopify_attributes }}
+                    class="stp-featured-inline {% if block.settings.font_style == 'body' %}stp-body-style{% endif %}"
+                    data-align="{{ block.settings['text-alignment'] | default: 'left' }}"
+                    style="--stp-fi-color: {{ block.settings.color }}; --stp-fi-size: {{ block.settings['font--size'] }}vw;"
+                  >{{ block.settings.featuredtext }}</span>
+                {%- endif -%}
+
+              {%- when 'image' -%}
+                <div class="stp-secondary-image" {{ block.shopify_attributes }}>
+                  {%- if block.settings.image != blank -%}
+                    {{ block.settings.image | image_url: width: 1200 | image_tag: loading: 'lazy', widths: '400, 800, 1200', sizes: '(min-width: 1025px) 700px, 100vw', alt: block.settings.image.alt }}
+                  {%- else -%}
+                    {{ 'product-2' | placeholder_svg_tag: 'placeholder-svg' }}
+                  {%- endif -%}
+                </div>
+
+              {%- when 'text' -%}
+                {%- if block.settings.text != blank or block.settings['text-right'] != blank -%}
+                  <div class="stp-details" {{ block.shopify_attributes }}>
+                    <div class="stp-details-col" data-align="{{ block.settings.left_text_align }}">
+                      {%- if block.settings['heading-left'] != blank -%}
+                        <h3 class="stp-details-heading">{{ block.settings['heading-left'] }}</h3>
+                      {%- endif -%}
+                      {%- if block.settings['price-left'] != blank -%}
+                        <p class="stp-details-price">{{ block.settings['price-left'] }}</p>
+                      {%- endif -%}
+                      {%- if block.settings.text != blank -%}
+                        <div class="stp-details-text">{{ block.settings.text }}</div>
+                      {%- endif -%}
+                      {%- if block.settings['btn_label-left'] != blank and block.settings['btn_link-left'] != blank -%}
+                        <a href="{{ block.settings['btn_link-left'] }}" class="stp-details-btn">{{ block.settings['btn_label-left'] }}</a>
+                      {%- endif -%}
+                    </div>
+                    <div class="stp-details-col" data-align="{{ block.settings.right_text_align }}">
+                      {%- if block.settings['heading-right'] != blank -%}
+                        <h3 class="stp-details-heading">{{ block.settings['heading-right'] }}</h3>
+                      {%- endif -%}
+                      {%- if block.settings['price-right'] != blank -%}
+                        <p class="stp-details-price">{{ block.settings['price-right'] }}</p>
+                      {%- endif -%}
+                      {%- if block.settings['text-right'] != blank -%}
+                        <div class="stp-details-text">{{ block.settings['text-right'] }}</div>
+                      {%- endif -%}
+                      {%- if block.settings['btn_label-right'] != blank and block.settings['btn_link-right'] != blank -%}
+                        <a href="{{ block.settings['btn_link-right'] }}" class="stp-details-btn">{{ block.settings['btn_label-right'] }}</a>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                {%- endif -%}
+
+            {%- endcase -%}
+          {%- endfor -%}
+
+        </div><!-- /.stp-content -->
+
+        <div class="stp-cover stp-reveal">
+          <div class="stp-cover-media">
+            {%- if cover_image != blank -%}
+              {{ cover_image | image_url: width: 1600 | image_tag: loading: 'lazy', widths: '600, 900, 1200, 1600, 2000', sizes: '(min-width: 1025px) 60vw, 100vw', alt: cover_image.alt }}
+            {%- else -%}
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+          </div>
+
+          {%- if overlay_pct > 0 -%}
+            <div class="stp-cover-overlay" aria-hidden="true"></div>
+          {%- endif -%}
+
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'featuredtext' and block.settings.featuredtext != blank and block.settings['block-position'] == 'featured' -%}
+              <div class="stp-cover-featured" {{ block.shopify_attributes }}>
+                <span
+                  class="stp-cover-featured-text {% if block.settings.font_style == 'body' %}stp-body-style{% endif %}"
+                  data-align="{{ block.settings['text-alignment'] | default: 'left' }}"
+                  style="--stp-fi-color: {{ block.settings.color }}; --stp-fi-size: {{ block.settings['font--size'] | times: 1.6 }}vw;"
+                >{{ block.settings.featuredtext }}</span>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- if btn_label != blank or btn_link != blank -%}
+            <div class="stp-cover-cta">
+              {%- if btn_class == 'stp-btn-wave' -%}
+                <a
+                  href="{{ btn_link | default: '#' }}"
+                  class="stp-btn-wave"
+                  {% if new_tab %}target="_blank" rel="noopener"{% endif %}
+                >
+                  <span class="stp-btn-wave__fill" aria-hidden="true"></span>
+                  <span class="stp-btn-wave__fill--2" aria-hidden="true"></span>
+                  <span class="stp-btn-wave__label">{{ btn_label }}</span>
+                </a>
+              {%- else -%}
+                <a
+                  href="{{ btn_link | default: '#' }}"
+                  class="{{ btn_class }}"
+                  {% if new_tab %}target="_blank" rel="noopener"{% endif %}
+                >{{ btn_label }}</a>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div><!-- /.stp-cover -->
+
+      </div><!-- /.stp-container -->
+    </div><!-- /.stp-pin -->
+  </div><!-- /.stp-stage -->
+</section>
+
+{%- if enable_anim or enable_sticky -%}
+<script>
+(function () {
+  'use strict';
+
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  {%- if enable_anim -%}
+  /* ── Reveal on scroll ──────────────────────────────────── */
+  var revealEls = root.querySelectorAll('.stp-reveal');
+  if (reducedMotion) {
+    revealEls.forEach(function (el) { el.classList.add('is-visible'); });
+  } else {
+    var revealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function (el) { revealObs.observe(el); });
+  }
+  {%- endif -%}
+
+  {%- if enable_sticky -%}
+  /* ── Pin & cover scroll progress ──────────────────────── */
+  var stage = root.querySelector('.stp-stage');
+  var pin   = root.querySelector('.stp-pin');
+
+  if (stage && pin) {
+    var holdFraction = Math.max(0, Math.min(0.95, {{ scroll_hold }} / 100));
+    var lerpAmount   = 0.05 + (Math.max(0, Math.min(100, {{ scroll_smooth }})) / 100) * 0.45;
+    var desktopQuery = window.matchMedia('(min-width: 1025px)');
+
+    var targetProgress  = 0;
+    var currentProgress = 0;
+    var rafId = null;
+
+    function computeTarget() {
+      if (!desktopQuery.matches) {
+        targetProgress = 0;
+        return;
+      }
+
+      var room = stage.offsetHeight - window.innerHeight;
+      var raw = 0;
+      if (room > 0) {
+        var rect = stage.getBoundingClientRect();
+        raw = -rect.top / room;
+      }
+      raw = Math.max(0, Math.min(1, raw));
+
+      /* Hold phase: section stays pinned with content fully visible.
+         Only after the hold fraction does the cover start sliding in
+         from below to cover the content. */
+      if (raw <= holdFraction) {
+        targetProgress = 0;
+      } else {
+        targetProgress = (raw - holdFraction) / (1 - holdFraction);
+      }
+    }
+
+    function step() {
+      computeTarget();
+
+      var diff = targetProgress - currentProgress;
+      if (Math.abs(diff) < 0.0008) {
+        currentProgress = targetProgress;
+        pin.style.setProperty('--stp-progress', currentProgress.toFixed(4));
+        rafId = null;
+        return;
+      }
+
+      currentProgress += diff * lerpAmount;
+      pin.style.setProperty('--stp-progress', currentProgress.toFixed(4));
+      rafId = window.requestAnimationFrame(step);
+    }
+
+    function onScroll() {
+      if (rafId === null) {
+        rafId = window.requestAnimationFrame(step);
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+  }
+  {%- endif -%}
+})();
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Sticky content",
+  "settings": [
+    {
+      "type": "text",
+      "id": "head",
+      "label": "Heading",
+      "default": "Sticky Image"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Heading font style",
+      "options": [
+        { "value": "heading", "label": "Heading" },
+        { "value": "body", "label": "Body" }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font-size",
+      "label": "Heading size",
+      "options": [
+        { "value": "XXXL", "label": "XXX large" },
+        { "value": "h1", "label": "Extra large" },
+        { "value": "h2", "label": "Large" },
+        { "value": "h3", "label": "Medium" },
+        { "value": "h4", "label": "Small" },
+        { "value": "h5", "label": "Extra small" }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description",
+      "default": "<p>Showcase the products from the collection in a grid or slider format.</p>"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon_txt",
+      "label": "Show icon with text blocks",
+      "default": false,
+      "info": "Displays up to 4 Icon with text blocks above the description"
+    },
+    {
+      "type": "header",
+      "content": "Theme colors"
+    },
+    {
+      "type": "paragraph",
+      "content": "Colors automatically switch between the dark and light site themes."
+    },
+    {
+      "type": "color",
+      "id": "bg_color_dark",
+      "label": "Background (dark theme)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "text_color_dark",
+      "label": "Text (dark theme)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_dark",
+      "label": "Accent (dark theme)",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Background (light theme)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text (light theme)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent (light theme)",
+      "default": "#07d16e"
+    },
+    {
+      "type": "header",
+      "content": "Scroll image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Scroll image"
+    },
+    {
+      "type": "range",
+      "id": "cover_width",
+      "label": "Scroll image width",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "default": 100,
+      "unit": "%",
+      "info": "Applies to the desktop sticky scroll effect"
+    },
+    {
+      "type": "range",
+      "id": "cover_height",
+      "label": "Scroll image height",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "default": 100,
+      "unit": "%",
+      "info": "Applies to the desktop sticky scroll effect"
+    },
+    {
+      "type": "range",
+      "id": "border-radius",
+      "label": "Scroll image corner radius",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "cover_overlay_opacity",
+      "label": "Scroll image overlay darkness",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "default": 0,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button label",
+      "default": "Button Label"
+    },
+    {
+      "type": "url",
+      "id": "btn_link",
+      "label": "Button link"
+    },
+    {
+      "type": "checkbox",
+      "id": "new_tab",
+      "label": "Open link in new tab",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Button style",
+      "options": [
+        { "value": "wavy", "label": "Wavy (liquid fill)" },
+        { "value": "primary", "label": "Primary" },
+        { "value": "btn-secondary", "label": "Secondary" },
+        { "value": "btn-link", "label": "Link" }
+      ],
+      "default": "wavy"
+    },
+    {
+      "type": "header",
+      "content": "Product details typography"
+    },
+    {
+      "type": "range",
+      "id": "details_heading_size",
+      "label": "Heading size",
+      "min": 18,
+      "max": 40,
+      "step": 1,
+      "default": 26,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "details_price_size",
+      "label": "Price size",
+      "min": 14,
+      "max": 32,
+      "step": 1,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "details_text_size",
+      "label": "Description size",
+      "min": 13,
+      "max": 24,
+      "step": 1,
+      "default": 17,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Sticky scroll effect"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_scroll",
+      "label": "Enable sticky pin and cover effect",
+      "default": true,
+      "info": "On desktop, the section pins in place while the scroll image and button slide up to cover the content. The section scrolls in normally on mobile and tablet, and when reduced motion is preferred."
+    },
+    {
+      "type": "range",
+      "id": "pin_height",
+      "label": "Section height",
+      "min": 70,
+      "max": 150,
+      "step": 5,
+      "default": 100,
+      "unit": "vh",
+      "info": "Height of the pinned section on desktop while the scroll image slides in"
+    },
+    {
+      "type": "range",
+      "id": "scroll_distance",
+      "label": "Scroll distance",
+      "min": 50,
+      "max": 300,
+      "step": 10,
+      "default": 150,
+      "unit": "vh",
+      "info": "Extra scroll distance needed for the cover effect to complete"
+    },
+    {
+      "type": "range",
+      "id": "scroll_hold",
+      "label": "Content hold",
+      "min": 0,
+      "max": 70,
+      "step": 5,
+      "default": 30,
+      "unit": "%",
+      "info": "How much of the scroll distance the section stays pinned with the content fully visible before the scroll image starts sliding in"
+    },
+    {
+      "type": "range",
+      "id": "scroll_smoothness",
+      "label": "Scroll smoothness",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 35,
+      "unit": "%",
+      "info": "Lower values feel slower and smoother; higher values track the scroll more directly"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable reveal animations",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Featured text",
+      "type": "featuredtext",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "inline_richtext",
+          "id": "featuredtext",
+          "label": "Featured text",
+          "default": "FEATURED TEXT"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "Font style",
+          "options": [
+            { "value": "heading", "label": "Heading" },
+            { "value": "body", "label": "Body" }
+          ],
+          "default": "body"
+        },
+        {
+          "type": "range",
+          "id": "font--size",
+          "label": "Font size",
+          "min": 3,
+          "max": 20,
+          "default": 5,
+          "step": 0.5
+        },
+        {
+          "type": "select",
+          "id": "text-alignment",
+          "label": "Text alignment",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Center" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "select",
+          "id": "block-position",
+          "label": "Block position",
+          "options": [
+            { "value": "text", "label": "With text" },
+            { "value": "featured", "label": "Over scroll image" }
+          ],
+          "default": "text"
+        },
+        {
+          "type": "color",
+          "id": "color",
+          "label": "Color",
+          "default": "#000"
+        }
+      ]
+    },
+    {
+      "name": "Image",
+      "type": "image",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Use a landscape image with reduced height for better visual balance"
+        }
+      ]
+    },
+    {
+      "name": "Product details",
+      "type": "text",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "First product"
+        },
+        {
+          "type": "select",
+          "id": "left_text_align",
+          "label": "Left text alignment",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Center" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "text",
+          "id": "heading-left",
+          "label": "Heading left",
+          "default": "Heading left"
+        },
+        {
+          "type": "text",
+          "id": "price-left",
+          "label": "Price"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text left",
+          "default": "<p>Write a short description that justifies your heading and image. You can also link the button to the desired page or template.</p>"
+        },
+        {
+          "type": "text",
+          "id": "btn_label-left",
+          "label": "Button label",
+          "default": "Button Label"
+        },
+        {
+          "type": "url",
+          "id": "btn_link-left",
+          "label": "Button link"
+        },
+        {
+          "type": "header",
+          "content": "Second product"
+        },
+        {
+          "type": "select",
+          "id": "right_text_align",
+          "label": "Right text alignment",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Center" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "right"
+        },
+        {
+          "type": "text",
+          "id": "heading-right",
+          "label": "Heading right",
+          "default": "Heading right"
+        },
+        {
+          "type": "text",
+          "id": "price-right",
+          "label": "Price"
+        },
+        {
+          "type": "richtext",
+          "id": "text-right",
+          "label": "Text right",
+          "default": "<p>Write a short description that justifies your heading and image. You can also link the button to the desired page or template.</p>"
+        },
+        {
+          "type": "text",
+          "id": "btn_label-right",
+          "label": "Button label",
+          "default": "Button Label"
+        },
+        {
+          "type": "url",
+          "id": "btn_link-right",
+          "label": "Button link"
+        }
+      ]
+    },
+    {
+      "name": "Icon with text",
+      "type": "icon-with-text",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "head",
+          "label": "Heading",
+          "default": "Image with text"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "Font style",
+          "options": [
+            { "value": "heading", "label": "Heading" },
+            { "value": "body", "label": "Body" }
+          ],
+          "default": "heading"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Description",
+          "default": "<p>This section allows you to highlight key content with a featured image and supporting text. Use it to showcase a product, collection, promotion, or brand story.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sticky content",
+      "blocks": [
+        { "type": "image" },
+        { "type": "text" }
+      ]
+    }
+  ]
+}
+{% endschema %}

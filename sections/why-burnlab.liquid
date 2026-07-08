@@ -1,0 +1,1273 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Why BurnLab Section
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Trust-badge style strip: heading + up to 5 icon/title/subtitle blocks
+  Any block field left blank is simply not rendered (icon, title, subtitle
+  each render independently). A block with nothing filled in is skipped.
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'burnlab-wb-' | append: section.id -%}
+
+{%- liquid
+  assign section_title    = section.settings.section_title
+  assign section_subtitle = section.settings.section_subtitle
+  assign heading_align     = section.settings.heading_alignment | default: 'center'
+  assign card_align        = section.settings.card_alignment    | default: 'center'
+  assign card_style        = section.settings.card_style        | default: 'cards'
+
+  assign cols_desktop = section.settings.columns_desktop | default: 5
+  assign cols_tablet  = section.settings.columns_tablet  | default: 3
+  assign cols_mobile  = section.settings.columns_mobile  | default: 1
+
+  assign title_fs        = section.settings.title_font_size        | default: 36
+  assign title_fs_m       = section.settings.title_font_size_mobile | default: 26
+  assign subtitle_fs      = section.settings.subtitle_font_size        | default: 17
+  assign subtitle_fs_m     = section.settings.subtitle_font_size_mobile | default: 15
+  assign block_title_fs   = section.settings.block_title_font_size    | default: 18
+  assign block_sub_fs      = section.settings.block_subtitle_font_size | default: 14
+
+  assign bg_dark     = section.settings.bg_dark     | default: '#001a2e'
+  assign bg_light    = section.settings.bg_light    | default: '#eaf4f5'
+  assign text_dark   = section.settings.text_dark   | default: '#eaf4f5'
+  assign text_light  = section.settings.text_light  | default: '#001a2e'
+  assign accent      = section.settings.accent_color | default: '#07d16e'
+  assign card_dark   = section.settings.card_bg_dark  | default: '#001828'
+  assign card_light  = section.settings.card_bg_light | default: '#ffffff'
+  assign icon_bg     = section.settings.icon_bg_color | default: '#07d16e'
+  assign icon_color  = section.settings.icon_color    | default: '#07d16e'
+  assign icon_shape  = section.settings.icon_shape    | default: 'circle'
+
+  assign enable_anims    = section.settings.enable_animations
+  assign enable_parallax = section.settings.enable_parallax
+  assign stack_offset    = section.settings.stack_top_offset  | default: 80
+  assign stack_height    = section.settings.stack_card_height | default: 200
+  assign padding_top      = section.settings.padding_top      | default: 48
+  assign padding_bottom   = section.settings.padding_bottom   | default: 48
+  assign padding_top_m     = section.settings.padding_top_mobile    | default: 28
+  assign padding_bottom_m  = section.settings.padding_bottom_mobile | default: 28
+-%}
+
+{% style %}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+#{{ section_id }} {
+  --wb-bg:        {{ bg_dark }};
+  --wb-text:      {{ text_dark }};
+  --wb-muted:     rgba(234,244,245,0.62);
+  --wb-accent:    {{ accent }};
+  --wb-card:      {{ card_dark }};
+  --wb-border:    rgba(234,244,245,0.14);
+  --wb-icon-bg:   {{ icon_bg }};
+  --wb-icon-fg:   {{ icon_color }};
+  --wb-cols-d:    {{ cols_desktop }};
+  --wb-cols-t:    {{ cols_tablet }};
+  --wb-cols-m:    {{ cols_mobile }};
+  --wb-title-fs:      {{ title_fs }}px;
+  --wb-title-fs-m:    {{ title_fs_m }}px;
+  --wb-subtitle-fs:   {{ subtitle_fs }}px;
+  --wb-subtitle-fs-m: {{ subtitle_fs_m }}px;
+  --wb-block-title-fs: {{ block_title_fs }}px;
+  --wb-block-sub-fs:   {{ block_sub_fs }}px;
+  --wb-stack-offset:   {{ stack_offset }}px;
+  --wb-stack-height:   {{ stack_height }}px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--wb-bg);
+  color: var(--wb-text);
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.35s ease, color 0.35s ease;
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+}
+
+[data-theme="light"] #{{ section_id }} {
+  --wb-bg:     {{ bg_light }};
+  --wb-text:   {{ text_light }};
+  --wb-muted:  rgba(0,26,46,0.62);
+  --wb-card:   {{ card_light }};
+  --wb-border: rgba(0,26,46,0.12);
+}
+
+@media (max-width: 768px) {
+  #{{ section_id }} {
+    padding-top: {{ padding_top_m }}px !important;
+    padding-bottom: {{ padding_bottom_m }}px !important;
+  }
+}
+
+/* ── Container ── */
+#{{ section_id }} .wb-inner {
+  max-width: 84rem;
+  margin: 0 auto;
+  padding-inline: clamp(1.6rem, 4vw, 3.2rem);
+}
+
+/* ── Header ── */
+#{{ section_id }} .wb-head {
+  margin-bottom: clamp(1.8rem, 4vw, 3rem);
+  text-align: {{ heading_align }};
+}
+#{{ section_id }} .wb-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--wb-text);
+  font-size: var(--wb-title-fs-m);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+@media (min-width: 769px) {
+  #{{ section_id }} .wb-title { font-size: var(--wb-title-fs); }
+}
+#{{ section_id }} .wb-subtitle {
+  font-size: var(--wb-subtitle-fs-m);
+  color: var(--wb-muted);
+  margin-top: 0.6rem;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+@media (min-width: 769px) {
+  #{{ section_id }} .wb-subtitle { font-size: var(--wb-subtitle-fs); }
+}
+#{{ section_id }} .wb-head.wb-align-center .wb-subtitle { margin-inline: auto; max-width: 42rem; }
+
+/* ── Grid ── */
+#{{ section_id }} .wb-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--wb-cols-m), 1fr);
+  gap: 1.4rem;
+}
+@media (min-width: 590px) {
+  #{{ section_id }} .wb-grid { grid-template-columns: repeat(var(--wb-cols-t), 1fr); }
+}
+@media (min-width: 990px) {
+  #{{ section_id }} .wb-grid { grid-template-columns: repeat(var(--wb-cols-d), 1fr); gap: 1rem; }
+}
+
+/* ── Card: shared ── */
+#{{ section_id }} .wb-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: {{ card_align }};
+  align-items: {% if card_align == 'left' %}flex-start{% elsif card_align == 'right' %}flex-end{% else %}center{% endif %};
+}
+
+/* ── Card style: boxed ── */
+#{{ section_id }}[data-style="cards"] .wb-card {
+  background: var(--wb-card);
+  border: 1px solid var(--wb-border);
+  border-radius: 14px;
+  padding: 1.8rem 1.5rem;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+  will-change: transform;
+}
+#{{ section_id }}[data-style="cards"] .wb-card:hover {
+  border-color: color-mix(in srgb, var(--wb-accent) 40%, var(--wb-border));
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  transform: translateY(-3px);
+}
+/* Flex grid so orphaned last-row cards center themselves */
+#{{ section_id }}[data-style="cards"] .wb-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+}
+#{{ section_id }}[data-style="cards"] .wb-card {
+  flex: 0 0 calc((100% - 1.4rem * (var(--wb-cols-m) - 1)) / var(--wb-cols-m));
+  max-width: calc((100% - 1.4rem * (var(--wb-cols-m) - 1)) / var(--wb-cols-m));
+}
+@media (min-width: 590px) {
+  #{{ section_id }}[data-style="cards"] .wb-card {
+    flex: 0 0 calc((100% - 1.4rem * (var(--wb-cols-t) - 1)) / var(--wb-cols-t));
+    max-width: calc((100% - 1.4rem * (var(--wb-cols-t) - 1)) / var(--wb-cols-t));
+  }
+}
+@media (min-width: 990px) {
+  #{{ section_id }}[data-style="cards"] .wb-card {
+    flex: 0 0 calc((100% - 1rem * (var(--wb-cols-d) - 1)) / var(--wb-cols-d));
+    max-width: calc((100% - 1rem * (var(--wb-cols-d) - 1)) / var(--wb-cols-d));
+  }
+}
+
+/* ── Card style: minimal (trust-bar with dividers) ── */
+#{{ section_id }}[data-style="minimal"] .wb-card {
+  padding: 0.4rem 1.2rem;
+  position: relative;
+}
+@media (min-width: 990px) {
+  #{{ section_id }}[data-style="minimal"] .wb-grid > .wb-card:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    right: -0.5rem;
+    width: 1px;
+    background: var(--wb-border);
+  }
+}
+
+/* ══════════════════════════════════════════
+   STYLE: STACKED (Pin & Cover)
+   Cards are position:sticky and each slides
+   over the previous as you scroll down.
+══════════════════════════════════════════ */
+#{{ section_id }}[data-style="stacked"] .wb-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 40vh;
+}
+#{{ section_id }}[data-style="stacked"] .wb-card {
+  position: sticky;
+  top: var(--wb-stack-offset);
+  min-height: var(--wb-stack-height);
+  justify-content: center;
+  background: var(--wb-card);
+  border: 1px solid var(--wb-border);
+  border-radius: 24px;
+  padding: 2.4rem 2.8rem;
+  transform-origin: top center;
+  will-change: transform;
+  transition: box-shadow 0.25s ease;
+}
+#{{ section_id }}[data-style="stacked"] .wb-card:hover {
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+}
+#{{ section_id }}[data-style="stacked"] .wb-card:nth-child(1) { z-index: 1; background: var(--wb-card); }
+#{{ section_id }}[data-style="stacked"] .wb-card:nth-child(2) { z-index: 2; }
+#{{ section_id }}[data-style="stacked"] .wb-card:nth-child(3) { z-index: 3; }
+#{{ section_id }}[data-style="stacked"] .wb-card:nth-child(4) { z-index: 4; }
+#{{ section_id }}[data-style="stacked"] .wb-card:nth-child(5) { z-index: 5; }
+/* Accent bar on left edge of each card */
+#{{ section_id }}[data-style="stacked"] .wb-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--wb-accent);
+  opacity: 0.5;
+  transition: opacity 0.25s ease, top 0.25s ease, bottom 0.25s ease;
+}
+#{{ section_id }}[data-style="stacked"] .wb-card:hover::before {
+  opacity: 1; top: 10%; bottom: 10%;
+}
+@media (max-width: 768px) {
+  #{{ section_id }}[data-style="stacked"] .wb-grid { padding-bottom: 0; }
+  #{{ section_id }}[data-style="stacked"] .wb-card {
+    position: relative; top: auto; min-height: 0;
+  }
+}
+
+/* ══════════════════════════════════════════
+   STYLE: SPOTLIGHT (Feature Showcase)
+   Split panel — numbered list on right,
+   large content panel on left transitions
+   smoothly as you hover each feature title.
+══════════════════════════════════════════ */
+#{{ section_id }}[data-style="spotlight"] .wb-spotlight {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.4rem;
+  align-items: center;
+  min-height: 380px;
+}
+
+/* Left panel */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-panel {
+  position: relative;
+  min-height: 340px;
+  background: var(--wb-card);
+  border: 1px solid var(--wb-border);
+  border-radius: 24px;
+  overflow: hidden;
+}
+/* Ambient accent glow inside panel */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 15% 85%, color-mix(in srgb, var(--wb-accent) 10%, transparent), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Each content slice — only active one is visible */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content {
+  position: absolute;
+  inset: 0;
+  padding: clamp(2rem, 3vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.38s cubic-bezier(0.16,1,0.3,1), transform 0.38s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+  z-index: 1;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content[aria-current="true"] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Big icon in panel */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-icon {
+  width: clamp(3.2rem, 5vw, 4.8rem);
+  height: clamp(3.2rem, 5vw, 4.8rem);
+  margin-bottom: 0.4rem;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-icon svg {
+  width: 55%;
+  height: 55%;
+}
+
+/* Oversize accent number watermark */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content::before {
+  content: attr(data-num);
+  position: absolute;
+  top: 1.2rem;
+  right: 1.8rem;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(4rem, 7vw, 6rem);
+  color: var(--wb-accent);
+  opacity: 0.07;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-card__title {
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  line-height: 1.25;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-card__subtitle {
+  font-size: clamp(0.85rem, 1.3vw, 1rem);
+  max-width: 30ch;
+}
+
+/* Progress bar across bottom of panel */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--wb-accent);
+  border-radius: 0 3px 0 0;
+  transition: width 0.38s cubic-bezier(0.16,1,0.3,1);
+  z-index: 2;
+}
+
+/* Right list */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.22s ease;
+  border: 1px solid transparent;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:not(:last-child) {
+  border-bottom-color: var(--wb-border);
+  border-radius: 0;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:first-child { border-radius: 12px 12px 0 0; }
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:last-child  { border-radius: 0 0 12px 12px; }
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:only-child  { border-radius: 12px; }
+
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:hover {
+  background: color-mix(in srgb, var(--wb-card) 55%, transparent);
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item[aria-current="true"] {
+  background: color-mix(in srgb, var(--wb-card) 80%, transparent);
+  border-color: color-mix(in srgb, var(--wb-accent) 28%, var(--wb-border)) !important;
+  border-radius: 12px !important;
+}
+
+#{{ section_id }}[data-style="spotlight"] .wb-sp-num {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.72rem;
+  color: var(--wb-accent);
+  opacity: 0.55;
+  min-width: 1.4rem;
+  transition: opacity 0.2s ease;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item[aria-current="true"] .wb-sp-num { opacity: 1; }
+
+#{{ section_id }}[data-style="spotlight"] .wb-sp-label {
+  font-weight: 600;
+  font-size: var(--wb-block-title-fs);
+  color: var(--wb-muted);
+  flex: 1;
+  line-height: 1.3;
+  transition: color 0.22s ease;
+  overflow-wrap: break-word;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item[aria-current="true"] .wb-sp-label,
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:hover .wb-sp-label {
+  color: var(--wb-text);
+}
+
+/* Arrow chevron */
+#{{ section_id }}[data-style="spotlight"] .wb-sp-arrow {
+  width: 1rem;
+  height: 1rem;
+  color: var(--wb-accent);
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  flex-shrink: 0;
+}
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item:hover .wb-sp-arrow,
+#{{ section_id }}[data-style="spotlight"] .wb-sp-item[aria-current="true"] .wb-sp-arrow {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  #{{ section_id }}[data-style="spotlight"] .wb-spotlight {
+    grid-template-columns: 1fr;
+  }
+  #{{ section_id }}[data-style="spotlight"] .wb-sp-panel {
+    min-height: 260px;
+    order: -1;
+  }
+}
+
+/* ══════════════════════════════════════════
+   STYLE: BENTO GRID (asymmetric)
+   Layout for 5 blocks:
+   [  1 (2×2 tall)  ][ 2 ][ 3 ]
+   [  1 (2×2 tall)  ][ 4 ][ 5 ]
+══════════════════════════════════════════ */
+#{{ section_id }}[data-style="bento"] .wb-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: minmax(140px, auto);
+  gap: 1rem;
+}
+#{{ section_id }}[data-style="bento"] .wb-card {
+  background: var(--wb-card);
+  border: 1px solid var(--wb-border);
+  border-radius: 20px;
+  padding: 2rem 1.8rem;
+  justify-content: center;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+  will-change: transform;
+}
+#{{ section_id }}[data-style="bento"] .wb-card:hover {
+  border-color: color-mix(in srgb, var(--wb-accent) 45%, var(--wb-border));
+  box-shadow: 0 12px 36px rgba(0,0,0,0.2);
+  transform: translateY(-4px);
+}
+/* Bento grid placement */
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(1) {
+  grid-column: 1 / 4; grid-row: 1 / 3;
+  padding: 2.8rem 2.2rem;
+  border-color: color-mix(in srgb, var(--wb-accent) 25%, var(--wb-border));
+}
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(1) .wb-icon {
+  width: 4rem; height: 4rem;
+}
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(1) .wb-card__title {
+  font-size: calc(var(--wb-block-title-fs) * 1.35);
+}
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(1) .wb-card__subtitle {
+  font-size: calc(var(--wb-block-sub-fs) * 1.15);
+  max-width: 28ch;
+}
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(2) { grid-column: 4 / 7; grid-row: 1; }
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(3) { grid-column: 4 / 7; grid-row: 2; }
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(4) { grid-column: 1 / 3; grid-row: 3; }
+#{{ section_id }}[data-style="bento"] .wb-card:nth-child(5) { grid-column: 3 / 7; grid-row: 3; }
+@media (max-width: 900px) {
+  #{{ section_id }}[data-style="bento"] .wb-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+  }
+  #{{ section_id }}[data-style="bento"] .wb-card:nth-child(n) {
+    grid-column: auto; grid-row: auto;
+  }
+  #{{ section_id }}[data-style="bento"] .wb-card:nth-child(1) {
+    grid-column: 1 / 3;
+  }
+}
+@media (max-width: 480px) {
+  #{{ section_id }}[data-style="bento"] .wb-grid { grid-template-columns: 1fr; }
+  #{{ section_id }}[data-style="bento"] .wb-card:nth-child(n) { grid-column: auto; }
+}
+
+/* ── Parallax icon layer ── */
+{% if enable_parallax %}
+#{{ section_id }} .wb-icon {
+  will-change: transform;
+  transition: transform 0.05s linear;
+}
+{% endif %}
+
+/* ── Icon ── */
+#{{ section_id }} .wb-icon {
+  width: var(--block-icon-sz, 3.2rem);
+  height: var(--block-icon-sz, 3.2rem);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wb-icon-fg);
+  background: color-mix(in srgb, var(--wb-icon-bg) 14%, transparent);
+  border-radius: {% if icon_shape == 'square' %}10px{% else %}50%{% endif %};
+}
+#{{ section_id }} .wb-icon svg {
+  width: calc(var(--block-icon-sz, 3.2rem) * 0.53);
+  height: calc(var(--block-icon-sz, 3.2rem) * 0.53);
+}
+#{{ section_id }} .wb-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
+
+/* ── Text ── */
+#{{ section_id }} .wb-card__title {
+  font-weight: 700;
+  font-size: var(--wb-block-title-fs);
+  color: var(--wb-text);
+  line-height: 1.35;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+#{{ section_id }} .wb-card__subtitle {
+  font-size: var(--wb-block-sub-fs);
+  color: var(--wb-muted);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Animations ── */
+{% if enable_anims %}
+#{{ section_id }} .wb-head { opacity: 0; transform: translateY(-10px); transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+#{{ section_id }} .wb-head.wb-in { opacity: 1; transform: none; }
+#{{ section_id }} .wb-card { opacity: 0; transform: translateY(12px); }
+#{{ section_id }}[data-style="cards"] .wb-card { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.22s ease, box-shadow 0.22s ease; }
+#{{ section_id }}[data-style="minimal"] .wb-card { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+#{{ section_id }} .wb-card.wb-in { opacity: 1; transform: none; }
+#{{ section_id }}[data-style="cards"] .wb-card:hover { transform: translateY(-3px) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .wb-head,
+  #{{ section_id }} .wb-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+{% else %}
+#{{ section_id }} .wb-head,
+#{{ section_id }} .wb-card { opacity: 1; }
+{% endif %}
+
+.shopify-design-mode #{{ section_id }} .wb-head,
+.shopify-design-mode #{{ section_id }} .wb-card { opacity: 1 !important; transform: none !important; }
+
+{% endstyle %}
+
+<div id="{{ section_id }}" data-style="{{ card_style }}">
+  <div class="wb-inner">
+
+    {%- if section_title != blank or section_subtitle != blank -%}
+      <div class="wb-head wb-align-{{ heading_align }}">
+        {%- if section_title != blank -%}
+          <h2 class="wb-title">{{ section_title | escape }}</h2>
+        {%- endif -%}
+        {%- if section_subtitle != blank -%}
+          <p class="wb-subtitle">{{ section_subtitle | escape }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- assign visible_blocks = 0 -%}
+    {%- for block in section.blocks -%}
+      {%- if block.settings.block_title != blank or block.settings.block_subtitle != blank or block.settings.custom_icon != blank or block.settings.icon != 'none' -%}
+        {%- assign visible_blocks = visible_blocks | plus: 1 -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- if visible_blocks > 0 -%}
+
+      {%- if card_style == 'spotlight' -%}
+
+        {%- comment %} ── Feature Spotlight layout ── {%- endcomment %}
+        <div class="wb-spotlight">
+
+          {%- comment %} Left content panel {%- endcomment %}
+          <div class="wb-sp-panel">
+            <div class="wb-sp-bar" id="{{ section_id }}-bar" style="width: 20%"></div>
+            {%- assign sp_index = 0 -%}
+            {%- for block in section.blocks -%}
+              {%- assign has_icon  = false -%}
+              {%- if block.settings.custom_icon != blank or block.settings.icon != 'none' -%}{%- assign has_icon = true -%}{%- endif -%}
+              {%- if block.settings.block_title != blank or block.settings.block_subtitle != blank or has_icon -%}
+                {%- assign sp_num = sp_index | plus: 1 -%}
+                <div class="wb-sp-content"
+                     data-sp="{{ sp_index }}"
+                     data-num="0{{ sp_num }}"
+                     aria-current="{% if sp_index == 0 %}true{% else %}false{% endif %}"
+                     {{ block.shopify_attributes }}>
+                  {%- assign icon_sz = block.settings.icon_size | default: 52 -%}
+                  {%- if has_icon -%}
+                    <span class="wb-icon" style="--block-icon-sz: {{ icon_sz }}px;">
+                      {%- if block.settings.custom_icon != blank -%}
+                        {{ block.settings.custom_icon | image_url: width: 128 | image_tag: loading: 'lazy', alt: block.settings.block_title | escape }}
+                      {%- else -%}
+                        {%- case block.settings.icon -%}
+                          {%- when 'truck' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="7" width="13" height="10"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+                          {%- when 'shield-check' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                          {%- when 'dumbbell' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6"/><path d="M6 7v10"/><path d="M6 12h12"/><path d="M18 7v10"/><path d="M20 9v6"/></svg>
+                          {%- when 'headset' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13a9 9 0 0118 0"/><path d="M21 13v5a2 2 0 01-2 2h-1v-7h3z"/><path d="M3 13v5a2 2 0 002 2h1v-7H3z"/></svg>
+                          {%- when 'star' -%}
+                            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.86L12 17.77l-6.18 3.23L7 14.14 2 9.27l7.1-1.01z"/></svg>
+                          {%- when 'flame' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3-3 4-3 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a5 5 0 01-10 0c0-4 3-6 3-6s1-2 2-4z"/></svg>
+                          {%- when 'heart' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2 0 3.5 1.5 6 4 2.5-2.5 4-4 6-4 4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                          {%- when 'award' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L6 21l6-3 6 3-2.5-8.5"/></svg>
+                          {%- when 'clock' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                          {%- when 'gift' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="12"/><path d="M3 9V6a1 1 0 011-1h16a1 1 0 011 1v3"/><path d="M12 5v16"/><path d="M12 5C10 1 5 2 5 5s4 1 7 0z"/><path d="M12 5c2-4 7-3 7 0s-4 1-7 0z"/></svg>
+                          {%- when 'lock' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                          {%- when 'check-circle' -%}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+                        {%- endcase -%}
+                      {%- endif -%}
+                    </span>
+                  {%- endif -%}
+                  {%- if block.settings.block_title != blank -%}
+                    <p class="wb-card__title">{{ block.settings.block_title | escape }}</p>
+                  {%- endif -%}
+                  {%- if block.settings.block_subtitle != blank -%}
+                    <p class="wb-card__subtitle">{{ block.settings.block_subtitle | escape }}</p>
+                  {%- endif -%}
+                </div>
+                {%- assign sp_index = sp_index | plus: 1 -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+
+          {%- comment %} Right numbered list {%- endcomment %}
+          <ul class="wb-sp-list">
+            {%- assign sp_index = 0 -%}
+            {%- for block in section.blocks -%}
+              {%- assign has_icon  = false -%}
+              {%- if block.settings.custom_icon != blank or block.settings.icon != 'none' -%}{%- assign has_icon = true -%}{%- endif -%}
+              {%- if block.settings.block_title != blank or block.settings.block_subtitle != blank or has_icon -%}
+                {%- assign sp_num = sp_index | plus: 1 -%}
+                <li class="wb-sp-item"
+                    data-sp="{{ sp_index }}"
+                    aria-current="{% if sp_index == 0 %}true{% else %}false{% endif %}"
+                    tabindex="0"
+                    role="button">
+                  <span class="wb-sp-num">0{{ sp_num }}</span>
+                  {%- if block.settings.block_title != blank -%}
+                    <span class="wb-sp-label">{{ block.settings.block_title | escape }}</span>
+                  {%- else -%}
+                    <span class="wb-sp-label">Feature {{ sp_num }}</span>
+                  {%- endif -%}
+                  <svg class="wb-sp-arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M1 6H11M11 6L7 2M11 6L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </li>
+                {%- assign sp_index = sp_index | plus: 1 -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+
+        </div>
+
+      {%- else -%}
+
+        {%- comment %} ── All other layout styles ── {%- endcomment %}
+        <div class="wb-grid">
+          {%- for block in section.blocks -%}
+            {%- assign has_icon  = false -%}
+            {%- if block.settings.custom_icon != blank or block.settings.icon != 'none' -%}{%- assign has_icon = true -%}{%- endif -%}
+            {%- if block.settings.block_title != blank -%}{%- assign has_title = true -%}{%- else -%}{%- assign has_title = false -%}{%- endif -%}
+            {%- if block.settings.block_subtitle != blank -%}{%- assign has_sub = true -%}{%- else -%}{%- assign has_sub = false -%}{%- endif -%}
+
+            {%- if has_icon or has_title or has_sub -%}
+              {%- assign icon_sz = block.settings.icon_size | default: 52 -%}
+              <div class="wb-card" {{ block.shopify_attributes }}>
+
+                {%- if has_icon -%}
+                  <span class="wb-icon" style="--block-icon-sz: {{ icon_sz }}px;">
+                    {%- if block.settings.custom_icon != blank -%}
+                      {{ block.settings.custom_icon | image_url: width: 128 | image_tag: loading: 'lazy', alt: block.settings.block_title | escape }}
+                    {%- else -%}
+                      {%- case block.settings.icon -%}
+                        {%- when 'truck' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="7" width="13" height="10"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+                        {%- when 'shield-check' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                        {%- when 'dumbbell' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6"/><path d="M6 7v10"/><path d="M6 12h12"/><path d="M18 7v10"/><path d="M20 9v6"/></svg>
+                        {%- when 'headset' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13a9 9 0 0118 0"/><path d="M21 13v5a2 2 0 01-2 2h-1v-7h3z"/><path d="M3 13v5a2 2 0 002 2h1v-7H3z"/></svg>
+                        {%- when 'star' -%}
+                          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.86L12 17.77l-6.18 3.23L7 14.14 2 9.27l7.1-1.01z"/></svg>
+                        {%- when 'flame' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3-3 4-3 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a5 5 0 01-10 0c0-4 3-6 3-6s1-2 2-4z"/></svg>
+                        {%- when 'heart' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2 0 3.5 1.5 6 4 2.5-2.5 4-4 6-4 4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                        {%- when 'award' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L6 21l6-3 6 3-2.5-8.5"/></svg>
+                        {%- when 'clock' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                        {%- when 'gift' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="12"/><path d="M3 9V6a1 1 0 011-1h16a1 1 0 011 1v3"/><path d="M12 5v16"/><path d="M12 5C10 1 5 2 5 5s4 1 7 0z"/><path d="M12 5c2-4 7-3 7 0s-4 1-7 0z"/></svg>
+                        {%- when 'lock' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        {%- when 'check-circle' -%}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+                      {%- endcase -%}
+                    {%- endif -%}
+                  </span>
+                {%- endif -%}
+
+                {%- if has_title -%}
+                  <p class="wb-card__title">{{ block.settings.block_title | escape }}</p>
+                {%- endif -%}
+
+                {%- if has_sub -%}
+                  <p class="wb-card__subtitle">{{ block.settings.block_subtitle | escape }}</p>
+                {%- endif -%}
+
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+      {%- endif -%}
+
+    {%- endif -%}
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var SECTION_ID   = '{{ section_id }}';
+  var CARD_STYLE   = '{{ card_style }}';
+  var STACK_OFFSET = {{ stack_offset }};
+  var PARALLAX     = {{ enable_parallax }};
+
+  function init() {
+    var root = document.getElementById(SECTION_ID);
+    if (!root) return;
+
+    /* ── 1. Entry animations ── */
+    {% if enable_anims %}
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('wb-in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    var head = root.querySelector('.wb-head');
+    if (head) io.observe(head);
+
+    root.querySelectorAll('.wb-card').forEach(function(card, i) {
+      card.style.transitionDelay = (0.05 + i * 0.06) + 's';
+      io.observe(card);
+    });
+    {% endif %}
+
+    /* ── 2. Pin & Cover scroll scale ── */
+    if (CARD_STYLE === 'stacked' && window.innerWidth > 768) {
+      var cards = Array.from(root.querySelectorAll('.wb-card'));
+
+      function onStackScroll() {
+        cards.forEach(function(card, i) {
+          var next = cards[i + 1];
+          if (!next) return;
+          var nextTop = next.getBoundingClientRect().top;
+          var progress = 1 - Math.max(0, Math.min(1,
+            (nextTop - STACK_OFFSET) / (window.innerHeight * 0.45)
+          ));
+          var scale      = (1 - progress * 0.05).toFixed(4);
+          var brightness = (1 - progress * 0.18).toFixed(4);
+          card.style.transform = 'scale(' + scale + ')';
+          card.style.filter    = 'brightness(' + brightness + ')';
+        });
+      }
+
+      window.addEventListener('scroll', onStackScroll, { passive: true });
+      onStackScroll();
+    }
+
+    /* ── 3. Feature Spotlight switching ── */
+    if (CARD_STYLE === 'spotlight') {
+      var spItems    = Array.from(root.querySelectorAll('.wb-sp-item'));
+      var spContents = Array.from(root.querySelectorAll('.wb-sp-content'));
+      var spBar      = root.querySelector('.wb-sp-bar');
+      var total      = spItems.length;
+
+      function activateSpotlight(index) {
+        spItems.forEach(function(item, i) {
+          item.setAttribute('aria-current', i === index ? 'true' : 'false');
+        });
+        spContents.forEach(function(content, i) {
+          content.setAttribute('aria-current', i === index ? 'true' : 'false');
+        });
+        if (spBar && total > 0) {
+          spBar.style.width = ((index + 1) / total * 100).toFixed(1) + '%';
+        }
+      }
+
+      spItems.forEach(function(item, i) {
+        item.addEventListener('mouseenter', function() { activateSpotlight(i); });
+        item.addEventListener('focus',      function() { activateSpotlight(i); });
+        item.addEventListener('keydown',    function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateSpotlight(i); }
+        });
+      });
+    }
+
+    /* ── 4. Parallax icon drift ── */
+    if (PARALLAX) {
+      var icons = Array.from(root.querySelectorAll('.wb-icon'));
+      if (!icons.length) return;
+
+      function onParallaxScroll() {
+        var rect = root.getBoundingClientRect();
+        var relY = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+        icons.forEach(function(icon, i) {
+          var dir = i % 2 === 0 ? 1 : -1;
+          var strength = 14 + (i % 3) * 5;
+          icon.style.transform = 'translateY(' + (relY * strength * dir).toFixed(2) + 'px)';
+        });
+      }
+
+      window.addEventListener('scroll', onParallaxScroll, { passive: true });
+      onParallaxScroll();
+    }
+
+    /* ── 5. Cleanup on section unload ── */
+    document.addEventListener('shopify:section:unload', function(e) {
+      if (e.detail && e.detail.sectionId === SECTION_ID) {
+        window.removeEventListener('scroll', onStackScroll);
+        window.removeEventListener('scroll', onParallaxScroll);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Why BurnLab",
+  "max_blocks": 5,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Text"
+    },
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Title",
+      "default": "Why BurnLab"
+    },
+    {
+      "type": "text",
+      "id": "section_subtitle",
+      "label": "Subtitle",
+      "default": "The details that make the difference."
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Title & subtitle alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_font_size",
+      "label": "Title font size (desktop)",
+      "min": 20, "max": 64, "step": 1, "unit": "px", "default": 36
+    },
+    {
+      "type": "range",
+      "id": "title_font_size_mobile",
+      "label": "Title font size (mobile)",
+      "min": 16, "max": 44, "step": 1, "unit": "px", "default": 26
+    },
+    {
+      "type": "range",
+      "id": "subtitle_font_size",
+      "label": "Subtitle font size (desktop)",
+      "min": 12, "max": 28, "step": 1, "unit": "px", "default": 17
+    },
+    {
+      "type": "range",
+      "id": "subtitle_font_size_mobile",
+      "label": "Subtitle font size (mobile)",
+      "min": 12, "max": 22, "step": 1, "unit": "px", "default": 15
+    },
+    {
+      "type": "range",
+      "id": "block_title_font_size",
+      "label": "Block title font size",
+      "min": 14, "max": 26, "step": 1, "unit": "px", "default": 18
+    },
+    {
+      "type": "range",
+      "id": "block_subtitle_font_size",
+      "label": "Block subtitle font size",
+      "min": 11, "max": 20, "step": 1, "unit": "px", "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "card_style",
+      "label": "Layout style",
+      "options": [
+        { "value": "cards",     "label": "Boxed cards (grid)" },
+        { "value": "minimal",   "label": "Minimal strip (trust-bar)" },
+        { "value": "stacked",   "label": "Pin & Cover (scroll stacking)" },
+        { "value": "spotlight", "label": "Feature Spotlight (split panel)" },
+        { "value": "bento",     "label": "Bento grid (asymmetric)" }
+      ],
+      "default": "cards"
+    },
+    {
+      "type": "select",
+      "id": "card_alignment",
+      "label": "Block content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns (desktop)",
+      "min": 1, "max": 5, "step": 1, "default": 5
+    },
+    {
+      "type": "select",
+      "id": "columns_tablet",
+      "label": "Columns (tablet)",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" },
+        { "value": "3", "label": "3" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns (mobile)",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "header",
+      "content": "Icon Style"
+    },
+    {
+      "type": "select",
+      "id": "icon_shape",
+      "label": "Icon container shape",
+      "options": [
+        { "value": "circle", "label": "Circle" },
+        { "value": "square", "label": "Rounded square" }
+      ],
+      "default": "circle"
+    },
+    {
+      "type": "color",
+      "id": "icon_bg_color",
+      "label": "Icon background tint",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_dark",
+      "label": "Background (dark mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "bg_light",
+      "label": "Background (light mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_dark",
+      "label": "Text (dark mode)",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_light",
+      "label": "Text (light mode)",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_dark",
+      "label": "Card background (dark mode)",
+      "default": "#001828"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Card background (light mode)",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Pin & Cover Settings",
+      "info": "Only applies when Layout style is set to Pin & Cover."
+    },
+    {
+      "type": "range",
+      "id": "stack_top_offset",
+      "label": "Sticky top offset",
+      "min": 40,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 80,
+      "info": "How far from the top of the viewport each card sticks."
+    },
+    {
+      "type": "range",
+      "id": "stack_card_height",
+      "label": "Card minimum height",
+      "min": 120,
+      "max": 420,
+      "step": 10,
+      "unit": "px",
+      "default": 200,
+      "info": "Minimum height of each stacked card."
+    },
+    {
+      "type": "header",
+      "content": "Animations and Effects"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_animations",
+      "label": "Enable entry animations",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable parallax icon drift",
+      "default": false,
+      "info": "Icons float at different speeds as you scroll past the section."
+    },
+    {
+      "type": "header",
+      "content": "Desktop Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0, "max": 120, "step": 4, "unit": "px", "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0, "max": 120, "step": 4, "unit": "px", "default": 48
+    },
+    {
+      "type": "header",
+      "content": "Mobile Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile)",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 28
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile)",
+      "min": 0, "max": 80, "step": 4, "unit": "px", "default": 28
+    }
+  ],
+  "blocks": [
+    {
+      "type": "feature",
+      "name": "Feature",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "truck", "label": "Truck (shipping)" },
+            { "value": "shield-check", "label": "Shield check (guarantee)" },
+            { "value": "dumbbell", "label": "Dumbbell (quality/fitness)" },
+            { "value": "headset", "label": "Headset (support)" },
+            { "value": "star", "label": "Star (ratings)" },
+            { "value": "flame", "label": "Flame" },
+            { "value": "heart", "label": "Heart" },
+            { "value": "award", "label": "Award" },
+            { "value": "clock", "label": "Clock" },
+            { "value": "gift", "label": "Gift" },
+            { "value": "lock", "label": "Lock" },
+            { "value": "check-circle", "label": "Check circle" }
+          ],
+          "default": "none"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon",
+          "label": "Custom icon image (overrides icon above)"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "label": "Icon size",
+          "min": 28,
+          "max": 80,
+          "step": 4,
+          "unit": "px",
+          "default": 52
+        },
+        {
+          "type": "text",
+          "id": "block_title",
+          "label": "Block title"
+        },
+        {
+          "type": "text",
+          "id": "block_subtitle",
+          "label": "Block subtitle"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Why BurnLab",
+      "blocks": [
+        {
+          "type": "feature",
+          "settings": {
+            "icon": "truck",
+            "block_title": "Delivered Across India",
+            "block_subtitle": "Free shipping on every order."
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "icon": "shield-check",
+            "block_title": "100% Money-Back Guarantee",
+            "block_subtitle": "30-day risk-free moneyback guarantee."
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "icon": "dumbbell",
+            "block_title": "Made To Last",
+            "block_subtitle": "Quality gear for daily workouts."
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "icon": "headset",
+            "block_title": "Support That Shows Up",
+            "block_subtitle": "Quick help whenever you need it."
+          }
+        },
+        {
+          "type": "feature",
+          "settings": {
+            "icon": "star",
+            "block_title": "Loved By Thousands",
+            "block_subtitle": "4★+ rated products with 20,000+ ratings and reviews."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

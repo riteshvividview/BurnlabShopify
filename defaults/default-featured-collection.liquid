@@ -1,0 +1,587 @@
+{% style %}
+     #shopify-section-{{ section.id }} .section_padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    position: relative;
+    z-index: 1;
+  }
+
+    @media screen and (max-width: 640px) {
+    #shopify-section-{{ section.id }} .section_padding {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+  }
+{% endstyle %}
+
+{{ 'featured-collection.css' | asset_url | stylesheet_tag }}
+{{ 'product-card.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="color_scheme color-{{ section.settings.color_scheme }}{% unless section.settings.enable_slider %} no_slider{% endunless %} section_padding"
+  style="
+    --columns: {{ section.settings.columns }};
+     {% if section.settings.columns_mobile == '1' %}
+      --mobile-columns: 1;
+    {% else %}
+      --mobile-columns: 2;
+    {% endif %}
+    --border-radius: {{ section.settings.border-radius }}px;
+  "
+>
+  <div class="container">
+    <featured-collection>
+      <swiper-section
+        data-slides-desktop="{{section.settings.columns }}"
+        data-slides-tablet="{{section.settings.columns }}"
+        data-slides-mobile="{{ section.settings.columns_mobile }}"
+        data-gap="{{ settings.horizontal_spacing }}"
+        data-speed="800"
+      >
+        <div class="section_header fc_head {% if section.settings.show_viewall == 'heading_right' %} section_header-flex{% endif %}">
+          <div class="fc_head_head fc_head--{{ section.settings.head_align }}">
+            {% if section.settings.head != blank %}
+              <h2 class="section_heading {{ section.settings.font-size }} {% if section.settings.font_style == 'body' %}body_style{% endif %}">
+                {{ section.settings.head }}
+              </h2>
+            {% endif %}
+
+            {% if section.settings.text != blank %}
+              <div class="section_rteText " style="--text-max-width:{{ section.settings.max-width }}%;">
+                {{ section.settings.text }}
+              </div>
+            {% endif %}
+          </div>
+
+          {% if section.settings.enable_slider %}
+            <div class="fc_arrows">
+              <button aria-label="Previous button" class="swiper-button-prev">
+                {% render 'icon-left' %}
+              </button>
+              <button aria-label="Next button" class="swiper-button-next">
+                {% render 'icon-right' %}
+              </button>
+            </div>
+          {% else %}
+            {% if section.settings.show_btn %}
+              {% assign collection = section.settings.collection %}
+              {% if section.settings.show_viewall == 'heading_right' %}
+                <div
+                  class="button__wrapper{% if section.settings.wide_button %} button__wide{% endif %}"
+                >
+                  {% render 'section-button',
+                    button_label: 'View All Products',
+                    btn_link: collection.url,
+                    new_tab: false,
+                    style: section.settings.style
+                  %}
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <div class="featured_collection_inner {% if section.settings.collection == blank %} empty_collection{% endif %} card_block_{{ section.settings.back_block }}">
+          {% assign collection = section.settings.collection %}
+          {% if collection != blank %}
+            <div class="featured_col_inner_wrapper">
+              <div class="feat_section_container{% unless section.settings.enable_slider %} has_collection{% endunless %}">
+                {% if section.settings.enable_slider %}
+                  <div class="swiper"><div class="swiper-wrapper main-swiper-wrapper">
+                {% endif %}
+                {% for product in collection.products limit: section.settings.limit %}
+                  <div class="featured_coll_inner{% if section.settings.enable_slider %} swiper-slide{% endif %} {% if section.settings.collection != blank %}has_collection{% endif %}">
+                    {% render 'product-card',
+                      product: product,
+                      index: forloop.index,
+                      card_bg: section.settings.bg,
+                      card_bg_color: section.settings.bg_color,
+                      aspect_ratio: section.settings.aspect_ratio,
+                      show_badges: settings.show_badges,
+                      show_vendor: section.settings.show_vendor,
+                      show_options: section.settings.show_options,
+                      swatch_shape: settings.swatch_shape,
+                      quick_view: section.settings.show_quick_view,
+                      quick_view_position: section.settings.quick_view_position,
+                      columns: section.settings.columns,
+                      spacing: settings.horizontal_spacing,
+                      img_size: section.settings.img_size,
+                      show_secondary: section.settings.show_secondary,
+                      product_title_position: section.settings.product_title_position,
+                      title_upcase: section.settings.title_upcase,
+                      show_description: section.settings.show_description,
+                      back_block: section.settings.back_block,
+                      card_color: product.metafields.custom.product_card_color.value,
+                      product_content_align: section.settings.product_content_align
+                    %}
+                  </div>
+                {% endfor %}
+                {% if section.settings.enable_slider %}
+                  </div>
+                  <div class="swiper-pagination"></div>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="section_buttons_wrapper" style="--swiper-navigation-size: 22px">
+                {% if collection != blank and section.settings.show_btn %}
+                  {% if section.settings.show_viewall == 'below_product' %}
+                    <div
+                      class="button__wrapper{% if section.settings.wide_button %} button__wide{% endif %}"
+                    >
+                      {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+                      {% render 'section-button',
+                        button_label: 'View All Products',
+                        btn_link: collection.url,
+                        new_tab: false,
+                        style: section.settings.style
+                      %}
+                      {% if settings.enable_magnet %}</magnetic-button>{% endif %}
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            {% for i in (1..5) %}
+              <div class="featured_coll_inner_empt">
+                <div class="featured_coll_inner_empt_svg ratio">
+                  {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+                </div>
+                <div class="featured_coll_inner_empt_info">
+                  <p class="small-text">{{ 'onboarding.product_title' | t }}</p>
+                  <div class="empty_price">
+                    <p>{{ 'onboarding.product_price' | t | money }}</p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </swiper-section>
+    </featured-collection>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "class": "featured_collection",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "border-radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "head",
+      "label": "Heading",
+      "default": "Featured Collection"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font-size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description",
+      "default": "<p>Showcase the products from the collection in a grid or slider format.</p>"
+    },
+    {
+      "type": "range",
+      "id": "max-width",
+      "label": "Max width",
+      "min": 45,
+      "max": 100,
+      "default": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "info": "Content alignment works when the Show view all option is below the product.",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Select collection"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Products to show",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns per row",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 5,
+      "unit": "col"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Product cards"
+    },
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        }
+      ],
+      "default": "square"
+    },
+    {
+      "type": "select",
+      "id": "img_size",
+      "label": "Image size",
+      "options": [
+        {
+          "value": "contain",
+          "label": "Contain"
+        },
+        {
+          "value": "cover",
+          "label": "Cover"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary",
+      "label": "Show secondary image on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "bg",
+      "label": "Card background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Card background color",
+      "default": "#fff",
+      "visible_if": "{{ section.settings.bg }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "Enable quick view",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "quick_view_position",
+      "label": "Quick view position",
+      "options": [
+        {
+          "value": "top_right",
+          "label": "Top right"
+        },
+        {
+          "value": "bottom_right",
+          "label": "Bottom right"
+        }
+      ],
+      "default": "top_right"
+    },
+    {
+      "type": "select",
+      "id": "product_content_align",
+      "label": "Product content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "product_title_position",
+      "label": "Product title position",
+      "options": [
+        {
+          "value": "product-title-top",
+          "label": "Top"
+        },
+        {
+          "value": "product-title-bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "product-title-bottom"
+    },
+    {
+      "type": "checkbox",
+      "id": "title_upcase",
+      "label": "Title upcase",
+      "default": false,
+      "info": "Display title in upcase"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show description",
+      "default": false,
+      "info": "Display product description"
+    },
+    {
+      "type": "select",
+      "id": "back_block",
+      "label": "Background block position",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        },
+        {
+          "value": "none",
+          "label": "None"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_btn",
+      "label": "Enable view all button",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "show_viewall",
+      "label": "Show view all",
+      "options": [
+        {
+          "value": "heading_right",
+          "label": "Heading right"
+        },
+        {
+          "value": "below_product",
+          "label": "Below product"
+        }
+      ],
+      "default": "heading_right"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "primary",
+          "label": "Primary"
+        },
+        {
+          "value": "btn-secondary",
+          "label": "Secondary"
+        },
+        {
+          "value": "btn-link",
+          "label": "Link"
+        }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "checkbox",
+      "id": "wide_button",
+      "label": "Enable wide button",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Mobile layout"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Number of columns",
+      "options": [
+        {
+          "value": "1",
+          "label": "Single column"
+        },
+        {
+          "value": "2",
+          "label": "Double column"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured collection"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,76 @@
+{%- comment -%}
+  Renders a fade-carousel image card with a single testimonial overlay.
+  Expects: block (the carousel_testimonial block), reveal_class (sti-reveal / sti-reveal--left / sti-reveal--right)
+{%- endcomment -%}
+
+{%- liquid
+  assign img1 = block.settings.image_1
+  assign img2 = block.settings.image_2
+  assign img3 = block.settings.image_3
+  assign img4 = block.settings.image_4
+  assign img5 = block.settings.image_5
+  assign first_set = false
+-%}
+
+<div class="sti-img-card sti-carousel-card sti-img-card--{{ block.settings.image_ratio | default: 'tall' }} {{ reveal_class }}"
+     data-carousel-interval="{{ block.settings.autoplay_interval | default: 4 }}"
+     {{ block.shopify_attributes }}>
+  <div class="sti-carousel-slides">
+    {%- if img1 -%}
+      <div class="sti-carousel-slide is-active">{{ img1 | image_url: width: 800 | image_tag: loading: 'lazy', alt: img1.alt | default: '' }}</div>
+      {%- assign first_set = true -%}
+    {%- endif -%}
+    {%- if img2 -%}
+      <div class="sti-carousel-slide{% unless first_set %} is-active{% endunless %}">{{ img2 | image_url: width: 800 | image_tag: loading: 'lazy', alt: img2.alt | default: '' }}</div>
+      {%- assign first_set = true -%}
+    {%- endif -%}
+    {%- if img3 -%}
+      <div class="sti-carousel-slide{% unless first_set %} is-active{% endunless %}">{{ img3 | image_url: width: 800 | image_tag: loading: 'lazy', alt: img3.alt | default: '' }}</div>
+      {%- assign first_set = true -%}
+    {%- endif -%}
+    {%- if img4 -%}
+      <div class="sti-carousel-slide{% unless first_set %} is-active{% endunless %}">{{ img4 | image_url: width: 800 | image_tag: loading: 'lazy', alt: img4.alt | default: '' }}</div>
+      {%- assign first_set = true -%}
+    {%- endif -%}
+    {%- if img5 -%}
+      <div class="sti-carousel-slide{% unless first_set %} is-active{% endunless %}">{{ img5 | image_url: width: 800 | image_tag: loading: 'lazy', alt: img5.alt | default: '' }}</div>
+      {%- assign first_set = true -%}
+    {%- endif -%}
+    {%- unless first_set -%}
+      <div class="sti-carousel-slide is-active"><div style="background: linear-gradient(135deg,#0a2236,#336870); width:100%; height:100%;"></div></div>
+    {%- endunless -%}
+  </div>
+
+  <div class="sti-img-overlay sti-img-overlay--bottom sti-img-overlay--always" aria-hidden="true">
+    <div class="sti-overlay-inner">
+      {%- if block.settings.tag != blank -%}
+        <span class="sti-card-tag">{{ block.settings.tag }}</span>
+      {%- endif -%}
+      {%- if block.settings.rating > 0 -%}
+        <div class="sti-overlay-stars" aria-label="{{ block.settings.rating }} out of 5 stars">
+          {%- for i in (1..block.settings.rating) -%}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+      {%- if block.settings.quote != blank -%}
+        <p class="sti-overlay-quote" style="font-size: {{ block.settings.quote_font_size | default: 15 }}px; line-height: {{ block.settings.quote_line_height | default: 1.6 }};">{{ block.settings.quote }}</p>
+      {%- endif -%}
+      {%- if block.settings.author_name != blank or block.settings.avatar -%}
+        <div class="sti-overlay-author">
+          <div class="sti-overlay-avatar">
+            {%- if block.settings.avatar -%}
+              {{ block.settings.avatar | image_url: width: 120 | image_tag: loading: 'lazy', alt: block.settings.author_name }}
+            {%- else -%}
+              <div class="sti-overlay-avatar-fallback">{{ block.settings.author_name | slice: 0 | upcase }}</div>
+            {%- endif -%}
+          </div>
+          <div>
+            {%- if block.settings.author_name != blank -%}<p class="sti-overlay-name">{{ block.settings.author_name }}</p>{%- endif -%}
+            {%- if block.settings.author_meta != blank -%}<p class="sti-overlay-meta">{{ block.settings.author_meta }}</p>{%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>

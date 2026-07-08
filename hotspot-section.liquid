@@ -1,0 +1,746 @@
+{{ 'hotspot-section.css' | asset_url | stylesheet_tag }}
+
+{% style %}
+.hotspot_row.htp_show_column_gd_color {
+    background: linear-gradient(180deg, {{ section.settings.first_content_color }} 0%, {{ section.settings.second_content_color }} 100%);
+}
+     #shopify-section-{{ section.id }} .section_padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    position: relative;
+    z-index: 1;
+  }
+
+    @media screen and (max-width: 640px) {
+    #shopify-section-{{ section.id }} .section_padding {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+  }
+{% endstyle %}
+
+{{ 'featured-collection.css' | asset_url | stylesheet_tag }}
+{{ 'product-card.css' | asset_url | stylesheet_tag }}
+
+<style>
+/* ── BurnLab Hotspot custom styles ── */
+.htp_product_info    { padding: 0; }
+.hotspot_coll_inner  { background: #001a2e; }
+.htp_product_price   { padding-top: 10px; line-height: 22px; color: #07d16e; }
+.htp_product_title   { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 400; padding-top: 10px; }
+.lg-hotspot__button  { background: #07d16e; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; box-shadow: none !important; color: #001a2e; font-weight: 700; }
+.lg-hotspot__button:hover { background: #05b85e; }
+
+/* ── Remove Price: label ── */
+.htp_price_lable { display: none !important; }
+
+/* ── Responsive: mobile dot sizing ── */
+@media screen and (max-width: 640px) {
+  .lg-hotspot__button { width: 20px !important; height: 20px !important; font-size: 1.2rem !important; line-height: 1 !important; }
+}
+
+/* ── Mobile popup: keep within screen ── */
+@media screen and (max-width: 1023px) {
+  .htp-container-img .lg-hotspot .lg-hotspot__label {
+    display: block !important;
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: 88vw !important;
+    max-width: 340px !important;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .htp-container-img .lg-hotspot.lg-hotspot--selected .lg-hotspot__label {
+    opacity: 1 !important;
+    pointer-events: all !important;
+  }
+  body.htp-popup-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+  }
+}
+
+/* ── General alignment fixes ── */
+.hotspot_row  { align-items: flex-start; }
+.hotspot_coll_inner { display: flex; flex-direction: column; align-items: center; }
+.htp_product_info { text-align: center; width: 100%; }
+.featured_htp_img img { display: block; }
+
+/* ── Mobile: image with dots first, slider below ── */
+@media screen and (max-width: 1023px) {
+  .hotspot-main            { order: -1; }
+  .hotspot_product_slider  { order: 1; }
+}
+
+/* ── Slider hidden: hotspot image takes full width ── */
+.hotspot_row.htp-no-slider {
+  display: block;
+}
+.hotspot_row.htp-no-slider .hotspot-main {
+  width: 100%;
+  max-width: 100%;
+}
+</style>
+
+<div
+  class="color_scheme color-{{ section.settings.color_scheme }}{% unless section.settings.enable_slider %} no_slider{% endunless %} section_padding"
+  style=" --border-radius: {{ section.settings.border_radius }}px;
+    --columns: {{ section.settings.columns }};
+     {% if section.settings.column-mobile == 'single' %}
+      --mobile-columns: 1
+    {% else %}
+      --mobile-columns: 2
+    {% endif %} 
+   
+  "
+>
+  <div class="container">
+    <hotspot-image>
+      <div class="section_header fc_head {% if section.settings.show_viewall == 'heading_right' %} section_header-flex{% endif %}">
+        <div class="htp_head_head fc_head--{{ section.settings.head_align }}">
+            {% if section.settings.head != blank %}
+            <h2 class="section_heading {{ section.settings.font-size }} {% if section.settings.font_style == 'body' %}body_style{% endif %}">
+                {{ section.settings.head }}
+            </h2>
+            {% endif %}
+
+            {% if section.settings.text != blank %}
+            <div class="section_rteText ">
+                {{ section.settings.text }}
+            </div>
+            {% endif %}
+        </div>
+      </div>
+
+      <div class="hotspot_row {% if section.settings.show_column_gd_color %}htp_show_column_gd_color{% endif %}{% unless section.settings.show_product_slider %}  htp-no-slider{% endunless %}">
+        {%- if section.settings.show_product_slider -%}
+        <div class="hotspot_product_slider">
+            <swiper-section
+                data-slides-desktop="2.4"
+                data-slides-tablet="{{section.settings.columns }}"
+                 {% if section.settings.columns_mobile == '2' %}
+                data-slides-mobile="1.5"
+                {%else %}
+                data-slides-mobile="{{ section.settings.columns_mobile }}"
+                {% endif %}
+                data-gap="{{ settings.horizontal_spacing }}"
+                data-speed="800"
+                data-autoplay="true" 
+                data-delay="300" 
+                data-slides-direction="vertical"
+                data-direction-tablet="horizontal"
+                data-direction-mobile="horizontal"
+            >
+                <div class="hotspot_collection_inner {% if section.settings.collection == blank %} empty_collection{% endif %}">
+                {% assign collection = section.settings.collection %}
+                {% if collection != blank %}
+                    <div class="hotspot_col_inner_wrapper">
+                    <div class="hotspot_section_container{% unless section.settings.enable_slider %} has_collection{% endunless %}">
+                        {% if section.settings.enable_slider %}
+                        <div class="swiper"><div class="swiper-wrapper main-swiper-wrapper">
+                        {% endif %}
+                        {% for product in collection.products limit: section.settings.limit %}
+                        <div class="hotspot_coll_inner{% if section.settings.enable_slider %} swiper-slide{% endif %}">
+                            <div class="side-hotspot__slider">
+                              
+                                    {% if product.featured_image != blank %}
+                                    <a href="{{ product.url }}" aria-label="{{ product.title }}">
+                                    {% assign ratio = 1 %}
+                                    {% if section.settings.article_aspect_ratio == 'adapt' %}
+                                        {% assign ratio = product.featured_image.width | times: 1.0 | divided_by: product.featured_image.height %}
+                                    {% endif %}
+
+                                    <div
+                                        class="featured_htp_img image--hover ratio"
+                                        {% if ratio == 1 %}
+                                        style="--aspect-ratio: 1;"
+                                        {% else %}
+                                        style="--aspect-ratio: {{ 1 | times: 100 | divided_by: ratio | round: 2 }}%;"
+                                        {% endif %}
+                                    >
+                                        {{
+                                        product.featured_image
+                                        | image_url: width: 1200
+                                        | image_tag: loading: 'lazy', alt: product.title
+                                        }}
+                                    </div>
+                                    </a>
+                                    {% else %}
+
+                                    <div class="featured_htp_img image--hover ratio" style="--aspect-ratio: 1;">
+                                        {{ 'product-1' | placeholder_svg_tag: 'placeholder_svg' }}
+                                    </div>
+
+                                    {% endif %}
+                                    <div class="htp_product_info">
+                                     <a href="{{ product.url }}" aria-label="{{ product.title }}"><h6 class="htp_product_title">{{ product.title }}</h6></a>
+                                        <div class="htp_product_price">
+                                            {{ product.price | money_without_trailing_zeros }}
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if section.settings.enable_slider %}
+                        </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                    {% for i in (1..2) %}
+                    <div class="hotspot_coll_inner_empt">
+                        <div class="hotspot_coll_inner_empt_svg ratio">
+                        {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+                        </div>
+                        <div class="hotspot_coll_inner_empt_info">
+                        <p class="small-text">{{ 'onboarding.product_title' | t }}</p>
+                        <div class="empty_price">
+                            <p>{{ 'onboarding.product_price' | t | money }}</p>
+                        </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </swiper-section>
+        </div>
+        {%- endif -%}
+        {% comment %} hotspot column {% endcomment %}
+        <div class="hotspot-main">
+            <div class="hotspot-container">
+                <div class="htp-container-lable-mobile">
+                  {% for block in section.blocks %}
+                  {% assign product = all_products[block.settings.product] %}
+                  <div class="lg-hotspot__label mobile_hotspot_label" data-index="{{ forloop.index }}">
+                      <div class="manage_hotspot_inner">
+                        {% if product.featured_image != blank %}
+                        <a href="{{ product.url }}" aria-label="{{ product.title }}">
+                        {% assign ratio = 1 %}
+                        {% if section.settings.article_aspect_ratio == 'adapt' %}
+                            {% assign ratio = product.featured_image.width | times: 1.0 | divided_by: product.featured_image.height %}
+                        {% endif %}
+
+                        <div
+                            class="featured_htp_img image--hover ratio"
+                            {% if ratio == 1 %}
+                            style="--aspect-ratio: 1;"
+                            {% else %}
+                            style="--aspect-ratio: {{ 1 | times: 100 | divided_by: ratio | round: 2 }}%;"
+                            {% endif %}
+                        >
+                            {{
+                            product.featured_image
+                            | image_url: width: 1200
+                            | image_tag: loading: 'lazy', alt: product.title
+                            }}
+                        </div>
+                      </a>
+                        {% else %}
+
+                        <div class="featured_htp_img image--hover ratio" style="--aspect-ratio: 1;">
+                            {{ 'product-1' | placeholder_svg_tag: 'placeholder_svg' }}
+                        </div>
+
+                        {% endif %}
+                        <div class="htp_product_info">
+                            <a href="{{ product.url }}" aria-label="{{ product.title }}"><h6 class="htp_product_title">{{ product.title }}</h6></a>
+                            <div class="htp_product_price">
+                                {{ product.price | money_without_trailing_zeros }}
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div class="htp-container-img">
+                    <div class="hotspot-image">
+                        {% if section.settings.bg_image != blank %}                           
+                        {% assign ratio = 1 %}
+                        {% assign ratio_auto = section.settings.htp_image_ratio %}
+                        <div
+                            class="htp_img_inner{% if ratio_auto == 'auto' %} cwn_column_img_auto{% endif %}"
+                            {% if ratio_auto == 'auto' %}
+                                style="--first-image-aspect-ratio: {{ ratio_auto }}"
+                            {% else %}
+                                style="--aspect-ratio: {{ 1 | times: 100 | divided_by: ratio | round: 2 }}%"
+                            {% endif %}
+                            >
+                            {{
+                                section.settings.bg_image
+                                | image_url: width: 1920
+                                | image_tag: loading: 'lazy', alt: section.settings.bg_image.alt, class:"lg-image"
+                            }}
+                        </div>
+                        {% else %}
+                        {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                        {% endif %}
+                    </div>
+                  
+                    {% for block in section.blocks %}
+                        {% assign product = all_products[block.settings.product] %}
+
+                        {% if product != blank %}
+                        <div 
+                            class="lg-hotspot"
+                            data-x="{{ block.settings.horizontal_position }}"
+                            data-y="{{ block.settings.vertical_position }}"
+                            data-index="{{ forloop.index }}"
+                            style="--top: {{ block.settings.vertical_position }}%; --left: {{ block.settings.horizontal_position }}%;"
+                            {{ block.shopify_attributes }}
+                            >
+                            <div class="lg-hotspot__button">+</div>
+
+                            <div class="lg-hotspot__label">
+                              <div class="manage_hotspot_inner">
+                                {% if product.featured_image != blank %}
+                                <a href="{{ product.url }}" aria-label="{{ product.title }}">
+                                {% assign ratio = 1 %}
+                                {% if section.settings.article_aspect_ratio == 'adapt' %}
+                                    {% assign ratio = product.featured_image.width | times: 1.0 | divided_by: product.featured_image.height %}
+                                {% endif %}
+
+                                <div
+                                    class="featured_htp_img image--hover ratio"
+                                    {% if ratio == 1 %}
+                                    style="--aspect-ratio: 1;"
+                                    {% else %}
+                                    style="--aspect-ratio: {{ 1 | times: 100 | divided_by: ratio | round: 2 }}%;"
+                                    {% endif %}
+                                >
+                                    {{
+                                    product.featured_image
+                                    | image_url: width: 1200
+                                    | image_tag: loading: 'lazy', alt: product.title
+                                    }}
+                                </div>
+                                </a>
+                                {% else %}
+
+                                <div class="featured_htp_img image--hover ratio" style="--aspect-ratio: 1;">
+                                    {{ 'product-1' | placeholder_svg_tag: 'placeholder_svg' }}
+                                </div>
+
+                                {% endif %}
+                                <div class="htp_product_info">
+                                    <a href="{{ product.url }}" aria-label="{{ product.title }}"><h6 class="htp_product_title">{{ product.title }}</h6></a>
+                                    <div class="htp_product_price">
+                                        {{ product.price | money_without_trailing_zeros }}
+                                    </div>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+      </div>
+    </hotspot-image>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.addEventListener('click', function (e) {
+    var hotspot = e.target.closest('.lg-hotspot');
+    if (!hotspot) {
+      document.querySelectorAll('.lg-hotspot--selected').forEach(function (el) {
+        el.classList.remove('lg-hotspot--selected');
+      });
+      document.body.classList.remove('htp-popup-open');
+    } else {
+      var wasSelected = hotspot.classList.contains('lg-hotspot--selected');
+      document.querySelectorAll('.lg-hotspot--selected').forEach(function (el) {
+        el.classList.remove('lg-hotspot--selected');
+      });
+      if (!wasSelected) {
+        hotspot.classList.add('lg-hotspot--selected');
+        document.body.classList.add('htp-popup-open');
+      } else {
+        document.body.classList.remove('htp-popup-open');
+      }
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Hotspot feature",
+  "class": "section hotspot-feature",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_column_gd_color",
+      "label": "Show grediant color",
+      "default":false
+    },
+    {
+      "type": "color",
+      "id": "first_content_color",
+      "label": "First grediant color",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.show_column_gd_color == true }}"
+    },
+    {
+      "type": "color",
+      "id": "second_content_color",
+      "label": "Second grediant color",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.show_column_gd_color == true }}"
+    }, 
+    {
+      "type": "text",
+      "id": "head",
+      "label": "Heading",
+      "default": "Hotspot image"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font-size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description",
+      "default": "<p>Showcase the products from the collection in a grid or slider format.</p>"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "info": "Content alignment works when the Show view all option is below the product.",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_slider",
+      "label": "Show rolling product list",
+      "default": true,
+      "info": "Disable to show only the hotspot image with plus buttons. Product cards still open on click."
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Select collection"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Products to show",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns per row",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 5,
+      "unit": "col"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Product cards"
+    },
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "Image aspect ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        }
+      ],
+      "default": "square"
+    },
+    {
+      "type": "select",
+      "id": "img_size",
+      "label": "Image size",
+      "options": [
+        {
+          "value": "contain",
+          "label": "Contain"
+        },
+        {
+          "value": "cover",
+          "label": "Cover"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary",
+      "label": "Show secondary image on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "bg",
+      "label": "Card background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Card background color",
+      "default": "#fff",
+      "visible_if": "{{ section.settings.bg }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "Enable quick view",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Mobile layout"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Number of columns",
+      "options": [
+        {
+          "value": "1",
+          "label": "Single column"
+        },
+        {
+          "value": "2",
+          "label": "Double column"
+        }
+      ],
+      "default": "2"
+    },
+    {
+        "type": "header",
+        "content": "Image"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_column_image",
+      "label": "Show column image",
+      "default": false,
+      "info":"Display background image/video as a column image"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "Image",
+      "info": "Recommended dimensions: 1920×800 px"
+    },
+    {
+      "type": "range",
+      "id": "max-width",
+      "label": "Background image width",
+      "min": 30,
+      "max": 65,
+      "default": 30,
+      "step": 5,
+      "unit": "%",
+      "visible_if": "{{section.settings.show_column_image == true}}"
+    },
+    {
+      "type": "select",
+      "id": "htp_image_ratio",
+      "label": "Image aspect ratio",
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": "Auto" },
+        { "value": "1", "label": "Square" },
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "blocks":[
+    {
+        "type": "product",
+        "name":"Add product",
+        "settings":[
+            {
+                "type": "product",
+                "id": "product",
+                "label": "Product"
+            },
+            {
+                "type": "range",
+                "label": "Vertical position",
+                "id": "vertical_position",
+                "min": 0,
+                "max": 90,
+                "default": 30,
+                "unit": "%"
+            },
+            {
+                "type": "range",
+                "label": "Horizontal position",
+                "id": "horizontal_position",
+                "min": 0,
+                "max": 90,
+                "default": 30,
+                "unit": "%"
+            }
+        ]
+    }
+],
+  "presets": [
+    {
+      "name": "Hotspot feature"
+    }
+  ]
+}
+{% endschema %}

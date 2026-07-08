@@ -25,9 +25,17 @@
   assign cta2_label   = section.settings.cta2_label
   assign cta2_url     = section.settings.cta2_url
   assign cta2_style   = section.settings.cta2_style   | default: 'outline'
+  assign cta_main_label = section.settings.cta_main_label
+  assign cta_main_url   = section.settings.cta_main_url
+  assign cta_main_style = section.settings.cta_main_style | default: 'primary'
+
+  assign t_img_size        = section.settings.transform_img_size        | default: 64
+  assign t_img_size_mobile = section.settings.transform_img_size_mobile | default: 52
+  assign t_label_size  = section.settings.transform_label_size | default: 11
+  assign t_btn_gap     = section.settings.transform_btn_gap    | default: 16
   assign stat1_num    = section.settings.stat1_num
   assign stat1_label  = section.settings.stat1_label
-  assign stat2_num    = section.settings.stat2_num    | default: '100%'
+  assign stat2_num    = section.settings.stat2_num
   assign stat2_label  = section.settings.stat2_label
   assign stat3_num    = section.settings.stat3_num
   assign stat3_label  = section.settings.stat3_label
@@ -70,6 +78,13 @@
 
   assign heading_size = section.settings.heading_size | default: 72
   assign body_size    = section.settings.body_size    | default: 16
+
+  assign heading_uppercase    = section.settings.heading_uppercase
+  assign heading_text_style   = section.settings.heading_text_style  | default: 'solid'
+  assign heading_size_desktop = section.settings.heading_size_desktop | default: 9
+  assign heading_size_mobile  = section.settings.heading_size_mobile  | default: 14
+  assign heading_opacity_raw  = section.settings.heading_opacity      | default: 100
+  assign heading_opacity_dec  = heading_opacity_raw | divided_by: 100.0
 
   assign enable_glitch       = section.settings.enable_glitch
   assign glitch_intensity    = section.settings.glitch_intensity    | default: 40
@@ -446,6 +461,47 @@
   overflow-wrap: break-word; word-break: break-word;
 }
 #{{ section_id }} .dbs-heading em { font-style: normal; color: var(--dbs-accent); }
+
+/* ── FULL-WIDTH BACKGROUND HEADING (fullscreen layout) ──── */
+#{{ section_id }} .dbs-heading-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+  font-family: var(--font-primary);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-size: {{ heading_size_desktop }}vw;
+  opacity: {{ heading_opacity_dec }};
+  color: var(--dbs-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+#{{ section_id }} .dbs-heading-bg--upper { text-transform: uppercase; }
+#{{ section_id }} .dbs-heading-bg--solid { color: var(--dbs-text); -webkit-text-stroke: 0; }
+#{{ section_id }} .dbs-heading-bg--outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--dbs-text);
+}
+#{{ section_id }} .dbs-heading-bg--accent { color: var(--dbs-accent); -webkit-text-stroke: 0; }
+#{{ section_id }} .dbs-heading-bg--accent-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--dbs-accent);
+}
+#{{ section_id }} .dbs-heading-bg--gradient {
+  background: linear-gradient(90deg, var(--dbs-accent) 0%, var(--dbs-text) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 #{{ section_id }} .dbs-sub {
   font-family: var(--font-secondary);
   font-size: clamp(1.3rem, 1.5vw, var(--dbs-body-size));
@@ -508,6 +564,155 @@
 }
 #{{ section_id }} .dbs-btn--navy { background:#001a2e; color:#eaf4f5; border:1.5px solid rgba(234,244,245,0.12); }
 #{{ section_id }} .dbs-btn--teal { background:#336870; color:#eaf4f5; }
+#{{ section_id }} .dbs-btn--dark-shadow {
+  background: var(--dbs-accent); color:#001a2e;
+  box-shadow: 0 14px 38px rgba(0,0,0,0.6), 0 4px 14px rgba(0,0,0,0.45);
+}
+#{{ section_id }} .dbs-btn--dark-shadow:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 6px 18px rgba(0,0,0,0.5); }
+#{{ section_id }} .dbs-btn--glass {
+  background: rgba(255,255,255,0.08); color: var(--dbs-text);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 34px rgba(0,0,0,0.4);
+}
+#{{ section_id }} .dbs-btn--glass:hover { background: rgba(255,255,255,0.16); }
+#{{ section_id }} .dbs-btn--white {
+  background:#ffffff; color:#001a2e;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+}
+#{{ section_id }} .dbs-btn--white:hover { box-shadow: 0 18px 44px rgba(0,0,0,0.5); }
+
+/* ── MAIN CTA — pinned to bottom-center, overlapping the model ── */
+#{{ section_id }} .dbs-cta-main {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4vw, 48px);
+  transform: translateX(-50%);
+  z-index: 25;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: {{ t_btn_gap }}px;
+  width: max-content;
+  max-width: 90vw;
+}
+#{{ section_id }} .dbs-cta-main .dbs-btn { pointer-events: auto; }
+
+/* ── TRANSFORM IMAGE STRIP (below Shop Now) ─────────────────── */
+#{{ section_id }} .dbs-transform-imgs {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  pointer-events: auto;
+}
+#{{ section_id }} .dbs-transform-img {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+#{{ section_id }} .dbs-transform-img__pic {
+  width: {{ t_img_size }}px;
+  height: {{ t_img_size }}px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(7,209,110,0.25);
+  transition: border-color 0.25s ease, transform 0.25s var(--ease-back), box-shadow 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+#{{ section_id }} .dbs-transform-img__pic:hover {
+  border-color: var(--dbs-accent);
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(7,209,110,0.28);
+}
+#{{ section_id }} .dbs-transform-img__pic img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+#{{ section_id }} .dbs-transform-img__label {
+  font-family: var(--font-secondary);
+  font-size: {{ t_label_size }}px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(234,244,245,0.5);
+  white-space: nowrap;
+}
+[data-theme="light"] #{{ section_id }} .dbs-transform-img__label { color: rgba(0,26,46,0.5); }
+[data-theme="light"] #{{ section_id }} .dbs-transform-img__pic {
+  background: rgba(0,26,46,0.06);
+  border-color: rgba(0,26,46,0.18);
+}
+
+/* Separator dots between images */
+#{{ section_id }} .dbs-transform-sep {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(7,209,110,0.35);
+  flex-shrink: 0;
+}
+
+/* ── 768px tablet: use mobile image size from schema ── */
+@media (max-width: 768px) {
+  #{{ section_id }} .dbs-transform-imgs { gap: clamp(0.4rem, 1.8vw, 0.65rem); }
+  #{{ section_id }} .dbs-transform-img__pic {
+    width: {{ t_img_size_mobile }}px;
+    height: {{ t_img_size_mobile }}px;
+  }
+  #{{ section_id }} .dbs-transform-sep { display: none; }
+  #{{ section_id }} .dbs-transform-img__label {
+    font-size: clamp(0.58rem, 1.4vw, 0.7rem);
+  }
+}
+
+/* ── 480px mobile: full-width 3×2 grid, large viewport-relative images ── */
+@media (max-width: 480px) {
+  /* Zero top padding + keep section at its natural height setting */
+  #{{ section_id }} {
+    padding-top: 0 !important;
+    padding-bottom: clamp(1.5rem, 4vw, 3rem) !important;
+  }
+
+  /* Full-width CTA column — raised bottom so images have breathing room */
+  #{{ section_id }} .dbs-cta-main {
+    width: 92vw;
+    max-width: 92vw;
+    bottom: clamp(2rem, 5vw, 3.5rem);  /* more gap at the bottom */
+    gap: clamp(0.75rem, 2.5vw, 1.2rem);
+    padding-top: clamp(0.8rem, 2.5vw, 1.4rem); /* breathing room above Shop Now */
+  }
+  /* Button fills the full CTA width */
+  #{{ section_id }} .dbs-cta-main .dbs-btn { width: 100%; }
+
+  /* 3-column grid that fills the full CTA width */
+  #{{ section_id }} .dbs-transform-imgs {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    gap: clamp(0.6rem, 2.5vw, 1rem);
+    /* clear flex overrides */
+    max-width: unset;
+    justify-content: unset;
+    flex-wrap: unset;
+  }
+  /* Each cell centers its circular image */
+  #{{ section_id }} .dbs-transform-img {
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Image: mobile schema size, capped so it never overflows its 1fr cell */
+  #{{ section_id }} .dbs-transform-img__pic {
+    width: min(24vw, {{ t_img_size_mobile }}px);
+    height: min(24vw, {{ t_img_size_mobile }}px);
+  }
+  #{{ section_id }} .dbs-transform-img__label { display: none; }
+  #{{ section_id }} .dbs-transform-sep { display: none; }
+}
 
 /* ── REVEAL ─────────────────────────────────────────────── */
 #{{ section_id }} .dbs-reveal {
@@ -517,7 +722,8 @@
 #{{ section_id }} .dbs-reveal.is-visible { opacity: 1; transform: translateY(0); }
 #{{ section_id }}.is-visible .dbs-reveal,
 .shopify-design-mode #{{ section_id }} .dbs-reveal,
-.shopify-design-mode #{{ section_id }} .dbs-badge { opacity:1 !important; transform:none !important; }
+.shopify-design-mode #{{ section_id }} .dbs-badge,
+.shopify-design-mode #{{ section_id }} .dbs-cta-main { opacity:1 !important; transform:none !important; }
 
 /* ── REDUCED MOTION ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -545,8 +751,11 @@
   #{{ section_id }} .dbs-content    { order: 2!important; padding-top: clamp(2rem,6vw,3rem); }
   #{{ section_id }} .dbs-canvas-split { order: 1!important; min-height: clamp(280px,80vw,420px); }
   #{{ section_id }} .dbs-heading    { font-size: clamp(2rem,8vw,3rem); }
+  #{{ section_id }} .dbs-heading-bg { font-size: {{ heading_size_mobile }}vw; }
   #{{ section_id }} .dbs-ctas       { flex-direction: column; align-items: stretch; }
   #{{ section_id }} .dbs-btn        { justify-content: center; width: 100%; }
+  #{{ section_id }} .dbs-cta-main   { width: 100%; padding-inline: clamp(1rem, 5vw, 2rem); }
+  #{{ section_id }} .dbs-cta-main .dbs-btn { width: 100%; }
   #{{ section_id }} .dbs-bgtext     { font-size: clamp(3.5rem,14vw,7rem); }
   #{{ section_id }} .dbs-overlay-content { max-width: 90%; padding: clamp(1.4rem,5vw,2.5rem); }
   #{{ section_id }} .dbs-overlay-content--center-left { top: auto; bottom: 8%; transform: none; }
@@ -595,6 +804,11 @@
 
   {%- if layout_mode == 'fullscreen' -%}
 
+    <!-- ── Full-width background heading ───────────────────── -->
+    {%- if heading != blank -%}
+    <h2 class="dbs-heading-bg dbs-reveal dbs-heading-bg--{{ heading_text_style }}{% if heading_uppercase %} dbs-heading-bg--upper{% endif %}">{{ heading }}</h2>
+    {%- endif -%}
+
     <!-- ── FULLSCREEN: canvas fills entire section ────────── -->
     <canvas
       id="dbs-canvas-{{ section.id }}"
@@ -619,7 +833,6 @@
     <div class="dbs-overlay-content dbs-overlay-content--{{ content_overlay_pos }}"
          style="opacity: {{ content_opacity_dec }};">
       {%- if eyebrow != blank -%}<p class="dbs-eyebrow dbs-reveal">{{ eyebrow }}</p>{%- endif -%}
-      {%- if heading != blank -%}<h2 class="dbs-heading dbs-reveal">{{ heading }}</h2>{%- endif -%}
       {%- if subheading != blank -%}<p class="dbs-sub dbs-reveal">{{ subheading }}</p>{%- endif -%}
       {%- assign has_stats = false -%}
       {%- if stat1_num != blank or stat2_num != blank or stat3_num != blank -%}{%- assign has_stats = true -%}{%- endif -%}
@@ -689,6 +902,47 @@
       </div>
     </div>
 
+  {%- endif -%}
+
+  <!-- ── Main CTA — pinned to bottom-center, overlapping the model ── -->
+  {%- if cta_main_label != blank -%}
+  <div class="dbs-cta-main">
+
+    <!-- Shop Now button -->
+    <a href="{{ cta_main_url | default: '#' }}" class="dbs-btn dbs-btn--{{ cta_main_style }}">{{ cta_main_label }}</a>
+
+    <!-- Transform images strip (what the dumbbell converts into) -->
+    {%- assign has_transform_imgs = false -%}
+    {%- for i in (1..6) -%}
+      {%- assign img_key = 'transform_img_' | append: i -%}
+      {%- if section.settings[img_key] != blank -%}
+        {%- assign has_transform_imgs = true -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- if has_transform_imgs -%}
+    <div class="dbs-transform-imgs">
+      {%- for i in (1..6) -%}
+        {%- assign img_key   = 'transform_img_'   | append: i -%}
+        {%- assign label_key = 'transform_label_' | append: i -%}
+        {%- assign t_img     = section.settings[img_key] -%}
+        {%- assign t_label   = section.settings[label_key] -%}
+        {%- if t_img != blank -%}
+          {%- unless forloop.first -%}<span class="dbs-transform-sep" aria-hidden="true"></span>{%- endunless -%}
+          <div class="dbs-transform-img">
+            <div class="dbs-transform-img__pic">
+              {{ t_img | image_url: width: 160 | image_tag: loading: 'lazy', alt: t_label | default: '' }}
+            </div>
+            {%- if t_label != blank -%}
+            <span class="dbs-transform-img__label">{{ t_label }}</span>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+    {%- endif -%}
+
+  </div>
   {%- endif -%}
 
 </section>
@@ -788,6 +1042,7 @@
       if (KINETIC_ON && !reducedMotion) initKinetic();
       if (PARTICLES_ON && !(isMobile && LOW_POWER) && !reducedMotion) initParticles();
       initReveal();
+      initCtaParallax();
     });
   } else {
     window.__dbsLoadLibs(function(){
@@ -798,6 +1053,7 @@
       if (PARTICLES_ON && !(isMobile && LOW_POWER) && !reducedMotion) initParticles();
       if (GLITCH_ON && !reducedMotion) scheduleGlitch();
       initReveal();
+      initCtaParallax();
     });
   }
 
@@ -1302,6 +1558,24 @@
     root.querySelectorAll('.dbs-badge').forEach(function(b){bobs.observe(b);});
   }
 
+  /* ── MAIN CTA — rises from the bottom on scroll (parallax) ── */
+  function initCtaParallax(){
+    var btn = root.querySelector('.dbs-cta-main');
+    if (!btn || reducedMotion || typeof gsap === 'undefined') return;
+    gsap.fromTo(btn,
+      { y: 140, opacity: 0 },
+      {
+        y: 0, opacity: 1, ease: 'none',
+        scrollTrigger: {
+          trigger: root,
+          start: 'top bottom',
+          end: 'bottom 60%',
+          scrub: 0.6
+        }
+      }
+    );
+  }
+
 }());
 </script>
 {% endif %}
@@ -1436,6 +1710,55 @@
       "default": "Built to Dominate"
     },
     {
+      "type": "checkbox",
+      "id": "heading_uppercase",
+      "label": "Uppercase heading",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "heading_text_style",
+      "label": "Heading text style",
+      "options": [
+        { "value": "solid", "label": "Solid" },
+        { "value": "outline", "label": "Outlined" },
+        { "value": "accent", "label": "Accent color" },
+        { "value": "accent-outline", "label": "Accent outline" },
+        { "value": "gradient", "label": "Gradient" }
+      ],
+      "default": "solid"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_desktop",
+      "label": "Heading size (desktop)",
+      "min": 4,
+      "max": 25,
+      "step": 1,
+      "unit": "vw",
+      "default": 9
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "label": "Heading size (mobile)",
+      "min": 6,
+      "max": 25,
+      "step": 1,
+      "unit": "vw",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "heading_opacity",
+      "label": "Heading opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
       "type": "text",
       "id": "subheading",
       "label": "Subheading",
@@ -1486,6 +1809,150 @@
         { "value": "teal",    "label": "Teal" }
       ],
       "default": "outline"
+    },
+    {
+      "type": "header",
+      "content": "Main CTA Button (overlaps model, bottom-center)"
+    },
+    {
+      "type": "text",
+      "id": "cta_main_label",
+      "label": "Main CTA Label"
+    },
+    {
+      "type": "url",
+      "id": "cta_main_url",
+      "label": "Main CTA URL"
+    },
+    {
+      "type": "select",
+      "id": "cta_main_style",
+      "label": "Main CTA Style",
+      "options": [
+        { "value": "primary",     "label": "Primary (Green)" },
+        { "value": "outline",     "label": "Outline" },
+        { "value": "navy",        "label": "Navy" },
+        { "value": "teal",        "label": "Teal" },
+        { "value": "dark-shadow", "label": "Primary (Dark Shadow)" },
+        { "value": "glass",       "label": "Glass" },
+        { "value": "white",       "label": "White" }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "header",
+      "content": "Transform Images (below Shop Now button)",
+      "info": "Show what the dumbbell converts into — up to 5 equipment images displayed in a row beneath the CTA button."
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_1",
+      "label": "Equipment Image 1"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_1",
+      "label": "Equipment 1 Label",
+      "placeholder": "e.g. Kettlebell"
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_2",
+      "label": "Equipment Image 2"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_2",
+      "label": "Equipment 2 Label",
+      "placeholder": "e.g. Barbell"
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_3",
+      "label": "Equipment Image 3"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_3",
+      "label": "Equipment 3 Label",
+      "placeholder": "e.g. Push-up Bar"
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_4",
+      "label": "Equipment Image 4"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_4",
+      "label": "Equipment 4 Label",
+      "placeholder": "e.g. Curl Bar"
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_5",
+      "label": "Equipment Image 5"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_5",
+      "label": "Equipment 5 Label",
+      "placeholder": "e.g. Tricep Bar"
+    },
+    {
+      "type": "image_picker",
+      "id": "transform_img_6",
+      "label": "Equipment Image 6"
+    },
+    {
+      "type": "text",
+      "id": "transform_label_6",
+      "label": "Equipment 6 Label",
+      "placeholder": "e.g. Resistance Band"
+    },
+    {
+      "type": "range",
+      "id": "transform_img_size",
+      "label": "Image Size",
+      "min": 40,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "info": "Size of each circular equipment image (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "transform_img_size_mobile",
+      "label": "Image Size (Mobile)",
+      "min": 30,
+      "max": 90,
+      "step": 2,
+      "unit": "px",
+      "default": 52,
+      "info": "Size of each circular equipment image on mobile and tablet (≤768px)"
+    },
+    {
+      "type": "range",
+      "id": "transform_label_size",
+      "label": "Label Font Size",
+      "min": 8,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 11,
+      "info": "Font size of the equipment name labels"
+    },
+    {
+      "type": "range",
+      "id": "transform_btn_gap",
+      "label": "Gap: Button → Images",
+      "min": 4,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 16,
+      "info": "Spacing between the Shop Now button and the image strip"
     },
     {
       "type": "header",

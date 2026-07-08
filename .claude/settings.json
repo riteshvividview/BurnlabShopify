@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const fs=require\\('fs'\\); const c=fs.readFileSync\\('hero-section.liquid','utf8'\\); const m=c.match\\(/{% schema %}\\([\\\\s\\\\S]*?\\){% endschema %}/\\); JSON.parse\\(m[1]\\); console.log\\('Schema JSON valid'\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const c=fs.readFileSync\\('3d-dumbbell-showcase.liquid','utf8'\\); const m=c.match\\(/{% schema %}\\([\\\\s\\\\S]*?\\){% endschema %}/\\); JSON.parse\\(m[1]\\); console.log\\('Schema JSON valid'\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const c=fs.readFileSync\\('c:/VividView Websites/BurnLab/BurnlabShopify/hero-section.liquid','utf8'\\); const m=c.match\\(/{% schema %}\\([\\\\s\\\\S]*?\\){% endschema %}/\\); JSON.parse\\(m[1]\\); console.log\\('Schema JSON valid'\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const c=fs.readFileSync\\('c:/VividView Websites/BurnLab/BurnlabShopify/hero-section.liquid','utf8'\\); const m=c.match\\(/{% schema %}\\([\\\\s\\\\S]*?\\){% endschema %}/\\); const s=JSON.parse\\(m[1]\\); console.log\\('Schema JSON valid'\\); const ids=s.settings.filter\\(x=>x.id\\).map\\(x=>x.id\\); const dup=ids.filter\\(\\(v,i\\)=>ids.indexOf\\(v\\)!==i\\); console.log\\('Duplicate ids:', dup.length?dup:'none'\\);\")"
+    ]
+  }
+}

@@ -7,18 +7,18 @@
 
 {%- liquid
   assign section_id      = 'burnlab-clist-' | append: section.id
-  assign eyebrow         = section.settings.eyebrow         | default: 'Shop By Category'
-  assign heading         = section.settings.heading         | default: 'Our Collections'
-  assign subtitle        = section.settings.subtitle        | default: 'Explore a curated selection of collections to find exactly what you are looking for'
+  assign eyebrow         = section.settings.eyebrow       
+  assign heading         = section.settings.heading        
+  assign subtitle        = section.settings.subtitle       
   assign show_hdr        = section.settings.show_header
   assign hdr_align       = section.settings.header_align    | default: 'center'
   assign bg_type         = section.settings.bg_type         | default: 'pale'
   assign bg_custom       = section.settings.bg_custom       | default: '#001a2e'
   assign text_color      = section.settings.text_color      | default: '#001a2e'
   assign accent_color    = section.settings.accent_color    | default: '#07d16e'
-  assign col_desktop     = section.settings.columns_desktop | default: 4
-  assign col_tablet      = section.settings.columns_tablet  | default: 2
-  assign card_gap        = section.settings.card_gap        | default: 20
+  assign card_width_desktop = section.settings.card_width_desktop | default: 260
+  assign card_width_mobile  = section.settings.card_width_mobile  | default: 160
+  assign card_gap           = section.settings.card_gap           | default: 20
   assign card_radius     = section.settings.card_radius     | default: 16
   assign card_style      = section.settings.card_style      | default: 'overlay'
   assign aspect_ratio    = section.settings.aspect_ratio    | default: '3/4'
@@ -26,9 +26,9 @@
   assign overlay_color   = section.settings.overlay_color   | default: '#001a2e'
   assign img_hover       = section.settings.img_hover       | default: 'zoom'
   assign show_shop_cta   = section.settings.show_shop_cta
-  assign shop_cta_label  = section.settings.shop_cta_label  | default: 'Shop Now'
+  assign shop_cta_label  = section.settings.shop_cta_label 
   assign enable_bg_text  = section.settings.enable_bg_text
-  assign bg_text_val     = section.settings.bg_text_val     | default: 'COLLECTIONS'
+  assign bg_text_val     = section.settings.bg_text_val  
   assign enable_grain    = section.settings.enable_grain
   assign enable_glows    = section.settings.enable_glows
   assign enable_anim     = section.settings.enable_animations
@@ -62,8 +62,7 @@
     --section-bg:       {{ resolved_bg }};
     --section-text:     {{ text_color }};
     --section-accent:   {{ accent_color }};
-    --col-desktop:      {{ col_desktop }};
-    --col-tablet:       {{ col_tablet }};
+    --card-min-w:       {{ card_width_desktop }}px;
     --card-gap:         {{ card_gap }}px;
     --card-radius:      {{ card_radius }}px;
     --overlay-color:    {{ overlay_color }};
@@ -258,45 +257,49 @@
   /* ── GRID ───────────────────────────────────────────────── */
   #{{ section_id }} .clist-grid {
     display: grid;
-    grid-template-columns: repeat(var(--col-desktop), 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-w), 1fr));
     gap: var(--card-gap);
     align-items: start;
   }
 
   /* ── CARD BASE ──────────────────────────────────────────── */
   #{{ section_id }} .clist-card {
-    position: relative;
     display: block;
     text-decoration: none;
     border-radius: var(--card-radius);
     overflow: hidden;
-    will-change: transform;
-    transition: box-shadow 0.45s ease, transform 0.45s var(--ease-back);
     color: inherit;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ── IMAGE WRAPPER ──────────────────────────────────────── */
+  /* ── IMAGE WRAPPER — in-flow, drives card height, containing block for all overlays ── */
   #{{ section_id }} .clist-img-wrap {
     position: relative;
-    overflow: hidden;
-    aspect-ratio: {{ aspect_ratio }};
     width: 100%;
-    background: rgba(0,26,46,0.12);
+    aspect-ratio: {{ aspect_ratio }};
+    overflow: hidden;
   }
 
+  /* img fills wrapper absolutely */
   #{{ section_id }} .clist-img {
+    position: absolute;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.75s var(--ease-expo), filter 0.4s ease;
+    transition: transform 0.75s var(--ease-expo);
     will-change: transform;
-    transform: scale(1.0);
+  }
+
+  #{{ section_id }} .clist-card:hover .clist-img {
+    transform: scale(1.06);
   }
 
   /* Placeholder when no image */
   #{{ section_id }} .clist-img-placeholder {
+    position: absolute;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     display: flex;
@@ -311,28 +314,36 @@
     height: clamp(40px, 8vw, 64px);
   }
 
-  /* ── GRADIENT OVERLAY (inside img-wrap) ─────────────────── */
+  /* Per-card colour tint */
+  #{{ section_id }} .clist-img-tint {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--card-tint, #001a2e);
+    opacity: var(--card-tint-opacity, 0.2);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Bottom gradient — always on so default title stays readable */
   #{{ section_id }} .clist-card-grad {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent 30%,
-      var(--overlay-color) 100%
-    );
-    opacity: var(--overlay-opacity);
-    pointer-events: none;
+    bottom: 0; left: 0; right: 0;
+    height: 65%;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.80) 100%);
     z-index: 2;
-    transition: opacity 0.4s ease;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
   }
+  #{{ section_id }} .clist-card:hover .clist-card-grad { opacity: 0; }
 
   /* ── BADGE ──────────────────────────────────────────────── */
   #{{ section_id }} .clist-badge {
     position: absolute;
     top: clamp(10px, 1.5vw, 16px);
     right: clamp(10px, 1.5vw, 16px);
-    z-index: 5;
+    z-index: 10;
     padding: 5px 12px;
     border-radius: 100px;
     background: var(--section-accent);
@@ -344,184 +355,188 @@
     text-transform: uppercase;
     line-height: 1;
     pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #{{ section_id }} .clist-card:hover .clist-badge { opacity: 0; }
+
+  /* ── DEFAULT STATE — title pinned to bottom ───────────────── */
+  #{{ section_id }} .clist-card-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 5;
+    padding: clamp(1.2rem, 2vw, 2rem);
+    transition: opacity 0.3s ease, transform 0.35s var(--ease-expo);
+  }
+  #{{ section_id }} .clist-card:hover .clist-card-bottom {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #{{ section_id }} .clist-card-bottom-title {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 1.5vw, {{ card_title_size }}px);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
   }
 
-  /* ── CARD INFO ──────────────────────────────────────────── */
-  #{{ section_id }} .clist-card-info {
-    padding: clamp(1rem, 1.5vw, 1.4rem) clamp(0.8rem, 1.2vw, 1.2rem);
+  /* ── HOVER PANEL — slides up from bottom ─────────────────── */
+  #{{ section_id }} .clist-card-hover {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    padding: clamp(1.2rem, 2vw, 1.8rem);
+    transform: translateY(100%);
+    transition: transform 0.45s var(--ease-expo);
+    will-change: transform;
+    overflow: hidden;
   }
-
-  /* ── CARD TITLE ─────────────────────────────────────────── */
-  #{{ section_id }} .clist-card-title {
-    font-family: var(--font-secondary);
-    font-weight: 600;
-    font-size: clamp(1.3rem, 1.4vw, {{ card_title_size }}px);
-    line-height: 1.25;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    transition: color 0.25s ease;
-  }
-
-  #{{ section_id }} .clist-card-count {
-    font-family: var(--font-secondary);
-    font-size: clamp(1.1rem, 1vw, 1.2rem);
-    font-weight: 400;
-    opacity: 0.55;
-    line-height: 1;
-  }
-
-  /* ── SHOP CTA ───────────────────────────────────────────── */
-  #{{ section_id }} .clist-cta-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-secondary);
-    font-size: clamp(1.1rem, 1.1vw, 1.2rem);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--section-accent);
-    margin-top: 0.3rem;
-    transition: gap 0.25s var(--ease-back);
-    overflow-wrap: break-word;
-  }
-  #{{ section_id }} .clist-card:hover .clist-cta-row { gap: 10px; }
-
-  /* ════════════════════════════════════════════
-     CARD STYLE VARIANTS
-  ════════════════════════════════════════════ */
-
-  /* ── OVERLAY style ──────────────────────────────────────── */
-  #{{ section_id }} .clist-card--overlay .clist-img-wrap {
-    aspect-ratio: {{ aspect_ratio }};
-    border-radius: var(--card-radius);
-  }
-  #{{ section_id }} .clist-card--overlay .clist-card-info {
+  /* Panel background via ::before so content opacity is unaffected */
+  #{{ section_id }} .clist-card-hover::before {
+    content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: clamp(1.4rem, 2.2vw, 2.2rem) clamp(1.2rem, 1.8vw, 1.8rem);
-    z-index: 4;
-    gap: 0.4rem;
+    inset: 0;
+    background: var(--hover-panel-color, #001a2e);
+    opacity: var(--hover-panel-opacity, 0.92);
+    z-index: -1;
   }
-  #{{ section_id }} .clist-card--overlay .clist-card-title {
-    color: #eaf4f5;
-  }
-  #{{ section_id }} .clist-card--overlay .clist-card-count {
-    color: rgba(234,244,245,0.65);
-  }
-  #{{ section_id }} .clist-card--overlay .clist-card-grad {
-    display: block;
-  }
-  /* "Shop Now" in overlay starts slightly below, slides up on hover */
-  #{{ section_id }} .clist-card--overlay .clist-cta-row {
-    color: var(--section-accent);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.35s ease, transform 0.35s var(--ease-back), gap 0.25s var(--ease-back);
-    margin-top: 0.2rem;
-  }
-  #{{ section_id }} .clist-card--overlay:hover .clist-cta-row {
-    opacity: 1;
+  #{{ section_id }} .clist-card:hover .clist-card-hover {
     transform: translateY(0);
-    gap: 10px;
   }
 
-  /* ── BELOW style ────────────────────────────────────────── */
-  #{{ section_id }} .clist-card--below {
-    background: var(--below-bg);
-  }
-  #{{ section_id }} .clist-card--below .clist-img-wrap {
-    border-radius: var(--card-radius) var(--card-radius) 0 0;
-    aspect-ratio: {{ aspect_ratio }};
-  }
-  #{{ section_id }} .clist-card--below .clist-card-grad {
-    display: none;
-  }
-  #{{ section_id }} .clist-card--below .clist-card-info {
-    padding: clamp(1rem, 1.6vw, 1.6rem) clamp(1rem, 1.4vw, 1.4rem);
-  }
-  #{{ section_id }} .clist-card--below .clist-card-title { color: #eaf4f5; }
-  #{{ section_id }} .clist-card--below .clist-card-count { color: rgba(234,244,245,0.55); }
-
-  /* ── FRAMED style ───────────────────────────────────────── */
-  #{{ section_id }} .clist-card--framed {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(234,244,245,0.10);
-    padding: clamp(0.8rem, 1.2vw, 1.2rem);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-  #{{ section_id }} .clist-card--framed .clist-img-wrap {
-    border-radius: calc(var(--card-radius) - 6px);
-    aspect-ratio: {{ aspect_ratio }};
-  }
-  #{{ section_id }} .clist-card--framed .clist-card-grad {
-    display: none;
-  }
-  #{{ section_id }} .clist-card--framed .clist-card-info {
-    padding: clamp(0.8rem, 1vw, 1rem) 0 0;
-  }
-  #{{ section_id }} .clist-card--framed .clist-card-title { color: #eaf4f5; }
-  #{{ section_id }} .clist-card--framed .clist-card-count { color: rgba(234,244,245,0.55); }
-
-  /* ── PLAIN style (matches screenshot — light bg, title below) */
-  #{{ section_id }} .clist-card--plain .clist-img-wrap {
-    border-radius: var(--card-radius);
-    aspect-ratio: {{ aspect_ratio }};
-  }
-  #{{ section_id }} .clist-card--plain .clist-card-grad { display: none; }
-  #{{ section_id }} .clist-card--plain .clist-card-info {
-    padding: clamp(0.8rem, 1.2vw, 1.2rem) 0;
-  }
-  #{{ section_id }} .clist-card--plain .clist-card-title {
-    color: var(--section-text);
-  }
-  #{{ section_id }} .clist-card--plain .clist-card-count {
-    color: var(--section-text);
-    opacity: 0.55;
+  /* Title at top of hover panel */
+  #{{ section_id }} .clist-hover-title {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 1.5vw, {{ card_title_size }}px);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    margin-bottom: clamp(0.5rem, 0.8vw, 0.85rem);
+    flex-shrink: 0;
   }
 
-  /* ── HOVER LIFT on all card styles ─────────────────────── */
-  #{{ section_id }} .clist-card:hover {
-    box-shadow: 0 22px 55px rgba(7,209,110,0.13), 0 6px 20px rgba(0,0,0,0.18);
-    transform: translateY(-5px) scale(1.01);
-  }
-  #{{ section_id }} .clist-card:hover .clist-card-title {
-    color: var(--section-accent);
-  }
-  #{{ section_id }} .clist-card--plain:hover .clist-card-title {
-    color: var(--section-accent);
+  /* Description */
+  #{{ section_id }} .clist-hover-desc {
+    font-family: var(--font-secondary);
+    font-size: clamp(1.1rem, 1.15vw, 1.35rem);
+    font-weight: 400;
+    color: rgba(234,244,245,0.72);
+    line-height: 1.6;
+    margin-bottom: clamp(0.8rem, 1.2vw, 1.1rem);
+    flex-shrink: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  /* ── IMAGE HOVER EFFECTS ────────────────────────────────── */
-  {%- if img_hover == 'zoom' -%}
-  #{{ section_id }} .clist-card:hover .clist-img {
-    transform: scale(1.08);
+  /* CTA button */
+  #{{ section_id }} .clist-hover-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    background: var(--section-accent);
+    color: var(--bl-navy);
+    border-radius: 100px;
+    font-family: var(--font-secondary);
+    font-size: clamp(1rem, 1.05vw, 1.2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    align-self: flex-start;
+    margin-bottom: clamp(0.8rem, 1.2vw, 1.1rem);
+    flex-shrink: 0;
+    transition: transform 0.25s var(--ease-back), box-shadow 0.25s ease;
   }
-  {%- elsif img_hover == 'pan' -%}
-  #{{ section_id }} .clist-card:hover .clist-img {
-    transform: scale(1.04) translateX(6px);
+  #{{ section_id }} .clist-card:hover .clist-hover-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(7,209,110,0.35);
   }
-  {%- elsif img_hover == 'brightness' -%}
-  #{{ section_id }} .clist-card:hover .clist-img {
+  #{{ section_id }} .clist-hover-cta svg {
+    width: 11px; height: 11px; flex-shrink: 0;
+  }
+
+  /* CTA — outlined style */
+  #{{ section_id }} .clist-hover-cta--outlined {
+    background: transparent;
+    color: #ffffff;
+    border: 2px solid rgba(255,255,255,0.65);
+  }
+  #{{ section_id }} .clist-card:hover .clist-hover-cta--outlined:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #ffffff;
+    box-shadow: none;
+    transform: translateY(-2px);
+  }
+
+  /* CTA — underline style (like reference image) */
+  #{{ section_id }} .clist-hover-cta--underline {
+    background: transparent;
+    color: #ffffff;
+    border-radius: 0;
+    padding: 3px 0;
+    border-bottom: 2px solid #ffffff;
+    letter-spacing: 0.08em;
+    gap: 6px;
+  }
+  #{{ section_id }} .clist-card:hover .clist-hover-cta--underline:hover {
+    transform: none;
+    opacity: 0.75;
+    box-shadow: none;
+  }
+
+  /* Text alignment — bottom title */
+  #{{ section_id }} .clist-card-bottom--center { text-align: center; }
+  #{{ section_id }} .clist-card-bottom--right  { text-align: right; }
+
+  /* Text alignment — hover panel */
+  #{{ section_id }} .clist-card-hover--center .clist-hover-title,
+  #{{ section_id }} .clist-card-hover--center .clist-hover-desc {
+    text-align: center;
+  }
+  #{{ section_id }} .clist-card-hover--center .clist-hover-cta {
+    align-self: center;
+  }
+  #{{ section_id }} .clist-card-hover--right .clist-hover-title,
+  #{{ section_id }} .clist-card-hover--right .clist-hover-desc {
+    text-align: right;
+  }
+  #{{ section_id }} .clist-card-hover--right .clist-hover-cta {
+    align-self: flex-end;
+  }
+
+  /* Hover product image — fills remaining space */
+  #{{ section_id }} .clist-hover-img-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  #{{ section_id }} .clist-hover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s var(--ease-expo);
+  }
+  #{{ section_id }} .clist-card:hover .clist-hover-img {
     transform: scale(1.04);
-    filter: brightness(1.12) saturate(1.05);
   }
-  {%- elsif img_hover == 'zoom-dark' -%}
-  #{{ section_id }} .clist-card:hover .clist-img {
-    transform: scale(1.08);
-    filter: brightness(0.72) saturate(0.85);
+
+  /* Touch devices: show static bottom title, hide hover panel */
+  @media (hover: none) {
+    #{{ section_id }} .clist-card-hover  { display: none; }
+    #{{ section_id }} .clist-card-bottom { opacity: 1 !important; pointer-events: auto !important; }
+    #{{ section_id }} .clist-card-grad   { opacity: 1 !important; }
+    #{{ section_id }} .clist-badge       { opacity: 1 !important; }
+    #{{ section_id }} .clist-img         { transform: none !important; }
   }
-  {%- elsif img_hover == 'zoom-bright' -%}
-  #{{ section_id }} .clist-card:hover .clist-img {
-    transform: scale(1.07);
-    filter: brightness(1.15) contrast(1.05);
-  }
-  {%- endif -%}
 
   /* ── REVEAL ANIMATION (page-flip catalog feel) ──────────── */
   #{{ section_id }} .clist-reveal {
@@ -602,15 +617,15 @@
     #{{ section_id }} .clist-subtitle { text-align: left !important; }
   }
 
-  @media (max-width: 1024px) {
-    #{{ section_id }} .clist-grid {
-      grid-template-columns: repeat(var(--col-tablet), 1fr);
+  @media (max-width: 767px) {
+    #{{ section_id }} {
+      --card-min-w: {{ card_width_mobile }}px;
     }
   }
 
   @media (max-width: 480px) {
     #{{ section_id }} .clist-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-min-w), 1fr));
     }
     #{{ section_id }} .clist-heading {
       font-size: clamp(2rem, 8vw, 3rem);
@@ -689,16 +704,29 @@
             assign bk_count = bk_collection.all_products_count
           endif
 
-          assign bk_badge = block.settings.badge_text
+          assign bk_badge      = block.settings.badge_text
+          assign bk_desc       = block.settings.description
+          assign bk_cta_label  = block.settings.cta_label
+          assign bk_hover_img  = block.settings.hover_image
+          assign bk_text_align = block.settings.hover_text_align | default: 'center'
+          assign bk_cta_style  = block.settings.cta_style | default: 'filled'
+
+          assign hp_color_raw    = block.settings.hover_panel_color | default: '#001a2e'
+          assign hp_opacity_pct  = block.settings.hover_panel_opacity | default: 90
+          assign hp_opacity      = hp_opacity_pct | times: 1.0 | divided_by: 100
+          assign tint_pct        = block.settings.overlay_opacity | default: 20
+          assign card_tint       = tint_pct | times: 1.0 | divided_by: 100
         -%}
         <a
           href="{{ bk_url }}"
-          class="clist-card clist-card--{{ card_style }} clist-reveal"
+          class="clist-card clist-reveal"
           data-card-index="{{ forloop.index0 }}"
           aria-label="{{ bk_title }}"
+          style="--hover-panel-color: {{ hp_color_raw }}; --hover-panel-opacity: {{ hp_opacity }}; --card-tint: {{ hp_color_raw }}; --card-tint-opacity: {{ card_tint }};"
           {{ block.shopify_attributes }}
         >
-          <!-- Image -->
+          <!-- img-wrap is in-flow and sets card height via aspect-ratio.
+               Everything else is absolute inside it. -->
           <div class="clist-img-wrap">
             {%- if bk_img != blank -%}
               {{ bk_img | image_url: width: 900 | image_tag:
@@ -718,29 +746,41 @@
                 </svg>
               </div>
             {%- endif -%}
-
-            <!-- Gradient overlay (used by overlay/dark styles) -->
+            <div class="clist-img-tint" aria-hidden="true"></div>
             <div class="clist-card-grad" aria-hidden="true"></div>
-
             {%- if bk_badge != blank -%}
-            <span class="clist-badge">{{ bk_badge }}</span>
+              <span class="clist-badge">{{ bk_badge }}</span>
             {%- endif -%}
-          </div>
 
-          <!-- Card info (positioned by card style via CSS) -->
-          <div class="clist-card-info">
-            {%- if bk_count != '' -%}
-            <span class="clist-card-count">{{ bk_count }} items</span>
-            {%- endif -%}
-            <h3 class="clist-card-title">{{ bk_title }}</h3>
-            {%- if show_shop_cta -%}
-            <span class="clist-cta-row" aria-hidden="true">
-              {{ shop_cta_label }}
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M1 6H11M11 6L6.5 1.5M11 6L6.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            {%- endif -%}
+            <!-- Default state: title pinned to bottom of wrapper -->
+            <div class="clist-card-bottom clist-card-bottom--{{ bk_text_align }}">
+              <h3 class="clist-card-bottom-title">{{ bk_title }}</h3>
+            </div>
+
+            <!-- Hover panel: slides up from bottom inside wrapper -->
+            <div class="clist-card-hover clist-card-hover--{{ bk_text_align }}" aria-hidden="true">
+              <h3 class="clist-hover-title">{{ bk_title }}</h3>
+              {%- if bk_desc != blank -%}
+                <p class="clist-hover-desc">{{ bk_desc }}</p>
+              {%- endif -%}
+              {%- if bk_cta_label != blank -%}
+                <span class="clist-hover-cta clist-hover-cta--{{ bk_cta_style }}">
+                  {{ bk_cta_label }}
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M1 6H11M11 6L6.5 1.5M11 6L6.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              {%- endif -%}
+              {%- if bk_hover_img != blank -%}
+                <div class="clist-hover-img-wrap">
+                  {{ bk_hover_img | image_url: width: 600 | image_tag:
+                    loading: 'lazy',
+                    alt: bk_title,
+                    class: 'clist-hover-img'
+                  }}
+                </div>
+              {%- endif -%}
+            </div>
           </div>
         </a>
       {%- endfor -%}
@@ -813,32 +853,7 @@
   }, { threshold: 0.12 });
   cardEls.forEach(function (card) { cardObserver.observe(card); });
 
-  /* ── 4. SUBTLE PARALLAX TILT on card hover ──────────── */
-  if (!reducedMotion) {
-    cardEls.forEach(function (card) {
-      card.addEventListener('mousemove', function (e) {
-        var rect = card.getBoundingClientRect();
-        var cx = rect.left + rect.width  / 2;
-        var cy = rect.top  + rect.height / 2;
-        var dx = (e.clientX - cx) / (rect.width  / 2);
-        var dy = (e.clientY - cy) / (rect.height / 2);
-        card.style.transform = [
-          'translateY(-5px)',
-          'scale(1.01)',
-          'rotateX(' + (-dy * 4) + 'deg)',
-          'rotateY(' + (dx * 4) + 'deg)'
-        ].join(' ');
-        card.style.transition = 'box-shadow 0.4s ease';
-      }, { passive: true });
-
-      card.addEventListener('mouseleave', function () {
-        card.style.transform  = '';
-        card.style.transition = 'box-shadow 0.45s ease, transform 0.5s var(--ease-back)';
-      });
-    });
-  }
-
-  /* ── 5. CLEANUP on section unmount ──────────────────── */
+  /* ── 4. CLEANUP on section unmount ──────────────────── */
   document.addEventListener('shopify:section:unload', function (e) {
     if (e.detail.sectionId === '{{ section.id }}') {
       hdrObserver.disconnect();
@@ -869,37 +884,111 @@
         },
         {
           "type": "header",
-          "content": "Manual Overrides"
+          "content": "Card Background"
         },
         {
           "type": "image_picker",
           "id": "custom_image",
-          "label": "Custom Image",
+          "label": "Background Image",
           "info": "Overrides the collection image if set."
+        },
+        {
+          "type": "range",
+          "id": "overlay_opacity",
+          "label": "Image Tint Opacity",
+          "min": 0,
+          "max": 80,
+          "step": 5,
+          "unit": "%",
+          "default": 20,
+          "info": "Dark tint applied over the background image for contrast."
+        },
+        {
+          "type": "header",
+          "content": "Card Text"
         },
         {
           "type": "text",
           "id": "custom_title",
-          "label": "Custom Title",
-          "info": "Overrides the collection title if set."
+          "label": "Title",
+          "info": "Shown at the bottom before hover, and at the top of the hover panel. Overrides collection title."
         },
         {
-          "type": "url",
-          "id": "custom_url",
-          "label": "Custom Link URL",
-          "info": "Overrides the collection link if set."
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "info": "Shown on hover below the title. Leave empty to hide."
         },
         {
           "type": "text",
           "id": "badge_text",
           "label": "Badge Text",
-          "info": "Leave empty to hide badge. Example: New, Sale, Hot."
+          "info": "Small label pinned to the top-right corner. Leave empty to hide."
         },
         {
-          "type": "checkbox",
-          "id": "show_product_count",
-          "label": "Show Product Count",
-          "default": false
+          "type": "header",
+          "content": "Hover CTA & Image"
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "CTA Button Label",
+          "default": "Shop Now",
+          "info": "e.g. 'Shop Dumbbells'. Leave empty to hide the button."
+        },
+        {
+          "type": "select",
+          "id": "cta_style",
+          "label": "CTA Button Style",
+          "options": [
+            { "value": "filled",    "label": "Filled (solid colour)" },
+            { "value": "outlined",  "label": "Outlined (border only)" },
+            { "value": "underline", "label": "Underline (text link)" }
+          ],
+          "default": "filled"
+        },
+        {
+          "type": "select",
+          "id": "hover_text_align",
+          "label": "Text Alignment",
+          "options": [
+            { "value": "left",   "label": "Left" },
+            { "value": "center", "label": "Center" },
+            { "value": "right",  "label": "Right" }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "url",
+          "id": "custom_url",
+          "label": "Link URL",
+          "info": "Overrides the collection link if set."
+        },
+        {
+          "type": "image_picker",
+          "id": "hover_image",
+          "label": "Hover Product Image",
+          "info": "Displayed at the bottom of the hover panel. Leave empty to hide."
+        },
+        {
+          "type": "header",
+          "content": "Hover Panel"
+        },
+        {
+          "type": "color",
+          "id": "hover_panel_color",
+          "label": "Panel Background Color",
+          "default": "#001a2e"
+        },
+        {
+          "type": "range",
+          "id": "hover_panel_opacity",
+          "label": "Panel Opacity",
+          "min": 50,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "default": 90
         }
       ]
     }
@@ -1099,6 +1188,28 @@
         { "value": "9/16", "label": "9:16 Tall Portrait"     }
       ],
       "default": "3/4"
+    },
+    {
+      "type": "range",
+      "id": "card_width_desktop",
+      "label": "Card Min Width (Desktop)",
+      "min": 180,
+      "max": 500,
+      "step": 20,
+      "unit": "px",
+      "default": 260,
+      "info": "Minimum card width on desktop. The grid auto-fills columns based on this."
+    },
+    {
+      "type": "range",
+      "id": "card_width_mobile",
+      "label": "Card Min Width (Mobile)",
+      "min": 120,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 160,
+      "info": "Minimum card width on screens under 768px."
     },
     {
       "type": "range",

@@ -1,0 +1,680 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Search Drawer Snippet
+  HTML structure matches Evolve's expected shape exactly:
+    - search_drawer_header  → heading + close button only
+    - header_search_content → <search-drawer> wraps form + results
+  This keeps Evolve's SearchDrawer JS working correctly.
+  ============================================================
+{% endcomment %}
+
+{{ 'search-drawer.css' | asset_url | stylesheet_tag }}
+
+<style>
+  /* ── RESET ─────────────────────────────────────────────── */
+  #search--drawer *, #search--drawer *::before, #search--drawer *::after {
+    box-sizing: border-box;
+  }
+
+  /* ── BACKDROP ───────────────────────────────────────────── */
+  #search--drawer.drawer-wrapper {
+    background: rgba(0, 26, 46, 0.88) !important;
+  }
+
+  /* ── PANEL — offset below the sticky navbar ─────────────── */
+  #search--drawer .drawer-wrapper_inner.search_drawer_inner {
+    background: #001a2e !important;
+    margin-top: var(--header-height, 64px) !important;
+    height: calc(100dvh - var(--header-height, 64px) - 2rem) !important;
+    border-radius: 0 0 1.2rem 1.2rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* ── PANEL HEADER (heading + close only) ───────────────── */
+  #search--drawer .search_drawer_header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: clamp(1.4rem, 2.5vw, 2rem) clamp(1.6rem, 5vw, 3.2rem) !important;
+    border-bottom: 1px solid rgba(234,244,245,0.08) !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+  #search--drawer .search_drawer_header h4 {
+    font-family: 'Archivo Black', sans-serif !important;
+    font-size: clamp(1.1rem, 1.6vw, 1.4rem) !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: rgba(234,244,245,0.6) !important;
+    margin: 0 !important;
+  }
+
+  #search--drawer .drawer-wrapper__close {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(234,244,245,0.06);
+    border: 1.5px solid rgba(234,244,245,0.12);
+    cursor: pointer;
+    color: #eaf4f5;
+    flex-shrink: 0;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  #search--drawer .drawer-wrapper__close:hover {
+    background: rgba(7,209,110,0.1);
+    border-color: #07d16e;
+    color: #07d16e;
+    transform: scale(1.08);
+  }
+  #search--drawer .drawer-wrapper__close .icon_wrapper {
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #search--drawer .drawer-wrapper__close .icon_wrapper svg { width: 14px; height: 14px; stroke: currentColor; }
+
+  /* ── SCROLLABLE CONTENT AREA ────────────────────────────── */
+  #search--drawer .header_search_content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(7,209,110,0.25) transparent;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #search--drawer .header_search_content::-webkit-scrollbar { width: 4px; }
+  #search--drawer .header_search_content::-webkit-scrollbar-track { background: transparent; }
+  #search--drawer .header_search_content::-webkit-scrollbar-thumb { background: rgba(7,209,110,0.25); border-radius: 4px; }
+
+  /* <search-drawer> custom element — must be block so it fills width */
+  #search--drawer search-drawer {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* ── SEARCH FORM ────────────────────────────────────────── */
+  #search--drawer .search_drawer_form {
+    padding: clamp(1.4rem, 2.5vw, 2rem) clamp(1.6rem, 5vw, 3.2rem);
+    border-bottom: 1px solid rgba(234,244,245,0.07);
+  }
+
+  #search--drawer .search_drawer_input { position: relative; }
+
+  #search--drawer .input_wrapper {
+    display: flex !important;
+    align-items: center !important;
+    background: rgba(234,244,245,0.06) !important;
+    border: 1.5px solid rgba(234,244,245,0.14) !important;
+    border-radius: 100px !important;
+    overflow: hidden !important;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+    position: relative !important;
+  }
+  #search--drawer .input_wrapper:focus-within {
+    border-color: #07d16e !important;
+    box-shadow: 0 0 0 3px rgba(7,209,110,0.12), 0 8px 32px rgba(7,209,110,0.08) !important;
+  }
+
+  /* Keep Evolve's absolute positioning for buttons — don't fight it */
+  #search--drawer .input_wrapper input[type="text"],
+  #search--drawer .input_wrapper input[type="search"] {
+    width: calc(100% - 4rem) !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    padding: 1.1rem 1.4rem !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: clamp(1rem, 1.3vw, 1.15rem) !important;
+    color: #eaf4f5 !important;
+    border-radius: var(--input-border-radius, 0) 0 0 var(--input-border-radius, 0) !important;
+  }
+  #search--drawer .input_wrapper input::placeholder { color: rgba(234,244,245,0.35) !important; }
+  #search--drawer .input_wrapper label { display: none !important; }
+
+  /* Submit button — keep absolute, restyle */
+  #search--drawer button#search_drawer_btn {
+    position: absolute !important;
+    top: 50% !important;
+    right: 4px !important;
+    transform: translateY(-50%) !important;
+    width: 34px !important; height: 34px !important;
+    max-width: 34px !important;
+    background: #07d16e !important;
+    border: none !important; border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  #search--drawer button#search_drawer_btn:hover {
+    transform: translateY(-50%) scale(1.08) !important;
+    box-shadow: 0 4px 16px rgba(7,209,110,0.4) !important;
+  }
+  #search--drawer button#search_drawer_btn svg { width: 15px; height: 15px; }
+  #search--drawer button#search_drawer_btn svg path,
+  #search--drawer button#search_drawer_btn svg circle { fill: none !important; stroke: #001a2e !important; stroke-width: 2 !important; }
+
+  /* Reset button — keep hidden via Evolve's default behaviour (display:none until input has value) */
+  #search--drawer button.search_drawer_reset {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(234,244,245,0.4) !important;
+    cursor: pointer !important;
+  }
+  #search--drawer button.search_drawer_reset svg path { fill: rgba(234,244,245,0.4) !important; }
+
+  /* ── EMPTY STATE ────────────────────────────────────────── */
+  #search--drawer .empty_search_drawer {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: clamp(2rem, 4vw, 4rem) !important;
+    padding: clamp(1.4rem, 2.5vw, 2.4rem) clamp(1.6rem, 5vw, 3.2rem) !important;
+    margin: 0 !important;
+  }
+
+  /* Featured image */
+  #search--drawer .search_drawer_img_wrapper {
+    position: relative !important;
+    flex: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    aspect-ratio: 16/9 !important;
+    background: rgba(234,244,245,0.04) !important;
+    display: block !important;
+  }
+  #search--drawer .search_drawer_img,
+  #search--drawer .search_drawer_img_head { grid-area: unset !important; }
+  #search--drawer .search_drawer_img { width: 100%; height: 100%; }
+  #search--drawer .search_drawer_img img {
+    width: 100%; height: 100%;
+    aspect-ratio: unset !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
+    transition: transform 0.5s ease !important;
+  }
+  #search--drawer .search_drawer_img_wrapper:hover img { transform: scale(1.04); }
+  #search--drawer .search_drawer_img_head {
+    position: absolute !important;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,26,46,0.85) 0%, transparent 100%) !important;
+    padding: 1.6rem 1.2rem 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+  }
+  #search--drawer .search_drawer_img_head h3 {
+    font-family: 'Archivo Black', sans-serif !important;
+    font-weight: 400 !important;
+    font-size: clamp(1.1rem, 1.6vw, 1.5rem) !important;
+    color: #eaf4f5 !important;
+    background: none !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0.4rem !important;
+  }
+  #search--drawer .search_drawer_img_head a {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #07d16e !important;
+    text-decoration: none !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    transition: gap 0.2s ease !important;
+  }
+  #search--drawer .search_drawer_img_head a:hover { gap: 0.7rem !important; }
+
+  /* Categories column */
+  #search--drawer .categories_wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.6rem !important;
+    width: 100% !important;
+    flex: 1 !important;
+  }
+
+  #search--drawer .popular_collections_wrapper h5,
+  #search--drawer .popular_products_wrapper h5 {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.10em !important;
+    text-transform: uppercase !important;
+    color: rgba(234,244,245,0.4) !important;
+    margin-bottom: 0.8rem !important;
+  }
+
+  #search--drawer .popular_collections_inner {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+  #search--drawer .popular_collections_block {
+    background: rgba(234,244,245,0.05) !important;
+    border: 1px solid rgba(234,244,245,0.1) !important;
+    border-radius: 100px !important;
+    transition: border-color 0.2s ease !important;
+  }
+  #search--drawer .popular_collections_block:hover { border-color: #07d16e !important; }
+  #search--drawer .popular_collections_block a {
+    display: inline-block !important;
+    padding: 0.4rem 1rem !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.88rem !important;
+    color: #eaf4f5 !important;
+    text-decoration: none !important;
+    width: max-content !important;
+    border: none !important;
+    transition: color 0.2s ease !important;
+  }
+  #search--drawer .popular_collections_block:hover a { color: #07d16e !important; }
+
+  #search--drawer .popular_products_inner {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.7rem !important;
+    margin: 0 !important;
+  }
+  #search--drawer .popular_products {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    position: relative !important;
+    cursor: pointer !important;
+  }
+  /* Evolve uses position:absolute on the <a> link inside popular_products */
+  #search--drawer .popular_products > a {
+    position: absolute !important;
+    top: 0; left: 0; width: 100%; height: 100% !important;
+    z-index: 1 !important;
+    font-size: 0 !important;
+    border-radius: 12px !important;
+  }
+  #search--drawer .popular_product_img {
+    aspect-ratio: 1 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    background: rgba(234,244,245,0.05) !important;
+    border: 1px solid rgba(234,244,245,0.08) !important;
+    transition: border-color 0.2s ease !important;
+  }
+  #search--drawer .popular_products:hover .popular_product_img { border-color: rgba(7,209,110,0.35) !important; }
+  #search--drawer .popular_product_img img,
+  #search--drawer .popular_product_img svg.placeholder_svg {
+    width: 100% !important; height: 100% !important;
+    aspect-ratio: 1 !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    transition: transform 0.4s ease !important;
+  }
+  #search--drawer .popular_products:hover .popular_product_img img { transform: scale(1.05); }
+  #search--drawer .popular_product_info p {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.82rem !important;
+    color: #eaf4f5 !important;
+    line-height: 1.4 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  #search--drawer .popular_product_price {
+    display: flex !important; align-items: center !important;
+    gap: 0.4rem !important; flex-wrap: wrap !important;
+    margin-top: 0.2rem !important;
+  }
+  #search--drawer span.pp_regular {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #07d16e !important;
+    margin-right: 0 !important;
+  }
+  #search--drawer span.pp_cap {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.75rem !important;
+    color: rgba(234,244,245,0.35) !important;
+    text-decoration: line-through !important;
+    opacity: 1 !important;
+  }
+
+  /* ── LIVE RESULTS PANEL ─────────────────────────────────── */
+  #search--drawer .result_search_drawer {
+    padding: clamp(1.2rem, 2vw, 1.8rem) clamp(1.6rem, 5vw, 3.2rem) clamp(2rem, 3vw, 3rem) !important;
+    border-top: 1px solid rgba(234,244,245,0.07) !important;
+    margin: 0 !important;
+  }
+
+  #search--drawer .result_search_inner {
+    display: flex !important;
+    gap: 2rem !important;
+    flex-wrap: nowrap !important;
+    min-height: 40px !important;
+    align-items: start !important;
+  }
+
+  /* Hide articles and collections — products only, full width */
+  #search--drawer .search_group:has(.search_result_article_card),
+  #search--drawer .search_group:has(.search_result_collection_card) { display: none !important; }
+
+  /* Products group — full width */
+  #search--drawer .search_group:has(.search_result_product_card) {
+    flex: 1 !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  #search--drawer .result_search_inner h6 {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: clamp(0.95rem, 1.2vw, 1.1rem) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: rgba(234,244,245,0.55) !important;
+    margin-bottom: 1.2rem !important;
+  }
+
+  #search--drawer .search_result_product_card {
+    display: flex !important;
+    gap: 1.2rem !important;
+    margin: 0 0 1.2rem !important;
+    align-items: center !important;
+  }
+  #search--drawer .search_result_product_card_img {
+    max-width: 10rem !important; flex: 0 0 10rem !important;
+    position: relative !important;
+    border-radius: 12px !important; overflow: hidden !important;
+    background: rgba(234,244,245,0.05) !important;
+    border: 1px solid rgba(234,244,245,0.1) !important;
+    aspect-ratio: 1 !important;
+  }
+  #search--drawer .search_result_product_card_img img {
+    width: 100% !important; height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
+  }
+  #search--drawer .search_result_product_card_info a {
+    color: #eaf4f5 !important;
+    text-decoration: none !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: clamp(1.05rem, 1.4vw, 1.25rem) !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+    display: block !important;
+  }
+  #search--drawer .search_result_product_card_info a:hover { color: #07d16e !important; }
+  #search--drawer .search_result_product_price {
+    display: flex !important; align-items: center !important;
+    margin-top: 0.5rem !important; gap: 0.7rem !important;
+  }
+  #search--drawer .search_result_product_price span {
+    color: #07d16e !important;
+    font-weight: 700 !important;
+    font-size: clamp(1rem, 1.3vw, 1.15rem) !important;
+    margin-right: 0 !important;
+  }
+  #search--drawer .search_result_product_price s {
+    color: rgba(234,244,245,0.35) !important;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+  }
+
+  /* ── STATIC PLACEHOLDER (empty state, no JS dependency) ──── */
+  /* Shows when input is empty; hides as soon as user types   */
+  #search--drawer .bl-drawer-placeholder {
+    padding: clamp(2rem, 4vw, 3.5rem) clamp(1.6rem, 5vw, 3.2rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1.6rem !important;
+    text-align: center !important;
+  }
+  /* Hide when the user has typed something */
+  #search--drawer search-drawer:has(#search_drawer_input:not(:placeholder-shown)) .bl-drawer-placeholder {
+    display: none !important;
+  }
+  #search--drawer .bl-placeholder-icon {
+    width: 56px; height: 56px;
+    background: rgba(7,209,110,0.1);
+    border: 1.5px solid rgba(7,209,110,0.25);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #search--drawer .bl-placeholder-icon svg { width: 26px; height: 26px; stroke: #07d16e; fill: none; stroke-width: 1.8; }
+  #search--drawer .bl-placeholder-title {
+    font-family: 'Archivo Black', sans-serif !important;
+    font-size: clamp(1.2rem, 2vw, 1.6rem) !important;
+    font-weight: 400 !important;
+    color: #eaf4f5 !important;
+    margin: 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+  #search--drawer .bl-placeholder-sub {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: clamp(0.9rem, 1.1vw, 1rem) !important;
+    color: rgba(234,244,245,0.45) !important;
+    margin: -0.6rem 0 0 !important;
+  }
+  #search--drawer .bl-placeholder-pills {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+  }
+  #search--drawer .bl-placeholder-pills a {
+    display: inline-block !important;
+    padding: 0.45rem 1.1rem !important;
+    background: rgba(234,244,245,0.06) !important;
+    border: 1px solid rgba(234,244,245,0.12) !important;
+    border-radius: 100px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.9rem !important;
+    color: #eaf4f5 !important;
+    text-decoration: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+  }
+  #search--drawer .bl-placeholder-pills a:hover {
+    background: rgba(7,209,110,0.1) !important;
+    border-color: #07d16e !important;
+    color: #07d16e !important;
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    #search--drawer .search_drawer_header { padding: 1rem 1.2rem !important; }
+    #search--drawer .search_drawer_form { padding: 1.2rem !important; }
+    #search--drawer .bl-drawer-placeholder { padding: 2rem 1.2rem !important; }
+    #search--drawer .empty_search_drawer { padding: 1.2rem !important; }
+    #search--drawer .result_search_drawer { padding: 1.2rem !important; }
+    #search--drawer .search_result_product_card_img { max-width: 7rem !important; flex: 0 0 7rem !important; }
+    #search--drawer .search_result_product_card_info a { font-size: 1rem !important; }
+  }
+
+  @media (max-width: 480px) {
+    #search--drawer button#search_drawer_btn { width: 38px !important; height: 38px !important; }
+    #search--drawer .search_result_product_card_img { max-width: 6rem !important; flex: 0 0 6rem !important; }
+    #search--drawer .search_result_product_card_info a { font-size: 0.95rem !important; }
+    #search--drawer .bl-placeholder-title { font-size: 1.1rem !important; }
+    #search--drawer .bl-placeholder-pills a { font-size: 0.82rem !important; padding: 0.4rem 0.9rem !important; }
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    #search--drawer.drawer-wrapper { transition: none !important; }
+  }
+</style>
+
+<div
+  class="drawer-wrapper search_drawer_wrapper color_scheme color-{{ settings.color_scheme_drawer }}"
+  id="search--drawer"
+  inert
+  aria-hidden="true"
+>
+  <div class="drawer-wrapper_inner search_drawer_inner" tabindex="-1" data-lenis-prevent>
+
+    <!-- Header: heading + close button only (matches Evolve's expected structure) -->
+    <div class="search_drawer_header">
+      <h4>{{ 'drawers.search_drawer.heading' | t }}</h4>
+      <button
+        class="drawer-wrapper__close search_drawer_close drawer_close_btn"
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        <div class="icon_wrapper">
+          {{ 'icon-close.svg' | inline_asset_content }}
+        </div>
+      </button>
+    </div>
+
+    <!-- Content: single <search-drawer> wraps form + results (Evolve JS requires this) -->
+    <div class="header_search_content">
+      <search-drawer>
+        <form method="GET" action="{{ routes.search_url }}" class="search_drawer_form">
+          <input type="hidden" value="last" name="options[prefix]">
+          <div class="search_drawer_input">
+            <div class="input_wrapper">
+              <input
+                type="text"
+                name="q"
+                id="search_drawer_input"
+                placeholder="Search for Products"
+                autocomplete="off"
+                aria-label="{{ 'drawers.search_drawer.search' | t | default: 'Search' }}"
+              >
+              <label for="search_drawer_input">{{ 'drawers.search_drawer.search' | t }}</label>
+
+              <button class="search_drawer_reset" aria-label="{{ 'Reset search' }}" type="button">
+                {{ 'icon-close.svg' | inline_asset_content }}
+              </button>
+
+              <button id="search_drawer_btn" aria-label="Search Button" type="submit" class="search_drawer_btn">
+                {{ 'icon-search.svg' | inline_asset_content }}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Static placeholder — always visible when input is empty,
+             hidden via CSS :has() when user starts typing. No JS dependency. -->
+        <div class="bl-drawer-placeholder">
+          <div class="bl-placeholder-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <h3 class="bl-placeholder-title">Find Your Next Gear</h3>
+          <p class="bl-placeholder-sub">Search dumbbells, benches, bands and more</p>
+          <div class="bl-placeholder-pills">
+            <a href="{{ routes.search_url }}?q=Dumbbells">Dumbbells</a>
+            <a href="{{ routes.search_url }}?q=Resistance+Bands">Resistance Bands</a>
+            <a href="{{ routes.search_url }}?q=Gym+Gloves">Gym Gloves</a>
+            <a href="{{ routes.search_url }}?q=Workout+Bench">Workout Bench</a>
+            <a href="{{ routes.search_url }}?q=Kettlebell">Kettlebell</a>
+          </div>
+        </div>
+
+        <!-- Evolve-controlled empty state (popular products from admin settings) -->
+        <div class="empty_search_drawer">
+          {% if settings.search_drawer_img != blank %}
+            <div class="search_drawer_img_wrapper">
+              <div class="search_drawer_img">
+                {{ settings.search_drawer_img | image_url: width: 1200 | image_tag: loading: 'lazy', alt: settings.search_drawer_img_head }}
+              </div>
+              {% if settings.search_drawer_img_head != blank %}
+                <div class="search_drawer_img_head">
+                  <h3>{{ settings.search_drawer_img_head }}</h3>
+                  {% if settings.search_drawer_img_link != blank %}
+                    <a aria-label="{{ 'Shop All' }}" href="{{ settings.search_drawer_img_link }}">
+                      {{ 'general.shop_all' | t | default: 'Shop All' }}
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <div class="categories_wrapper">
+            {% if settings.popular_collections != blank %}
+              <div class="popular_collections_wrapper">
+                {% if settings.popular_collections_heading != blank %}
+                  <h5>{{ settings.popular_collections_heading }}</h5>
+                {% else %}
+                  <h5>Popular Collections</h5>
+                {% endif %}
+                <div class="popular_collections_inner">
+                  {% for collection in settings.popular_collections %}
+                    <div class="popular_collections_block">
+                      <a aria-label="{{ collection.title }}" href="{{ collection.url }}">{{ collection.title }}</a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {% if settings.popular_products != blank %}
+              <div class="popular_products_wrapper">
+                {% if settings.popular_products_heading != blank %}
+                  <h5>{{ settings.popular_products_heading }}</h5>
+                {% else %}
+                  <h5>Popular Products</h5>
+                {% endif %}
+                <div class="popular_products_inner">
+                  {% for product in settings.popular_products limit: 4 %}
+                    <div class="popular_products">
+                      <a href="{{ product.url }}" aria-label="{{ product.title }}">{{ product.title }}</a>
+                      <div
+                        class="popular_product_img{% if settings.card_bg %} has_bg{% endif %}"
+                        {% if settings.card_bg %}style="--card-bg-color: {{ settings.card_bg_color }}"{% endif %}
+                      >
+                        {% if product.featured_image != blank %}
+                          {{ product.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', alt: product.title }}
+                        {% else %}
+                          {% assign index = forloop.index | modulo: 2 %}
+                          {% if index == 1 %}
+                            {{ 'product-2' | placeholder_svg_tag: 'placeholder_svg' }}
+                          {% else %}
+                            {{ 'product-1' | placeholder_svg_tag: 'placeholder_svg' }}
+                          {% endif %}
+                        {% endif %}
+                      </div>
+                      <div class="popular_product_info ppi--{{ settings.card_text_align }}" style="--text-align: {{ settings.card_text_align }};">
+                        <p>{{ product.title }}</p>
+                        <div class="popular_product_price">
+                          <span class="pp_regular">{{ product.price | money }}</span>
+                          {% if product.compare_at_price != blank and product.compare_at_price != 0 and product.compare_at_price != product.price %}
+                            <span class="pp_cap">{{ product.compare_at_price | money }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Live results: populated by Evolve's SearchDrawer JS -->
+        <div class="result_search_drawer">
+          <div class="result_search_inner"></div>
+        </div>
+
+      </search-drawer>
+    </div>
+  </div>
+</div>

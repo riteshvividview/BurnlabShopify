@@ -27,6 +27,8 @@
   assign enable_anim       = section.settings.enable_animations
   assign icon_shape        = section.settings.icon_shape        | default: 'rounded'
   assign card_gap          = section.settings.card_gap          | default: 28
+  assign card_min_width    = section.settings.card_min_width    | default: 220
+  assign layout_width      = section.settings.layout_width      | default: 'boxed'
   assign section_hdr_align = section.settings.section_hdr_align | default: 'left'
 
   assign heading_size_mobile = heading_size | minus: 6
@@ -67,6 +69,7 @@
     --col-desktop:      {{ col_desktop }};
     --col-tablet:       {{ col_tablet }};
     --card-gap:         {{ card_gap }}px;
+    --card-min-w:       {{ card_min_width }}px;
   }
 
   /* ── RESET ─────────────────────────────────────────────── */
@@ -135,9 +138,14 @@
   #{{ section_id }} .itwt-container {
     position: relative;
     z-index: 10;
+    {% if layout_width == 'full' %}
+    max-width: 100%;
+    padding-inline: clamp(1.2rem, 3vw, 3.2rem);
+    {% else %}
     max-width: 1400px;
     margin-inline: auto;
     padding-inline: clamp(1.6rem, 5vw, 8rem);
+    {% endif %}
   }
 
   /* ── SECTION HEADER ─────────────────────────────────────── */
@@ -225,9 +233,15 @@
 
   /* ── GRID ───────────────────────────────────────────────── */
   #{{ section_id }} .itwt-grid {
-    display: grid;
-    grid-template-columns: repeat(var(--col-desktop), 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--card-gap);
+  }
+
+  #{{ section_id }} .itwt-card {
+    flex: 1 1 var(--card-min-w);
+    max-width: calc(var(--card-min-w) * 1.6);
   }
 
   /* ── CARD ───────────────────────────────────────────────── */
@@ -288,7 +302,6 @@
     box-shadow: 0 20px 50px rgba(7,209,110,0.14), 0 6px 20px rgba(0,0,0,0.10);
   }
   #{{ section_id }} .itwt-card:hover .itwt-card-accent    { transform: scaleX(1); }
-  #{{ section_id }} .itwt-card:hover .itwt-icon-ring       { opacity: 1; transform: scale(1.6); }
   #{{ section_id }} .itwt-card:hover .itwt-icon-wrap       { transform: scale(1.08) translateY(-2px); }
   {%- endif -%}
 
@@ -457,23 +470,15 @@
       padding-top: {{ section.settings.padding_top_mobile }}px !important;
       padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
     }
-    #{{ section_id }} .itwt-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
     #{{ section_id }} .itwt-main-heading {
       font-size: clamp(2rem, 8vw, 3rem);
     }
   }
 
-  @media (max-width: 1024px) {
-    #{{ section_id }} .itwt-grid {
-      grid-template-columns: repeat(var(--col-tablet), 1fr);
-    }
-  }
-
   @media (max-width: 480px) {
-    #{{ section_id }} .itwt-grid {
-      grid-template-columns: 1fr;
+    #{{ section_id }} .itwt-card {
+      flex: 1 1 100%;
+      max-width: 100%;
     }
     #{{ section_id }} .itwt-main-heading {
       font-size: clamp(2rem, 8vw, 3rem);
@@ -875,6 +880,16 @@
       "content": "Layout"
     },
     {
+      "type": "select",
+      "id": "layout_width",
+      "label": "Section Width",
+      "options": [
+        { "value": "boxed", "label": "Boxed (max 1400px, centered)" },
+        { "value": "full",  "label": "Full Width (edge to edge)" }
+      ],
+      "default": "boxed"
+    },
+    {
       "type": "range",
       "id": "columns_desktop",
       "label": "Columns (Desktop)",
@@ -901,6 +916,17 @@
       "step": 4,
       "unit": "px",
       "default": 28
+    },
+    {
+      "type": "range",
+      "id": "card_min_width",
+      "label": "Card Width",
+      "min": 160,
+      "max": 480,
+      "step": 10,
+      "unit": "px",
+      "default": 220,
+      "info": "Minimum width for each card. Increase this to make cards wider — fewer columns will fit per row, preventing heading text from wrapping."
     },
 
     {

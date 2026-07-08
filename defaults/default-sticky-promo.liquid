@@ -1,0 +1,698 @@
+{% style %}
+  #shopify-section-{{ section.id }} .sticky_product_wrapper  {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    position: relative;
+    z-index: 1;
+  }
+  @media screen and (max-width: 640px) {
+    #shopify-section-{{ section.id }} .sticky_product_wrapper {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+  }
+{% endstyle %}
+{{ 'sticky-promo.css' | asset_url | stylesheet_tag }}
+<section
+  class="sticky_product_wrapper sticky-product-promo color_scheme color-{{ section.settings.color_scheme }}"
+  style="--border-radius: {{ section.settings.border-radius }}px;"
+>
+  <div class="container">
+    <div class="section_header fc_head {% if section.settings.show_viewall == 'heading_right' %} section_header-flex{% endif %}">
+      <div class="fc_head_head fc_head--{{ section.settings.head_align }}">
+        {% if section.settings.head != blank %}
+          <h2 class="section_heading {{ section.settings.font-size }} {% if section.settings.font_style == 'body' %}body_style{% endif %}">
+            {{ section.settings.head }}
+          </h2>
+        {% endif %}
+
+        {% if section.settings.text != blank %}
+          <div class="section_rteText ">
+            {{ section.settings.text }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="promo-text {% if section.settings.show_icon_txt %}sticky_icon_text_height{% endif %}">
+      {% if section.settings.show_icon_txt %}
+      <div class="sticky_icontext_main">
+        <div class="sticky_icontext_outer_left">
+          {% for block in section.blocks limit:2 %}
+            {% case block.type %}
+              {% when 'icon-with-text' %}
+                <div class="stycky_inner_img_text">
+                  <div class="stcky-icon-with-text-column">
+                    {% if block.settings.icon != blank %}
+                      {{ block.settings.icon | image_url: width: 80 | image_tag: loading: 'lazy' }}
+                    {% endif %}
+                    <div class="sticky_content_icntext">
+                    {% if block.settings.head != blank %}
+                      <h2
+                        {{ block.shopify_attributes }}
+                        class="section_block_heading {{ block.settings.font-size }} {% if block.settings.font_style == 'body' %}body_style{% endif %}"
+                      >
+                        {{ block.settings.head }}
+                      </h2>
+                    {% endif %}
+                    {% if block.settings.text != blank %}
+                      <div
+                        {{ block.shopify_attributes }}
+                        class="sticky_txt rte"
+                      >
+                        {{ block.settings.text }}
+                      </div>
+                    {% endif %}
+                    </div>
+                  </div>
+                </div>
+            {% endcase %}
+          {% endfor %}
+        </div>
+        <div class="sticky_icontext_outer_right">
+          {% for block in section.blocks offset:2 %}
+            {% case block.type %}
+              {% when 'icon-with-text' %}
+                <div class="stycky_inner_img_text">
+                  <div class="stcky-icon-with-text-column">
+                    {% if block.settings.icon != blank %}
+                      {{ block.settings.icon | image_url: width: 80 | image_tag: loading: 'lazy' }}
+                    {% endif %}
+                    <div class="sticky_content_icntext">
+                    {% if block.settings.head != blank %}
+                      <h2
+                        {{ block.shopify_attributes }}
+                        class="section_block_heading {{ block.settings.font-size }} {% if block.settings.font_style == 'body' %}body_style{% endif %}"
+                      >
+                        {{ block.settings.head }}
+                      </h2>
+                    {% endif %}
+                    {% if block.settings.text != blank %}
+                      <div
+                        {{ block.shopify_attributes }}
+                        class="sticky_txt rte"
+                      >
+                        {{ block.settings.text }}
+                      </div>
+                    {% endif %}
+                    </div>
+                  </div>
+                </div>
+            {% endcase %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      <div class="section_content_gap">
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'subheading' %}
+
+            {% when 'featuredtext' %}
+              {% if block.settings.featuredtext != blank and block.settings['block-position'] == 'text' %}
+                <span
+                  {{ block.shopify_attributes }}
+                  class="h1 promo_heading {{ block.settings.text-alignment }} {% if block.settings.font_style == 'body' %}body_style{% endif %}"
+                  style="
+                    --subheading-color: {{ block.settings.color }};
+                    --font-size: {{ block.settings.font--size }}vw;
+                    --text-alignment: {{ block.settings.text-alignment }};
+                    --color: {{ block.settings.color }}
+                  "
+                >
+                  {{ block.settings.featuredtext }}
+                </span>
+              {% endif %}
+            {% when 'image' %}
+              <div class="promo-text-image">
+                {% if block.settings.image != blank %}
+                  {% render 'image', image: block.settings.image %}
+                {% else %}
+                  {{ 'product-2' | placeholder_svg_tag: 'placeholder_svg' }}
+                {% endif %}
+              </div>
+
+            {% when 'text' %}
+              {% if block.settings.text != blank or block.settings['text-right'] != blank %}
+                <div
+                  {{ block.shopify_attributes }}
+                  class="sticky-promo-descrption"
+                >
+                  <!-- LEFT PRODUCT -->
+                  <div class="text__left text_lft_{{ block.settings.left_text_align }}">
+                    {% if block.settings['heading-left'] != blank or block.settings['price-left'] != blank %}
+                      <div class="split_heading">
+                        {% if block.settings['heading-left'] != blank %}
+                          <h6>{{ block.settings['heading-left'] }}</h6>
+                        {% endif %}
+
+                        {% if block.settings['price-left'] != blank %}
+                          <p class="price">{{ block.settings['price-left'] }}</p>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    {% if block.settings.text != blank %}
+                      <div class="split_content">
+                        {{ block.settings.text }}
+
+                        {% if block.settings['btn_label-left'] != blank and block.settings['btn_link-left'] != blank %}
+                          <a
+                            href="{{ block.settings['btn_link-left'] }}"
+                            class="button split_button"
+                          >
+                            {{ block.settings['btn_label-left'] }}
+                          </a>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- RIGHT PRODUCT -->
+                  <div class="text__right text_right_{{ block.settings.right_text_align }}">
+                    {% if block.settings['heading-right'] != blank or block.settings['price-right'] != blank %}
+                      <div class="split_heading">
+                        {% if block.settings['heading-right'] != blank %}
+                          <h6>{{ block.settings['heading-right'] }}</h6>
+                        {% endif %}
+
+                        {% if block.settings['price-right'] != blank %}
+                          <p class="price">{{ block.settings['price-right'] }}</p>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    {% if block.settings['text-right'] != blank %}
+                      <div class="split_content">
+                        {{ block.settings['text-right'] }}
+
+                        {% if block.settings['btn_label-right'] != blank
+                          and block.settings['btn_link-right'] != blank
+                        %}
+                          <a
+                            href="{{ block.settings['btn_link-right'] }}"
+                            class="button split_button"
+                          >
+                            {{ block.settings['btn_label-right'] }}
+                          </a>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+          {% endcase %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="promo-image-wrapper">
+      {% if section.settings.image != blank %}
+        {% render 'image', image: section.settings.image %}
+      {% else %}
+        {{ 'product-1' | placeholder_svg_tag: 'placeholder--svg' }}
+      {% endif %}
+      {% if section.settings.btn_link != blank or section.settings.btn_label != blank %}
+        <div {{ section.shopify_attributes }} class="section_button">
+          {% if settings.enable_magnet %}<magnetic-button data-radius="200">{% endif %}
+          {% render 'section-button',
+            button_label: section.settings.btn_label,
+            btn_link: section.settings.btn_link,
+            new_tab: section.settings.new_tab,
+            style: section.settings.style
+          %}
+          {% if settings.enable_magnet %}</magnetic-button>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Sticky content",
+  "class": "sticky-content",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "text",
+      "id": "head",
+      "label": "Heading",
+      "default": "Sticky Image"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "Font style",
+      "options": [
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "body",
+          "label": "Body"
+        }
+      ],
+      "default": "heading"
+    },
+    {
+      "type": "select",
+      "id": "font-size",
+      "label": "Font size",
+      "options": [
+        {
+          "value": "XXXL",
+          "label": "XXX large"
+        },
+        {
+          "value": "h1",
+          "label": "Extra large"
+        },
+        {
+          "value": "h2",
+          "label": "Large"
+        },
+        {
+          "value": "h3",
+          "label": "Medium"
+        },
+        {
+          "value": "h4",
+          "label": "Small"
+        },
+        {
+          "value": "h5",
+          "label": "Extra small"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Description",
+      "default": "<p>Showcase the products from the collection in a grid or slider format.</p>"
+    },
+    {
+      "type": "select",
+      "id": "head_align",
+      "label": "Heading alignment",
+      "info": "Content alignment works when the Show view all option is below the product.",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "border-radius",
+      "label": "Section border radius",
+      "min": 0,
+      "max": 100,
+      "default": 20,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Scroll image"
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button label",
+      "default": "Button Label"
+    },
+    {
+      "type": "url",
+      "id": "btn_link",
+      "label": "Button link"
+    },
+    {
+      "type": "checkbox",
+      "id": "new_tab",
+      "label": "Open link in new tab",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "primary",
+          "label": "Primary"
+        },
+        {
+          "value": "btn-secondary",
+          "label": "Secondary"
+        },
+        {
+          "value": "btn-link",
+          "label": "Link"
+        }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon_txt",
+      "label": "Show icon with text",
+      "default":false,
+      "info":"Show icon with text block"
+    },
+    {
+      "type": "header",
+      "content": "Desktop spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Mobile spacing"
+    },
+    {
+      "type": "range",
+      "label": "Padding top",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "label": "Padding bottom",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "default": 30,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Featured text",
+      "type": "featuredtext",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "inline_richtext",
+          "id": "featuredtext",
+          "label": "Featured text",
+          "default": "FEATURED TEXT"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "Font style",
+          "options": [
+            {
+              "value": "heading",
+              "label": "Heading"
+            },
+            {
+              "value": "body",
+              "label": "Body"
+            }
+          ],
+          "default": "body"
+        },
+        {
+          "type": "range",
+          "id": "font--size",
+          "label": "Font size",
+          "min": 3,
+          "max": 20,
+          "default": 5,
+          "step": 0.5
+        },
+        {
+          "type": "select",
+          "id": "block-position",
+          "label": "Block position",
+          "options": [
+            {
+              "value": "text",
+              "label": "With text"
+            },
+            {
+              "value": "featured",
+              "label": "In featured block"
+            }
+          ],
+          "default": "text"
+        },
+        {
+          "type": "color",
+          "id": "color",
+          "label": "Color",
+          "default": "#000"
+        }
+      ]
+    },
+    {
+      "name": "Image",
+      "type": "image",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Use a landscape image with reduced height for better visual balance"
+        }
+      ]
+    },
+    {
+      "name": "Product details",
+      "type": "text",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "First product"
+        },
+        {
+          "type": "select",
+          "id": "left_text_align",
+          "label": "Left text alingment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "text",
+          "id": "heading-left",
+          "label": "Heading left",
+          "default": "Heading left"
+        },
+        {
+          "type": "text",
+          "id": "price-left",
+          "label": "Price"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text left",
+          "default": "<p>Write a short description that justifies your heading and image. You can also link the button to the desired page or template.</p>"
+        },
+        {
+          "type": "text",
+          "id": "btn_label-left",
+          "label": "Button label",
+          "default": "Button Label"
+        },
+        {
+          "type": "url",
+          "id": "btn_link-left",
+          "label": "Button link"
+        },
+        {
+          "type": "header",
+          "content": "Second product"
+        },
+        {
+          "type": "select",
+          "id": "right_text_align",
+          "label": "Right text alingment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "right"
+        },
+        {
+          "type": "text",
+          "id": "heading-right",
+          "label": "Heading right",
+          "default": "Heading right"
+        },
+        {
+          "type": "text",
+          "id": "price-right",
+          "label": "Price"
+        },
+        {
+          "type": "richtext",
+          "id": "text-right",
+          "label": "Text right",
+          "default": "<p>Write a short description that justifies your heading and image. You can also link the button to the desired page or template.</p>"
+        },
+        {
+          "type": "text",
+          "id": "btn_label-right",
+          "label": "Button label",
+          "default": "Button Label"
+        },
+        {
+          "type": "url",
+          "id": "btn_link-right",
+          "label": "Button link"
+        }
+      ]
+    },
+    {
+      "name": "Icon with text",
+      "type": "icon-with-text",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "head",
+          "label": "Heading",
+          "default": "Image with text"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "Font style",
+          "options": [
+            {
+              "value": "heading",
+              "label": "Heading"
+            },
+            {
+              "value": "body",
+              "label": "Body"
+            }
+          ],
+          "default": "heading"
+        },
+        {
+          "type": "select",
+          "id": "font-size",
+          "label": "Font size",
+          "options": [
+            {
+              "value": "XXXL",
+              "label": "XXX large"
+            },
+            {
+              "value": "h1",
+              "label": "Extra large"
+            },
+            {
+              "value": "h2",
+              "label": "Large"
+            },
+            {
+              "value": "h3",
+              "label": "Medium"
+            },
+            {
+              "value": "h4",
+              "label": "Small"
+            },
+            {
+              "value": "h5",
+              "label": "Extra small"
+            }
+          ],
+          "default": "h2"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Description",
+          "default": "<p>This section allows you to highlight key content with a featured image and supporting text. Use it to showcase a product, collection, promotion, or brand story. The image and text can be customized to match your store’s style and layout preferences</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sticky content",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

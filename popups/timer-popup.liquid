@@ -1,0 +1,903 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Mystery Discount Popup
+  Deploy to: sections/timer-popup.liquid
+  JS file:   assets/timer-popup.js
+  ============================================================
+{% endcomment %}
+
+{%- assign section_id = 'bl-popup-' | append: section.id -%}
+
+{%- assign delay_sec      = section.settings.delay_seconds  | default: 20 -%}
+{%- assign session_once   = section.settings.session_once -%}
+{%- assign layout_style   = section.settings.layout_style   | default: 'card' -%}
+{%- assign show_timer     = section.settings.show_timer -%}
+{%- assign timer_days     = section.settings.timer_days     | default: 2 -%}
+{%- assign timer_hours    = section.settings.timer_hours    | default: 0 -%}
+{%- assign timer_mins_set = section.settings.timer_minutes  | default: 0 -%}
+{%- assign close_on_timer = section.settings.close_on_timer_end -%}
+
+{%- assign hours_secs = timer_hours | times: 3600 -%}
+{%- assign mins_secs  = timer_mins_set | times: 60 -%}
+{%- assign timer_total_secs = timer_days | times: 86400 | plus: hours_secs | plus: mins_secs -%}
+
+{%- assign badge_text      = section.settings.badge_text      | default: 'Limited Time Offer' -%}
+{%- assign popup_eyebrow   = section.settings.popup_eyebrow -%}
+{%- assign heading         = section.settings.heading         | default: "You've got a mystery discount" -%}
+{%- assign subheading      = section.settings.subheading      | default: "But first, tell us what you're training for!" -%}
+{%- assign brand_name   = section.settings.brand_name   | default: 'BurnLab' -%}
+{%- assign bg_color     = section.settings.bg_color     | default: '#001a2e' -%}
+{%- assign card_color   = section.settings.card_color   | default: '#011c30' -%}
+{%- assign text_color   = section.settings.text_color   | default: '#eaf4f5' -%}
+{%- assign sub_color    = section.settings.subtext_color | default: '#7aabbf' -%}
+{%- assign btn_bg       = section.settings.button_bg    | default: '#ffffff' -%}
+{%- assign btn_text     = section.settings.button_text  | default: '#001a2e' -%}
+{%- assign timer_bg     = section.settings.timer_bg     | default: '#eaf4f5' -%}
+{%- assign timer_text_c = section.settings.timer_text_c | default: '#001a2e' -%}
+{%- assign accent       = section.settings.accent_color | default: '#07d16e' -%}
+{%- assign split_bg     = section.settings.split_panel_bg   | default: '#07d16e' -%}
+{%- assign split_text   = section.settings.split_panel_text | default: '#001a2e' -%}
+
+{%- assign btn_font_size    = section.settings.button_font_size | default: 16 -%}
+{%- assign card_w_desktop   = section.settings.card_width_desktop  | default: 500 -%}
+{%- assign card_h_desktop   = section.settings.card_height_desktop | default: 0 -%}
+{%- assign card_w_mobile    = section.settings.card_width_mobile   | default: 92 -%}
+{%- assign card_h_mobile    = section.settings.card_height_mobile  | default: 0 -%}
+
+{%- if timer_days  < 10 -%}{%- assign d_pad = '0' -%}{%- else -%}{%- assign d_pad = '' -%}{%- endif -%}
+{%- if timer_hours < 10 -%}{%- assign h_pad = '0' -%}{%- else -%}{%- assign h_pad = '' -%}{%- endif -%}
+{%- if timer_mins_set < 10 -%}{%- assign m_pad = '0' -%}{%- else -%}{%- assign m_pad = '' -%}{%- endif -%}
+
+{% style %}
+
+#{{ section_id }} *,
+#{{ section_id }} *::before,
+#{{ section_id }} *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══ Backdrop ══ */
+#{{ section_id }} {
+  --pop-bg:          {{ bg_color }};
+  --pop-card:        {{ card_color }};
+  --pop-text:        {{ text_color }};
+  --pop-sub:         {{ sub_color }};
+  --pop-accent:      {{ accent }};
+  --pop-btn-bg:      {{ btn_bg }};
+  --pop-btn-text:    {{ btn_text }};
+  --pop-timer-bg:    {{ timer_bg }};
+  --pop-timer-text:  {{ timer_text_c }};
+  --pop-split-bg:    {{ split_bg }};
+  --pop-split-text:  {{ split_text }};
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: rgba(0, 4, 12, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.4s ease, visibility 0.4s;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#{{ section_id }}.bl-popup--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ══ Card ══ */
+#{{ section_id }} .bl-popup__card {
+  position: relative;
+  background: var(--pop-card);
+  border-radius: 24px;
+  width: 100%;
+  max-width: {{ card_w_desktop }}px;
+  {% if card_h_desktop > 0 %}min-height: {{ card_h_desktop }}px;{% endif %}
+  overflow: hidden;
+  /* Accent-tinted border */
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pop-accent) 22%, transparent),
+    0 32px 80px rgba(0, 0, 0, 0.55),
+    0 0 0 0 transparent;
+  /* Entry animation */
+  transform: scale(0.92) translateY(20px);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 640px) {
+  #{{ section_id }} .bl-popup__card {
+    max-width: {{ card_w_mobile }}vw;
+    {% if card_h_mobile > 0 %}min-height: {{ card_h_mobile }}px;{% endif %}
+  }
+}
+#{{ section_id }}.bl-popup--open .bl-popup__card {
+  transform: scale(1) translateY(0);
+}
+/* Subtle radial glow inside card */
+#{{ section_id }} .bl-popup__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 55% at 50% 0%, color-mix(in srgb, var(--pop-accent) 9%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ══ Close button (top-right of card) ══ */
+#{{ section_id }} .bl-popup__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--pop-text) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pop-text) 14%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--pop-text) 55%, transparent);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  padding: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+#{{ section_id }} .bl-popup__close:hover {
+  background: color-mix(in srgb, var(--pop-text) 16%, transparent);
+  color: var(--pop-text);
+  transform: rotate(90deg);
+}
+#{{ section_id }} .bl-popup__close svg { width: 1rem; height: 1rem; }
+
+/* ══ Split layout — left accent panel ══ */
+#{{ section_id }}[data-layout="split"] .bl-popup__card {
+  max-width: 820px;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+}
+#{{ section_id }}:not([data-layout="split"]) .bl-popup__left { display: none; }
+
+#{{ section_id }} .bl-popup__left {
+  background: var(--pop-split-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+#{{ section_id }} .bl-popup__left-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--pop-split-text) 18%, transparent);
+  pointer-events: none;
+  animation: bl-ring 7s ease-in-out infinite;
+}
+#{{ section_id }} .bl-popup__left-ring--1 { width: 120%; height: 120%; animation-delay: 0s; }
+#{{ section_id }} .bl-popup__left-ring--2 { width: 85%;  height: 85%;  animation-delay: 1.5s; }
+#{{ section_id }} .bl-popup__left-ring--3 { width: 55%;  height: 55%;  animation-delay: 3s; }
+@keyframes bl-ring {
+  0%, 100% { opacity: 0.5; transform: scale(1);    }
+  50%       { opacity: 0.15; transform: scale(1.06); }
+}
+#{{ section_id }} .bl-popup__left-brand {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  color: var(--pop-split-text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1rem;
+}
+#{{ section_id }} .bl-popup__left-tagline {
+  font-size: clamp(0.88rem, 1.2vw, 1rem);
+  color: color-mix(in srgb, var(--pop-split-text) 72%, transparent);
+  line-height: 1.5;
+  max-width: 20ch;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hide logo in split (left panel shows brand) */
+#{{ section_id }}[data-layout="split"] .bl-popup__logo { display: none !important; }
+
+/* ══ Sheet layout ══ */
+#{{ section_id }}[data-layout="sheet"] {
+  align-items: flex-end;
+  padding: 0;
+}
+#{{ section_id }}[data-layout="sheet"] .bl-popup__card {
+  max-width: 100%;
+  border-radius: 24px 24px 0 0;
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+}
+#{{ section_id }}[data-layout="sheet"].bl-popup--open .bl-popup__card {
+  transform: translateY(0);
+}
+/* Sheet drag handle */
+#{{ section_id }}[data-layout="sheet"] .bl-popup__card::after {
+  content: '';
+  display: block;
+  width: 2.8rem;
+  height: 4px;
+  background: color-mix(in srgb, var(--pop-text) 20%, transparent);
+  border-radius: 99px;
+  margin: 1rem auto 0;
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ══ Body (right in split, full in others) ══ */
+#{{ section_id }} .bl-popup__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3.2rem) clamp(1.6rem, 4vw, 2.8rem) clamp(2rem, 5vw, 2.8rem);
+  gap: 0;
+}
+#{{ section_id }}[data-layout="sheet"] .bl-popup__body {
+  align-items: flex-start;
+  text-align: left;
+  padding-top: 2.4rem;
+}
+
+/* ══ Badge ══ */
+#{{ section_id }} .bl-popup__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: color-mix(in srgb, var(--pop-accent) 14%, transparent);
+  color: var(--pop-accent);
+  border: 1px solid color-mix(in srgb, var(--pop-accent) 32%, transparent);
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+  white-space: nowrap;
+}
+
+/* Badge icon */
+#{{ section_id }} .bl-popup__badge-icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* ══ Eyebrow title ══ */
+#{{ section_id }} .bl-popup__eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pop-sub);
+  margin-bottom: 0.5rem;
+}
+
+/* ══ Logo ══ */
+#{{ section_id }} .bl-popup__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+#{{ section_id }} .bl-popup__logo img {
+  max-height: 2rem;
+  width: auto;
+  object-fit: contain;
+}
+#{{ section_id }} .bl-popup__logo-text {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--pop-text);
+  letter-spacing: -0.01em;
+}
+
+/* ══ D/H/M/S Countdown ══ */
+#{{ section_id }} .bl-popup__countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.8rem;
+}
+#{{ section_id }}[data-layout="sheet"] .bl-popup__countdown {
+  justify-content: flex-start;
+}
+#{{ section_id }} .bl-popup__cd-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+#{{ section_id }} .bl-popup__cd-val {
+  background: var(--pop-timer-bg);
+  color: var(--pop-timer-text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 800;
+  width: clamp(4rem, 8vw, 5.2rem);
+  height: clamp(4rem, 8vw, 5.2rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 6px 22px rgba(0,0,0,0.3),
+    0 1px 0 rgba(255,255,255,0.1) inset,
+    0 -1px 0 rgba(0,0,0,0.08) inset;
+}
+/* Flip-clock divider */
+#{{ section_id }} .bl-popup__cd-val::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0,0,0,0.1);
+  pointer-events: none;
+}
+/* Top half slightly brighter */
+#{{ section_id }} .bl-popup__cd-val::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+#{{ section_id }} .bl-popup__cd-lbl {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--pop-sub);
+  font-weight: 700;
+}
+/* Static colons — no blink, vertically centred with the number boxes */
+#{{ section_id }} .bl-popup__cd-sep {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 800;
+  color: var(--pop-timer-bg);
+  opacity: 0.5;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  /* Push down by half the label+gap height so the colon
+     stays centred on the number boxes, not the whole unit */
+  margin-bottom: calc(0.62rem + 0.45rem);
+  flex-shrink: 0;
+}
+
+/* ══ Heading ══ */
+#{{ section_id }} .bl-popup__heading {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  line-height: 1.14;
+  color: var(--pop-text);
+  letter-spacing: -0.025em;
+  margin-bottom: 0.8rem;
+  overflow-wrap: break-word;
+}
+
+/* ══ Sub-text ══ */
+#{{ section_id }} .bl-popup__sub {
+  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+  color: var(--pop-sub);
+  line-height: 1.55;
+  margin-bottom: 1.8rem;
+  max-width: 34ch;
+}
+#{{ section_id }}[data-layout="sheet"] .bl-popup__sub { max-width: 100%; }
+
+/* ══ CTA Buttons ══ */
+#{{ section_id }} .bl-popup__btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+}
+#{{ section_id }} .bl-popup__btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--pop-btn-bg);
+  color: var(--pop-btn-text);
+  border: none;
+  border-radius: 999px;
+  padding: clamp(0.85rem, 2vw, 1.1rem) 1.4rem clamp(0.85rem, 2vw, 1.1rem) 1.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: {{ btn_font_size }}px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.22s ease, transform 0.18s ease, box-shadow 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--pop-btn-bg) 30%, transparent);
+}
+#{{ section_id }} .bl-popup__btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--pop-btn-bg) 40%, transparent);
+}
+#{{ section_id }} .bl-popup__btn:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+/* Arrow icon inside button */
+#{{ section_id }} .bl-popup__btn-arrow {
+  width: 1.8rem;
+  height: 1.8rem;
+  background: color-mix(in srgb, var(--pop-btn-text) 16%, transparent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 0.8rem;
+  transition: transform 0.2s ease;
+}
+#{{ section_id }} .bl-popup__btn:hover .bl-popup__btn-arrow {
+  transform: translateX(3px);
+}
+#{{ section_id }} .bl-popup__btn-arrow svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* ══ Mobile ══ */
+@media (max-width: 640px) {
+  #{{ section_id }}[data-layout="split"] .bl-popup__card {
+    grid-template-columns: 1fr;
+  }
+  #{{ section_id }}[data-layout="split"] .bl-popup__left {
+    padding: 2rem;
+    min-height: 120px;
+  }
+  #{{ section_id }}[data-layout="split"] .bl-popup__left-brand { font-size: 1.6rem; }
+  #{{ section_id }} .bl-popup__heading { font-size: 1.8rem; }
+}
+@media (max-width: 400px) {
+  #{{ section_id }} .bl-popup__cd-val { width: 3.2rem; height: 3.2rem; font-size: 1.6rem; border-radius: 10px; }
+  #{{ section_id }} .bl-popup__cd-sep { font-size: 1.3rem; }
+}
+
+{% endstyle %}
+
+<div id="{{ section_id }}"
+     class="bl-popup"
+     data-layout="{{ layout_style }}"
+     role="dialog"
+     aria-modal="true"
+     aria-label="{{ heading | escape }}"
+     aria-hidden="true">
+
+  <div class="bl-popup__card">
+
+    <!-- Close button -->
+    <button class="bl-popup__close" aria-label="Close popup" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <!-- Split: left accent panel -->
+    <div class="bl-popup__left" aria-hidden="true">
+      <span class="bl-popup__left-ring bl-popup__left-ring--1"></span>
+      <span class="bl-popup__left-ring bl-popup__left-ring--2"></span>
+      <span class="bl-popup__left-ring bl-popup__left-ring--3"></span>
+      {%- if section.settings.logo != blank -%}
+        {{ section.settings.logo | image_url: width: 240 | image_tag: loading: 'eager', alt: brand_name }}
+      {%- else -%}
+        <div class="bl-popup__left-brand">{{ brand_name }}</div>
+      {%- endif -%}
+      <p class="bl-popup__left-tagline">Your mystery discount is waiting</p>
+    </div>
+
+    <!-- Main body -->
+    <div class="bl-popup__body">
+
+      <!-- Badge -->
+      {%- if badge_text != blank -%}
+        <span class="bl-popup__badge">
+          <svg class="bl-popup__badge-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5"/>
+            <path d="M8 5v3l1.8 1.8"/>
+          </svg>
+          {{ badge_text }}
+        </span>
+      {%- endif -%}
+
+      <!-- Logo (card / sheet layouts) -->
+      <div class="bl-popup__logo">
+        {%- if section.settings.logo != blank -%}
+          {{ section.settings.logo | image_url: width: 240 | image_tag: loading: 'eager', alt: brand_name }}
+        {%- else -%}
+          <span class="bl-popup__logo-text">{{ brand_name }}</span>
+        {%- endif -%}
+      </div>
+
+      <!-- Eyebrow title -->
+      {%- if popup_eyebrow != blank -%}
+        <p class="bl-popup__eyebrow">{{ popup_eyebrow | escape }}</p>
+      {%- endif -%}
+
+      <!-- D / H / M / S Countdown -->
+      {%- if show_timer -%}
+        <div class="bl-popup__countdown">
+          {%- if timer_days > 0 or timer_total_secs >= 86400 -%}
+            <div class="bl-popup__cd-unit">
+              <span class="bl-popup__cd-val" id="{{ section_id }}-days">{{ d_pad }}{{ timer_days }}</span>
+              <span class="bl-popup__cd-lbl">days</span>
+            </div>
+            <span class="bl-popup__cd-sep">:</span>
+          {%- endif -%}
+          <div class="bl-popup__cd-unit">
+            <span class="bl-popup__cd-val" id="{{ section_id }}-hours">{{ h_pad }}{{ timer_hours }}</span>
+            <span class="bl-popup__cd-lbl">hrs</span>
+          </div>
+          <span class="bl-popup__cd-sep">:</span>
+          <div class="bl-popup__cd-unit">
+            <span class="bl-popup__cd-val" id="{{ section_id }}-mins">{{ m_pad }}{{ timer_mins_set }}</span>
+            <span class="bl-popup__cd-lbl">min</span>
+          </div>
+          <span class="bl-popup__cd-sep">:</span>
+          <div class="bl-popup__cd-unit">
+            <span class="bl-popup__cd-val" id="{{ section_id }}-secs">00</span>
+            <span class="bl-popup__cd-lbl">sec</span>
+          </div>
+        </div>
+      {%- endif -%}
+
+      <!-- Heading -->
+      <h2 class="bl-popup__heading">{{ heading }}</h2>
+
+      <!-- Sub-text -->
+      {%- if subheading != blank -%}
+        <p class="bl-popup__sub">{{ subheading }}</p>
+      {%- endif -%}
+
+      <!-- CTA Buttons (blocks) — skips blocks with no label -->
+      {%- assign has_buttons = false -%}
+      {%- for block in section.blocks -%}
+        {%- if block.settings.label != blank -%}{%- assign has_buttons = true -%}{%- endif -%}
+      {%- endfor -%}
+      {%- if has_buttons -%}
+        <div class="bl-popup__btns">
+          {%- for block in section.blocks -%}
+            {%- if block.settings.label != blank -%}
+              {%- assign btn_href = block.settings.url | default: '#' -%}
+              <a class="bl-popup__btn"
+                 href="{{ btn_href }}"
+                 data-discount="{{ block.settings.discount_code | escape }}"
+                 data-close-on-click="{{ block.settings.close_on_click }}"
+                 {{ block.shopify_attributes }}>
+                {{ block.settings.label | escape }}
+                <span class="bl-popup__btn-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 6h10M6 1l5 5-5 5"/>
+                  </svg>
+                </span>
+              </a>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+    </div><!-- /.bl-popup__body -->
+  </div><!-- /.bl-popup__card -->
+</div>
+
+<script>
+  window.BLPopupConfig = {
+    sectionId:        '{{ section_id }}',
+    delayMs:          {{ delay_sec | times: 1000 }},
+    sessionOnce:      {{ session_once }},
+    showTimer:        {{ show_timer }},
+    timerTotalSecs:   {{ timer_total_secs }},
+    closeOnTimerEnd:  {{ close_on_timer }}
+  };
+</script>
+<script src="{{ 'timer-popup.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Mystery Discount Popup",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Trigger"
+    },
+    {
+      "type": "range",
+      "id": "delay_seconds",
+      "label": "Display after (seconds)",
+      "min": 0, "max": 120, "step": 5, "unit": "s", "default": 20,
+      "info": "How many seconds after page load before the popup appears."
+    },
+    {
+      "type": "checkbox",
+      "id": "session_once",
+      "label": "Show once per browser session",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "layout_style",
+      "label": "Popup layout",
+      "options": [
+        { "value": "card",  "label": "Card — centered modal with backdrop" },
+        { "value": "split", "label": "Split — accent panel + content" },
+        { "value": "sheet", "label": "Bottom sheet — slides up from bottom" }
+      ],
+      "default": "card"
+    },
+    {
+      "type": "header",
+      "content": "Countdown Timer"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_timer",
+      "label": "Show countdown timer",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "timer_days",
+      "label": "Days",
+      "min": 0, "max": 30, "step": 1, "unit": "d", "default": 2
+    },
+    {
+      "type": "range",
+      "id": "timer_hours",
+      "label": "Hours",
+      "min": 0, "max": 23, "step": 1, "unit": "h", "default": 0
+    },
+    {
+      "type": "range",
+      "id": "timer_minutes",
+      "label": "Minutes",
+      "min": 0, "max": 59, "step": 1, "unit": "m", "default": 0,
+      "info": "Countdown runs in real-time and resets each visit (use session storage to prevent re-showing)."
+    },
+    {
+      "type": "checkbox",
+      "id": "close_on_timer_end",
+      "label": "Auto-close when timer reaches zero",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image",
+      "info": "Leave blank to show the brand name as text."
+    },
+    {
+      "type": "text",
+      "id": "brand_name",
+      "label": "Brand name (used if no logo)",
+      "default": "BurnLab"
+    },
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Badge label",
+      "default": "Limited Time Offer",
+      "info": "Accent pill at the very top. Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "popup_eyebrow",
+      "label": "Popup title (eyebrow)",
+      "info": "Small uppercase label shown above the main heading. Leave blank to hide."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Main heading",
+      "default": "You've got a mystery discount"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Sub-text",
+      "default": "But first, tell us what you're training for!"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Card"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Backdrop tint",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Card background",
+      "default": "#011c30"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent / glow color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Heading color",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "subtext_color",
+      "label": "Sub-text color",
+      "default": "#7aabbf"
+    },
+    {
+      "type": "header",
+      "content": "Popup Size"
+    },
+    {
+      "type": "range",
+      "id": "card_width_desktop",
+      "label": "Card width (desktop)",
+      "min": 340, "max": 860, "step": 10, "unit": "px", "default": 500,
+      "info": "Split layout automatically widens to 820px regardless of this setting."
+    },
+    {
+      "type": "range",
+      "id": "card_height_desktop",
+      "label": "Card min-height (desktop)",
+      "min": 0, "max": 800, "step": 10, "unit": "px", "default": 0,
+      "info": "Set to 0 for auto (height follows content)."
+    },
+    {
+      "type": "range",
+      "id": "card_width_mobile",
+      "label": "Card width (mobile)",
+      "min": 70, "max": 100, "step": 2, "unit": "vw", "default": 92,
+      "info": "As a percentage of the viewport width."
+    },
+    {
+      "type": "range",
+      "id": "card_height_mobile",
+      "label": "Card min-height (mobile)",
+      "min": 0, "max": 600, "step": 10, "unit": "px", "default": 0,
+      "info": "Set to 0 for auto."
+    },
+    {
+      "type": "header",
+      "content": "Colors — Buttons"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Button text size",
+      "min": 12, "max": 24, "step": 1, "unit": "px", "default": 16
+    },
+    {
+      "type": "color",
+      "id": "button_bg",
+      "label": "Button background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text",
+      "label": "Button text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Timer Boxes"
+    },
+    {
+      "type": "color",
+      "id": "timer_bg",
+      "label": "Timer box background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "timer_text_c",
+      "label": "Timer text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "header",
+      "content": "Colors — Split Panel",
+      "info": "Only applies when Layout is set to Split."
+    },
+    {
+      "type": "color",
+      "id": "split_panel_bg",
+      "label": "Left panel background",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "split_panel_text",
+      "label": "Left panel text color",
+      "default": "#001a2e"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "button",
+      "name": "Category Button",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Button label",
+          "info": "Leave blank to hide this button entirely."
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link URL"
+        },
+        {
+          "type": "text",
+          "id": "discount_code",
+          "label": "Discount code (optional)",
+          "info": "Applied via /discount/CODE before redirecting."
+        },
+        {
+          "type": "checkbox",
+          "id": "close_on_click",
+          "label": "Close popup on click",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Mystery Discount Popup",
+      "blocks": [
+        { "type": "button", "settings": { "label": "Dumbbell Kit" } },
+        { "type": "button", "settings": { "label": "Resistance Bands" } },
+        { "type": "button", "settings": { "label": "Gym Gloves" } },
+        { "type": "button", "settings": { "label": "I'm not sure!" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

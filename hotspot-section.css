@@ -1,0 +1,292 @@
+.hotspot-container {
+    width: 100%;
+    display: block;
+}
+.htp-container-img {
+   position: relative;
+    padding: 2rem;
+    background: var(--color-background);
+    border-radius: var(--border-radius);
+}
+.lg-image {
+    display: block;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+ .lg-hotspot {
+	 position: absolute;
+	 margin: 0;
+	 padding: 0;
+	 transform: translate(-50%, -50%);
+	 z-index: 0;
+     top: var(--top);
+    left: var(--left);
+}
+
+ .lg-hotspot--selected {
+	 z-index: 999;
+}
+.lg-hotspot.lg-hotspot--selected .lg-hotspot__button {
+    background: var(--color-highlight);
+    color: var(--color-highlight-secondary);
+}
+.lg-hotspot__button:hover{
+    background: var(--color-highlight);
+    color: var(--color-highlight-secondary);
+}
+ .lg-hotspot--selected .lg-hotspot__label {
+	opacity: 1;
+    pointer-events: all;
+}
+.lg-hotspot__button {
+    height: 35px;
+    font-size: 2.3rem;
+    width: 35px;
+    padding: 0;
+    line-height: 36px;
+    border-radius: 100%;
+    text-align: center;
+    background: var(--color-background);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px 8px #FFFFFF4D;
+    color: var(--color-secondary-text);
+}
+.lg-hotspot__button:after {
+    content: "";
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: var(--color-background);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+.manage_hotspot_inner {
+    padding: 2rem;
+    background-color: var(--color-background);
+    box-shadow: 0 2px 4px #0003;
+    transition: all .1s linear;
+    border-radius: var(--border-radius);
+}
+.lg-hotspot__label {
+    position: absolute;
+    width: 18em;
+    max-width: 50vw;
+    z-index: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    opacity: 0;
+    transition: all .1s linear;
+    left: 24px;
+    top: 24px;
+    pointer-events: none;
+}
+.lg-hotspot__label h4 {
+    font-size: 2rem;
+    line-height: 1.4;
+}
+.htp_product_info a {
+    text-decoration: none;
+}
+.hotspot_section_container .main-swiper-wrapper {
+    height: 900px;
+}
+.hotspot_row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    gap: 1.5%;
+    padding: 3rem 3rem;
+    background:var(--color-secondary-bg)
+}
+.featured_htp_img img {
+    border-radius: var(--border-radius);
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+.hotspot_coll_inner {
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    background: var(--color-background);
+    color: var(--color-secondary-heading);
+}
+.htp_product_info {
+    padding: 2rem 0 0 0;
+    text-align: center;
+}
+.htp_product_price {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color:var(--color-secondary-text);
+}
+.htp_product_title {
+    color: var(--color-secondary-heading);
+}
+
+.hotspot_collection_inner {
+    border-radius: var(--border-radius);
+}
+
+.hotspot_product_slider {
+    width: 18%;
+}
+.hotspot-main {
+    width: 80%;
+}
+.htp_head_head.fc_head--left {
+    text-align: left;
+}
+.htp_head_head.fc_head--center {
+    text-align: center;
+}
+.htp_head_head.fc_head--right {
+    text-align: right;
+}
+.hotspot_coll_inner_empt_info {
+    padding: 1rem 0rem;
+    text-align: center;
+}
+.hotspot_coll_inner_empt {
+    margin-bottom: 10px;
+}
+
+.no_slider .hotspot_section_container.has_collection .hotspot_coll_inner {
+    margin-bottom: 1.5rem;
+}
+
+.lg-hotspot[data-x^="6"],
+.lg-hotspot[data-x^="7"],
+.lg-hotspot[data-x^="8"],
+.lg-hotspot[data-x^="9"] {
+  --popup-x: -100%;
+}
+
+.lg-hotspot[data-x^="6"] .lg-hotspot__label,
+.lg-hotspot[data-x^="7"] .lg-hotspot__label,
+.lg-hotspot[data-x^="8"] .lg-hotspot__label,
+.lg-hotspot[data-x^="9"] .lg-hotspot__label {
+  left: auto;
+  right: 100%;
+}
+
+ .lg-hotspot[data-y^="6"],
+.lg-hotspot[data-y^="7"],
+.lg-hotspot[data-y^="8"],
+.lg-hotspot[data-y^="9"] {
+  --popup-y: -100%;
+}
+
+.lg-hotspot[data-y^="6"] .lg-hotspot__label,
+.lg-hotspot[data-y^="7"] .lg-hotspot__label,
+.lg-hotspot[data-y^="8"] .lg-hotspot__label,
+.lg-hotspot[data-y^="9"] .lg-hotspot__label {
+  top: auto;
+  bottom: 100%;
+}
+
+
+@media screen and (max-width: 1200px) {
+    .featured_htp_img img {
+        width: 165px;
+        height: 165px;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .htp-container-lable-mobile {
+        display: none;
+    }
+}
+
+
+
+@media screen and (max-width: 1023px) {
+    .hotspot_product_slider {
+        width: 100%;
+    }
+    .hotspot-main {
+        width: 100%;
+    }
+    .hotspot_section_container .main-swiper-wrapper {
+        height: auto;
+    }
+    .hotspot_row {
+        row-gap: 3rem;
+        padding: 3rem 2rem;
+        position: relative;
+    }
+    .hotspot_section_container .main-swiper-wrapper {
+        height: 380px;
+    }
+    .htp-container-lable-mobile {
+        position: absolute;
+        top: 20%;
+        left: 20%;
+        transform: translate(-20%, -20%);
+        display: block;
+        content: '';
+        z-index: 3;
+    }
+    .lg-hotspot__label.mobile_hotspot_label.show_product_htp {
+        opacity: 1;
+    }
+}
+@media screen and (max-width: 1023px){
+ .featured_htp_img img {
+    width: 220px;
+    height: 220px;
+ }
+}
+
+
+@media screen and (max-width: 640px) {
+    .hotspot_row {
+        padding: 3rem 1rem;
+    }
+    .lg-hotspot__button {
+        height: 22px;
+        font-size: 1.5rem;
+        width: 22px;
+        line-height: 23px;
+    }
+    .htp-container-img {
+        padding: 1rem;
+    }    
+    .lg-hotspot__label {
+      padding: 1.2rem;
+    }
+    .hotspot_section_container .main-swiper-wrapper {
+        height: 345px;
+    }
+    .lg-hotspot__label {
+        width: 16em;
+    }
+    .lg-hotspot__label .featured_htp_img img {
+        width: 130px;
+        height: 130px;
+    }
+    .lg-hotspot__label .htp_product_info .htp_product_price {
+        font-size: 1.4rem;
+    }
+    .htp-container-img .lg-hotspot .lg-hotspot__label {
+        display: none;
+        position: static;
+    }
+    .htp_product_price {
+        font-size: 1.5rem;
+    }
+    .featured_htp_img img {
+        width: 180px;
+        height: 180px;
+    }
+    .hotspot_coll_inner {
+        padding: 1rem;
+    }
+}

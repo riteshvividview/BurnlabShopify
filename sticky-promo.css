@@ -1,0 +1,199 @@
+     .sticky-product-promo {
+        position: relative;
+        padding: 6rem 1rem 0;
+      }
+
+
+      .promo-text {
+        position: sticky;
+        top: calc(var(--header-height) + 10rem);
+        flex: 0 0 40%;
+        z-index: 2;
+      }
+
+        .split_content ,
+         .split_heading {
+            max-width: 45rem;
+        }
+      .promo-image-wrapper {
+        position: relative;
+        flex: 1;
+        text-align: center;
+        max-width: 60rem;
+        z-index: 2;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+
+      .promo-image {
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        transition: transform 0.4s ease-out;
+      }
+      .sticky-promo-descrption {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 4rem;
+        padding: 4rem 0;
+    }
+    .text__right .split_content ,   
+    .text__right .split_heading {
+         margin: 0 0 0 auto;
+    }
+
+  
+  
+
+    .split_heading, 
+    .text__right .split_heading{
+      margin-bottom:1.25rem;
+    } 
+
+    .split_heading h6,
+      .split_content p{
+      margin-bottom:1rem;
+    }
+
+    .promo-text .section_heading {
+    text-align: center;
+    }
+    .promo_heading {
+      font-size: var(--font-size);
+      letter-spacing: 0;
+      line-height: 1;
+      color: var(--color);
+      text-align: center;
+  }
+  .promo-image-wrapper .section_button {
+    padding-top: 5rem;
+}
+.promo_placeholder_svg {
+    display: flex;
+    grid-gap: 3rem;
+}
+.promo-image-wrapper .placeholder--svg {
+    box-shadow: 1px 1px #000;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+}
+.promo-image-wrapper .placeholder--svg {
+    border-radius: var(--border-radius);
+}
+.promo-image-wrapper img {
+    border-radius: var(--border-radius);
+}
+
+.promo-text-image svg{
+  width:40%;
+  margin:0 auto;
+}
+
+
+.sticky_icontext_main {
+    display: flex;
+    justify-content: space-between;
+    grid-gap: 4rem;
+    flex-wrap: wrap;
+}
+.sticky_content_icntext .section_block_heading.h5.body_style {
+    font-size: calc(var(--font-heading-scale) * 1.8rem);
+}
+.sticky_icontext_outer_left, .sticky_icontext_outer_right {
+    gap: 4rem;
+    display: flex;
+    flex-flow: column;
+}
+.sticky_icontext_main .stcky-icon-with-text-column {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+}
+.sticky_txt {
+    margin: 1rem 0 0;
+}
+.stycky_inner_img_text .sticky_content_icntext .section_block_heading.body_style {
+    color: var(--color-secondary-text);
+}
+.sticky_txt, .sticky_txt p {
+    color: var(--color-secondary-text);
+}
+.promo-text.sticky_icon_text_height+.promo-image-wrapper {
+    height: 100vh;
+}
+.text__left.text_lft_left {
+    text-align: left;
+}
+.text__left.text_lft_center {
+    text-align: center;
+}
+.text__left.text_lft_right {
+    text-align: right;
+}
+.text__right.text_right_right {
+    text-align: right;
+}
+.text__right.text_right_left {
+    text-align: left;
+}
+.text__right.text_right_center {
+    text-align: center;
+}
+@media screen and (max-width: 1400px) {
+.promo-image-wrapper {
+  max-width: 50rem;
+}
+.promo-text.sticky_icon_text_height+.promo-image-wrapper {
+    height: auto;
+}
+}
+
+@media screen and (max-width: 750px) {
+
+.split_heading,
+ .text__right .split_heading{
+  margin:0 0 1rem 0;
+    max-width:100%;
+}
+.split_content, .split_heading {
+    max-width: 100%;
+}
+
+.text__right .split_content{
+  margin:0;
+}
+
+.sticky-promo-descrption {
+    grid-template-columns: 1fr;
+    grid-gap: 3rem;
+    padding: 3rem 0;
+}
+.promo-text {
+  top: calc(var(--header-height) + 5rem);
+}
+.sticky-product-promo .placeholder-svg:last-child, .sticky-product-promo .placeholder-svg:first-child {
+    display: none;
+}
+.promo_placeholder_svg {
+    grid-gap: 2rem;
+}
+}
+
+@media screen and (max-width: 640px){
+  .sticky_content_icntext .section_block_heading.h5.body_style {
+    font-size: calc(var(--font-heading-scale) * 1.6rem);
+  }
+  .sticky_txt {
+    margin: 0.6rem 0 0;
+  }
+  .sticky_icontext_main .stcky-icon-with-text-column img {
+    width: 60px;
+    height: 60px;
+  }
+  .sticky_icontext_main {
+    margin-bottom: 3rem;
+  }
+}

@@ -8,7 +8,6 @@
 {%- assign section_id = 'burnlab-collection-' | append: section.id -%}
 
 {%- liquid
-  assign hero_height           = section.settings.hero_height           | default: 480
   assign hero_overlay_color    = section.settings.hero_overlay_color    | default: '#001a2e'
   assign hero_overlay_opacity  = section.settings.hero_overlay_opacity  | default: 60
   assign hero_ov_alpha         = hero_overlay_opacity | times: 0.01
@@ -18,15 +17,23 @@
   assign accent_color          = section.settings.accent_color          | default: '#07d16e'
   assign filter_bar_bg_dark    = section.settings.filter_bar_bg_dark    | default: '#001828'
   assign filter_bar_bg_light   = section.settings.filter_bar_bg_light   | default: '#ecf3f5'
-  assign show_filters          = section.settings.show_filters
-  assign filter_position       = section.settings.filter_position       | default: 'sidebar'
-  assign sidebar_sticky        = section.settings.sidebar_sticky
-  assign sidebar_sticky_top    = section.settings.sidebar_sticky_top    | default: 80
   assign show_sort             = section.settings.show_sort
   assign show_collection_stats = section.settings.show_collection_stats
-  assign price_control         = section.settings.price_control         | default: 'slider'
   assign currency_symbol       = section.settings.currency_symbol       | default: '₹'
   assign hide_decimal          = section.settings.hide_decimal
+  assign price_range_style     = section.settings.price_range_style     | default: 'range'
+  assign price_from_prefix     = section.settings.price_from_prefix     | default: 'Starting from'
+  assign price_prefix_color    = section.settings.price_prefix_color    | default: '#8fa6ab'
+  assign price_prefix_font_size = section.settings.price_prefix_font_size | default: 12
+  assign price_value_color     = section.settings.price_value_color    | default: '#07d16e'
+  assign badge_mode            = section.settings.badge_mode            | default: 'discount'
+  assign badge_bg_color        = section.settings.badge_bg_color        | default: '#ffffff'
+  assign badge_text_color      = section.settings.badge_text_color      | default: '#001a2e'
+  assign badge_icon            = section.settings.badge_icon            | default: '🔥'
+  assign badge_font_size       = section.settings.badge_font_size       | default: 12
+  assign badge_radius          = section.settings.badge_radius          | default: 20
+  assign badge_padding         = section.settings.badge_padding         | default: 6
+  assign badge_style           = section.settings.badge_style           | default: 'floating'
   assign price_font_size       = section.settings.price_font_size       | default: 14
   assign card_title_size       = section.settings.card_title_size       | default: 16
   assign paginate_count        = section.settings.paginate              | default: 12
@@ -47,22 +54,9 @@
   assign padding_top_mobile    = section.settings.padding_top_mobile    | default: 0
   assign padding_bottom_mobile = section.settings.padding_bottom_mobile | default: 48
   assign anim_dur              = anim_speed | times: 0.06 | plus: 0.3
-  assign hero_mob_height       = hero_height | times: 0.65 | round
   assign body_size_sm          = body_size | minus: 2
   assign card_title_sm         = card_title_size | minus: 2
   assign price_size_sm         = price_font_size | minus: 2
-
-  assign price_floor = collection.price_min | divided_by: 100
-  assign price_ceil  = collection.price_max | divided_by: 100
-  for filter in collection.filters
-    if filter.type == 'price_range'
-      assign price_floor = filter.range_min | divided_by: 100
-      assign price_ceil  = filter.range_max | divided_by: 100
-    endif
-  endfor
-  unless price_ceil > price_floor
-    assign price_ceil = price_floor | plus: 50000
-  endunless
 -%}
 
 {% style %}
@@ -82,9 +76,6 @@
   --bl-col-card-bg:     #0a1929;
   --bl-col-card-border: rgba(51, 104, 112, 0.22);
   --bl-col-card-shadow: 0 4px 24px rgba(0, 0, 0, 0.30);
-  --bl-col-sidebar-bg:  rgba(0, 22, 38, 0.70);
-  --bl-col-input-bg:    rgba(255, 255, 255, 0.05);
-  --bl-col-select-opt:  #001828;
   --bl-col-img-bg:      #071420;
 }
 
@@ -93,9 +84,6 @@
   --bl-col-card-bg:     #ffffff;
   --bl-col-card-border: rgba(0, 26, 46, 0.10);
   --bl-col-card-shadow: 0 2px 16px rgba(0, 26, 46, 0.07);
-  --bl-col-sidebar-bg:  rgba(236, 243, 245, 0.90);
-  --bl-col-input-bg:    rgba(0, 26, 46, 0.04);
-  --bl-col-select-opt:  #ecf3f5;
   --bl-col-img-bg:      #eaf4f5;
 }
 
@@ -114,11 +102,8 @@
 #{{ section_id }} .bl-col-hero {
   position: relative;
   width: 100%;
-  height: {{ hero_height }}px;
-  min-height: 240px;
+  aspect-ratio: 2048 / 410;
   overflow: hidden;
-  display: flex;
-  align-items: flex-end;
 }
 
 #{{ section_id }} .bl-col-hero-bg { position: absolute; inset: 0; z-index: 0; }
@@ -126,7 +111,6 @@
 #{{ section_id }} .bl-col-hero:hover .bl-col-hero-bg img { transform: scale(1.04); }
 #{{ section_id }} .bl-col-hero-bg-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, #001228 0%, #001a2e 45%, #002040 100%); }
 #{{ section_id }} .bl-col-hero-overlay { position: absolute; inset: 0; z-index: 1; background: {{ hero_overlay_color }}; opacity: {{ hero_ov_alpha }}; }
-#{{ section_id }} .bl-col-hero-gradient { position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: linear-gradient(to top, var(--bl-mode-body-bg, #000f1c) 0%, transparent 100%); z-index: 2; }
 
 #{{ section_id }} .bl-col-hero-lines { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 #{{ section_id }} .bl-col-hero-lines::before,
@@ -142,8 +126,10 @@
 #{{ section_id }} .bl-col-hero-content {
   position: relative; z-index: 10; width: 100%; max-width: 1400px;
   margin-inline: auto;
+  background: var(--bl-mode-body-bg, #000f1c);
   padding-inline: clamp(1.6rem, 5vw, 8rem);
-  padding-bottom: clamp(2.8rem, 4.5vw, 5.2rem);
+  padding-top: clamp(1.8rem, 3vw, 3rem);
+  padding-bottom: clamp(1.8rem, 3vw, 3rem);
 }
 
 #{{ section_id }} .bl-col-breadcrumb {
@@ -229,24 +215,6 @@
   display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
 }
 
-#{{ section_id }} .bl-col-filter-trigger {
-  display: none; align-items: center; gap: 0.6rem;
-  padding: 0.65rem 1.4rem;
-  background: transparent; border: 1px solid var(--bl-mode-border, rgba(51,104,112,0.22));
-  border-radius: 8px; color: var(--bl-mode-text, #eaf4f5);
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
-  font-size: clamp(1.1rem, 1.2vw, 1.3rem); font-weight: 600;
-  cursor: pointer; white-space: nowrap;
-  transition: border-color 0.22s ease, color 0.22s ease, background 0.22s ease;
-}
-{% if filter_position == 'top' %}
-#{{ section_id }} .bl-col-filter-trigger { display: inline-flex; }
-{% endif %}
-#{{ section_id }} .bl-col-filter-trigger svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; color: {{ accent_color }}; }
-#{{ section_id }} .bl-col-filter-trigger:hover { border-color: {{ accent_color }}; color: {{ accent_color }}; background: rgba(7,209,110,0.06); }
-#{{ section_id }} .bl-col-filter-trigger[aria-expanded="true"] { border-color: {{ accent_color }}; color: {{ accent_color }}; background: rgba(7,209,110,0.10); }
-
-#{{ section_id }} .bl-col-divider { width: 1px; height: 2.2rem; background: var(--bl-mode-border, rgba(51,104,112,0.22)); flex-shrink: 0; }
 #{{ section_id }} .bl-col-sort-wrap { display: flex; align-items: center; gap: 0.8rem; margin-left: auto; flex-shrink: 0; }
 #{{ section_id }} .bl-col-sort-label { font-size: clamp(1.1rem, 1.2vw, 1.3rem); color: var(--bl-mode-text-muted, rgba(234,244,245,0.52)); white-space: nowrap; flex-shrink: 0; }
 #{{ section_id }} .bl-col-sort-select {
@@ -264,224 +232,15 @@
 #{{ section_id }} .bl-col-sort-select:focus { outline: none; border-color: {{ accent_color }}; box-shadow: 0 0 0 3px rgba(7,209,110,0.14); }
 #{{ section_id }} .bl-col-sort-select option { background-color: var(--bl-col-select-opt); color: var(--bl-mode-text, #eaf4f5); }
 
-/* ── Top filter panel ─────────────────────────────────────── */
-#{{ section_id }} .bl-col-filter-top {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  background: var(--bl-col-filter-bg);
-  border-bottom: 1px solid var(--bl-mode-border, rgba(51,104,112,0.22));
-}
-#{{ section_id }} .bl-col-filter-top.is-open { max-height: 900px; }
-#{{ section_id }} .bl-col-filter-top-inner {
-  max-width: 1400px; margin-inline: auto;
-  padding: 2rem clamp(1.6rem, 5vw, 8rem);
-  display: flex; flex-wrap: wrap; gap: 2.4rem; align-items: flex-start;
-}
-
 /* ── Main layout ─────────────────────────────────────────── */
 #{{ section_id }} .bl-col-layout {
   max-width: 1400px; margin-inline: auto;
   padding-inline: clamp(1.6rem, 5vw, 8rem);
   padding-top: 3.2rem;
-  display: flex; gap: 3.6rem; align-items: flex-start;
 }
-
-/* ── Sidebar — sticky desktop only ───────────────────────── */
-#{{ section_id }} .bl-col-sidebar {
-  flex: 0 0 27rem; width: 27rem;
-  {% if sidebar_sticky %}
-  position: sticky;
-  top: {{ sidebar_sticky_top }}px;
-  max-height: calc(100vh - {{ sidebar_sticky_top | plus: 20 }}px);
-  {% else %}
-  position: static; max-height: none;
-  {% endif %}
-  overflow-y: auto; overflow-x: hidden;
-  scrollbar-width: thin; scrollbar-color: {{ accent_color }} transparent;
-  background: var(--bl-col-sidebar-bg);
-  border: 1px solid var(--bl-mode-border, rgba(51,104,112,0.18));
-  border-radius: 14px; padding: 1.8rem 1.4rem;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-}
-#{{ section_id }} .bl-col-sidebar::-webkit-scrollbar { width: 3px; }
-#{{ section_id }} .bl-col-sidebar::-webkit-scrollbar-thumb { background: {{ accent_color }}; border-radius: 2px; }
-
-/* ── Evolve filter snippet overrides ─────────────────────── */
-#{{ section_id }} .bl-col-sidebar .facets__heading,
-#{{ section_id }} .bl-col-filter-top-inner .facets__heading {
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif) !important;
-  font-weight: 400 !important; font-size: 1.5rem !important;
-  color: var(--bl-mode-text, #eaf4f5) !important;
-  margin-bottom: 1.4rem !important; padding-bottom: 0.8rem !important;
-  border-bottom: 1px solid var(--bl-mode-border, rgba(51,104,112,0.22)) !important;
-}
-#{{ section_id }} .bl-col-sidebar details,
-#{{ section_id }} .bl-col-filter-top-inner details {
-  border-bottom: 1px solid var(--bl-mode-border, rgba(51,104,112,0.18)) !important;
-  padding-bottom: 0.8rem !important; margin-bottom: 0.8rem !important;
-}
-#{{ section_id }} .bl-col-sidebar details > summary,
-#{{ section_id }} .bl-col-filter-top-inner details > summary {
-  display: flex !important; align-items: center !important;
-  justify-content: space-between !important; cursor: pointer !important;
-  list-style: none !important; padding: 0.8rem 0 !important;
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
-  font-size: 1.3rem !important; font-weight: 600 !important;
-  letter-spacing: 0.04em !important; text-transform: uppercase !important;
-  color: var(--bl-mode-text, #eaf4f5) !important; transition: color 0.2s ease !important;
-}
-#{{ section_id }} .bl-col-sidebar details > summary::-webkit-details-marker { display: none; }
-#{{ section_id }} .bl-col-sidebar details > summary::marker { display: none; }
-#{{ section_id }} .bl-col-sidebar details > summary:hover,
-#{{ section_id }} .bl-col-filter-top-inner details > summary:hover { color: {{ accent_color }} !important; }
-#{{ section_id }} .bl-col-sidebar details[open] > summary { color: {{ accent_color }} !important; }
-#{{ section_id }} .bl-col-sidebar details > summary::after,
-#{{ section_id }} .bl-col-filter-top-inner details > summary::after {
-  content: ''; display: block; width: 1rem; height: 1rem;
-  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translateY(-4px); transition: transform 0.25s ease; flex-shrink: 0;
-}
-#{{ section_id }} .bl-col-sidebar details[open] > summary::after,
-#{{ section_id }} .bl-col-filter-top-inner details[open] > summary::after { transform: rotate(-135deg) translateY(-4px); }
-
-#{{ section_id }} .bl-col-sidebar .facets__list,
-#{{ section_id }} .bl-col-filter-top-inner .facets__list {
-  list-style: none !important; display: flex !important; flex-direction: column !important;
-  gap: 0.55rem !important; padding: 0.6rem 0 0 0 !important; margin: 0 !important;
-}
-#{{ section_id }} .bl-col-sidebar .facets__item,
-#{{ section_id }} .bl-col-filter-top-inner .facets__item {
-  display: flex !important; align-items: center !important; gap: 0.8rem !important;
-}
-#{{ section_id }} .bl-col-sidebar input[type="checkbox"],
-#{{ section_id }} .bl-col-filter-top-inner input[type="checkbox"] {
-  appearance: none !important; -webkit-appearance: none !important;
-  width: 1.6rem !important; height: 1.6rem !important; min-width: 1.6rem !important;
-  border: 1.5px solid var(--bl-mode-border, rgba(51,104,112,0.40)) !important;
-  border-radius: 4px !important; background: var(--bl-col-input-bg) !important;
-  cursor: pointer !important; transition: border-color 0.2s ease, background 0.2s ease !important;
-  position: relative !important;
-}
-#{{ section_id }} .bl-col-sidebar input[type="checkbox"]:checked,
-#{{ section_id }} .bl-col-filter-top-inner input[type="checkbox"]:checked {
-  background: {{ accent_color }} !important; border-color: {{ accent_color }} !important;
-}
-#{{ section_id }} .bl-col-sidebar input[type="checkbox"]:checked::after,
-#{{ section_id }} .bl-col-filter-top-inner input[type="checkbox"]:checked::after {
-  content: ''; position: absolute !important;
-  top: 2px !important; left: 5px !important;
-  width: 5px !important; height: 9px !important;
-  border-right: 2px solid #001a2e !important; border-bottom: 2px solid #001a2e !important;
-  transform: rotate(45deg) !important;
-}
-#{{ section_id }} .bl-col-sidebar input[type="checkbox"]:hover,
-#{{ section_id }} .bl-col-filter-top-inner input[type="checkbox"]:hover { border-color: {{ accent_color }} !important; }
-#{{ section_id }} .bl-col-sidebar .facet__label,
-#{{ section_id }} .bl-col-sidebar label,
-#{{ section_id }} .bl-col-filter-top-inner label {
-  font-size: 1.3rem !important; color: var(--bl-mode-text, #eaf4f5) !important;
-  cursor: pointer !important; line-height: 1.4 !important;
-  transition: color 0.2s ease !important; overflow-wrap: break-word !important;
-}
-#{{ section_id }} .bl-col-sidebar label:hover,
-#{{ section_id }} .bl-col-filter-top-inner label:hover { color: {{ accent_color }} !important; }
-#{{ section_id }} .bl-col-sidebar .facets__count,
-#{{ section_id }} .bl-col-filter-top-inner .facets__count {
-  font-size: 1.05rem !important; color: var(--bl-mode-text-muted, rgba(234,244,245,0.45)) !important; margin-left: auto !important;
-}
-#{{ section_id }} .bl-col-sidebar .facets__reset,
-#{{ section_id }} .bl-col-sidebar button[type="submit"],
-#{{ section_id }} .bl-col-filter-top-inner .facets__reset,
-#{{ section_id }} .bl-col-filter-top-inner button[type="submit"] {
-  display: inline-flex !important; align-items: center !important; justify-content: center !important;
-  padding: 0.7rem 1.6rem !important; border-radius: 999px !important;
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
-  font-size: 1.2rem !important; font-weight: 600 !important; cursor: pointer !important;
-  transition: background 0.22s ease, transform 0.2s ease !important; will-change: transform !important;
-}
-#{{ section_id }} .bl-col-sidebar button[type="submit"],
-#{{ section_id }} .bl-col-filter-top-inner button[type="submit"] {
-  background: {{ accent_color }} !important; color: #001a2e !important; border: none !important;
-}
-#{{ section_id }} .bl-col-sidebar button[type="submit"]:hover { transform: translateY(-1px); background: #09f07e !important; }
-#{{ section_id }} .bl-col-sidebar .facets__reset,
-#{{ section_id }} .bl-col-filter-top-inner .facets__reset {
-  background: transparent !important;
-  border: 1px solid var(--bl-mode-border, rgba(51,104,112,0.35)) !important;
-  color: var(--bl-mode-text, #eaf4f5) !important;
-}
-#{{ section_id }} .bl-col-sidebar .facets__reset:hover { border-color: {{ accent_color }} !important; color: {{ accent_color }} !important; }
-
-/* ── Styled manual price inputs (inputs mode) ────────────── */
-#{{ section_id }} .bl-col-sidebar .facets__price input[type="number"],
-#{{ section_id }} .bl-col-sidebar input[name*="filter.v.price"],
-#{{ section_id }} .bl-col-filter-top-inner input[name*="filter.v.price"] {
-  background: var(--bl-col-input-bg) !important;
-  border: 1.5px solid var(--bl-mode-border, rgba(51,104,112,0.35)) !important;
-  border-radius: 8px !important; color: {{ accent_color }} !important;
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
-  font-size: 1.3rem !important; font-weight: 600 !important;
-  padding: 0.6rem 0.9rem !important; width: 10rem !important;
-  transition: border-color 0.2s ease !important; -moz-appearance: textfield !important;
-}
-#{{ section_id }} .bl-col-sidebar .facets__price input:focus,
-#{{ section_id }} .bl-col-sidebar input[name*="filter.v.price"]:focus {
-  outline: none !important; border-color: {{ accent_color }} !important;
-  box-shadow: 0 0 0 3px rgba(7,209,110,0.15) !important;
-}
-#{{ section_id }} .bl-col-sidebar .facets__price input::-webkit-outer-spin-button,
-#{{ section_id }} .bl-col-sidebar .facets__price input::-webkit-inner-spin-button { -webkit-appearance: none !important; }
-
-/* ── Custom Price Slider ──────────────────────────────────── */
-#{{ section_id }} .bl-price-slider-wrap {
-  padding: 0.4rem 0 1.6rem;
-  border-bottom: 1px solid var(--bl-mode-border, rgba(51,104,112,0.22));
-  margin-bottom: 1.2rem;
-}
-#{{ section_id }} .bl-price-slider-title {
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif); font-size: 1.3rem; font-weight: 600;
-  letter-spacing: 0.04em; text-transform: uppercase; color: var(--bl-mode-text, #eaf4f5);
-  margin-bottom: 1.6rem;
-}
-#{{ section_id }} .bl-price-slider-vals { display: flex; justify-content: space-between; margin-bottom: 1.4rem; gap: 0.5rem; }
-#{{ section_id }} .bl-price-val {
-  font-size: 1.25rem; font-weight: 600; color: {{ accent_color }};
-  background: rgba(7,209,110,0.08); border: 1px solid rgba(7,209,110,0.25);
-  border-radius: 6px; padding: 0.35rem 0.8rem;
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif); min-width: 7rem; text-align: center;
-}
-#{{ section_id }} .bl-price-track-wrap { position: relative; padding: 1.6rem 0.8rem; }
-#{{ section_id }} .bl-price-track { position: relative; height: 4px; background: var(--bl-mode-border, rgba(51,104,112,0.35)); border-radius: 4px; }
-#{{ section_id }} .bl-price-fill { position: absolute; top: 0; height: 4px; background: {{ accent_color }}; border-radius: 4px; pointer-events: none; }
-#{{ section_id }} .bl-price-thumb {
-  position: absolute; top: 50%; transform: translate(-50%, -50%);
-  width: 3.2rem; height: 2rem; cursor: grab;
-  background: none; border: none; padding: 0;
-  display: flex; align-items: center; justify-content: center;
-  color: {{ accent_color }}; filter: drop-shadow(0 2px 6px rgba(7,209,110,0.45));
-  transition: filter 0.2s ease; will-change: left; touch-action: none; z-index: 2;
-}
-#{{ section_id }} .bl-price-thumb:active { cursor: grabbing; filter: drop-shadow(0 4px 12px rgba(7,209,110,0.7)); }
-#{{ section_id }} .bl-price-thumb svg { width: 3.2rem; height: 2rem; pointer-events: none; }
-#{{ section_id }} .bl-price-slider-apply {
-  width: 100%; padding: 0.75rem; margin-top: 1.2rem;
-  background: {{ accent_color }}; color: #001a2e; border: none; border-radius: 8px;
-  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif); font-size: 1.25rem; font-weight: 700;
-  cursor: pointer; transition: background 0.22s ease, transform 0.18s ease; will-change: transform;
-}
-#{{ section_id }} .bl-price-slider-apply:hover { background: #09f07e; transform: translateY(-1px); }
-
-/* Hide Evolve's price section when slider is active */
-{% if price_control == 'slider' %}
-#{{ section_id }} .bl-col-sidebar .facets__price,
-#{{ section_id }} .bl-col-sidebar [data-index*="price"],
-#{{ section_id }} .bl-col-sidebar details:has([name*="filter.v.price"]),
-#{{ section_id }} .bl-col-filter-top-inner .facets__price,
-#{{ section_id }} .bl-col-filter-top-inner [data-index*="price"] { display: none !important; }
-{% endif %}
 
 /* ── Main column ─────────────────────────────────────────── */
-#{{ section_id }} .bl-col-main { flex: 1; min-width: 0; }
+#{{ section_id }} .bl-col-main { min-width: 0; }
 #{{ section_id }} .bl-col-desc {
   font-size: clamp({{ body_size_sm }}px, 1.4vw, {{ body_size }}px); line-height: 1.72;
   color: var(--bl-mode-text-muted, rgba(234,244,245,0.55));
@@ -558,15 +317,23 @@
 
 /* Sale / sold-out badge on image */
 #{{ section_id }} .bl-col-card-badge {
-  position: absolute; top: 0.9rem; left: 0.9rem; z-index: 2;
-  background: {{ accent_color }}; color: #001a2e;
+  position: absolute; z-index: 2;
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: {{ badge_bg_color }}; color: {{ badge_text_color }};
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
-  font-size: 1rem; font-weight: 700; line-height: 1.3;
-  padding: 0.22rem 0.65rem; border-radius: 4px; letter-spacing: 0.02em;
+  font-size: {{ badge_font_size }}px; font-weight: 700; line-height: 1.3;
+  border-radius: {{ badge_radius }}px; letter-spacing: 0.02em;
+  padding: {{ badge_padding }}px {{ badge_padding | times: 1.7 | round }}px;
+  {%- if badge_style == 'flush' -%}
+  top: 0; left: 0; box-shadow: none;
+  {%- else -%}
+  top: 0.9rem; left: 0.9rem; box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  {%- endif -%}
 }
 #{{ section_id }} .bl-col-badge-sold {
   background: rgba(234,244,245,0.15);
   color: var(--bl-mode-text, #eaf4f5);
+  box-shadow: none;
 }
 
 /* Info area — always at the bottom, never scaled by zoom */
@@ -603,12 +370,22 @@
   padding-top: 0.4rem;
 }
 
-/* Main price — green */
+/* Main price */
 #{{ section_id }} .bl-col-price-main {
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-weight: 700;
   font-size: clamp({{ price_size_sm }}px, 1.2vw, {{ price_font_size }}px);
-  color: {{ accent_color }};
+  color: {{ price_value_color }};
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+/* "Starting from" prefix */
+#{{ section_id }} .bl-col-price-prefix {
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 500;
+  font-size: clamp({{ price_prefix_font_size | minus: 2 }}px, 1.2vw, {{ price_prefix_font_size }}px);
+  color: {{ price_prefix_color }};
   letter-spacing: 0;
   line-height: 1.2;
 }
@@ -729,9 +506,7 @@
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  #{{ section_id }} .bl-col-sidebar { display: none !important; position: static !important; }
-  #{{ section_id }} .bl-col-layout { flex-direction: column; gap: 0; padding-top: 0; }
-  #{{ section_id }} .bl-col-filter-trigger { display: inline-flex !important; }
+  #{{ section_id }} .bl-col-layout { padding-top: 0; }
   #{{ section_id }} .bl-col-grid { --col-cols: 2; }
   #{{ section_id }} .bl-col-filterbar {
     position: sticky; top: 0; z-index: 100;
@@ -740,10 +515,8 @@
   }
 }
 @media (max-width: 768px) {
-  #{{ section_id }} .bl-col-hero { height: {{ hero_mob_height }}px; min-height: 220px; }
   #{{ section_id }} .bl-col-sort-wrap { margin-left: 0; width: 100%; }
   #{{ section_id }} .bl-col-sort-select { width: 100%; min-width: 0; }
-  #{{ section_id }} .bl-col-divider { display: none; }
   #{{ section_id }} { padding-top: {{ padding_top_mobile }}px !important; padding-bottom: {{ padding_bottom_mobile }}px !important; }
 }
 @media (max-width: 480px) {
@@ -754,8 +527,6 @@
   #{{ section_id }} .bl-col-stats { padding-inline: 1.2rem; flex-direction: column; align-items: flex-start; gap: 0.8rem; }
   #{{ section_id }} .bl-col-hero-content { padding-inline: 1.6rem; }
   #{{ section_id }} .bl-col-sort-label { display: none; }
-  #{{ section_id }} .bl-col-filter-top-inner { padding: 1.6rem 1.2rem; flex-direction: column; gap: 1.6rem; }
-  #{{ section_id }} .bl-col-filter-trigger { padding: 0.55rem 1rem; }
   #{{ section_id }} .bl-col-card-info { padding: 1rem 1rem 1.1rem; }
   #{{ section_id }} .bl-pag-btn { min-width: 3.6rem; height: 3.6rem; font-size: 1.3rem; }
 }
@@ -770,7 +541,6 @@
   #{{ section_id }} .bl-col-hero:hover .bl-col-hero-bg img, #{{ section_id }} .bl-col-card:hover .bl-col-card-img-wrap img { transform: none !important; }
   #{{ section_id }} .bl-col-hero-lines::before, #{{ section_id }} .bl-col-hero-lines::after { animation: none; opacity: 0.3; }
   #{{ section_id }} .bl-col-empty-icon { animation: none; opacity: 0.6; }
-  #{{ section_id }} .bl-col-filter-top { transition: none; }
 }
 
 {% endstyle %}
@@ -792,6 +562,7 @@
   <!-- ── Hero ──────────────────────────────────────────────── -->
   <div class="bl-col-hero">
     <div class="bl-col-hero-bg" aria-hidden="true">
+      <div class="bl-col-hero-bg-fallback"></div>
       {%- if collection.image -%}
         <img
           src="{{ collection.image | image_url: width: 1800 }}"
@@ -801,36 +572,33 @@
           loading="eager" fetchpriority="high"
           width="{{ collection.image.width }}" height="{{ collection.image.height }}"
         >
-      {%- else -%}
-        <div class="bl-col-hero-bg-fallback"></div>
       {%- endif -%}
     </div>
     <div class="bl-col-hero-overlay" aria-hidden="true"></div>
-    <div class="bl-col-hero-gradient" aria-hidden="true"></div>
     <div class="bl-col-hero-lines" aria-hidden="true"></div>
-    <div class="bl-col-hero-content">
-      {%- if show_breadcrumbs -%}
-        <nav class="bl-col-breadcrumb" aria-label="Breadcrumb">
-          <a href="{{ routes.root_url }}">Home</a>
-          <span class="bl-col-breadcrumb-sep" aria-hidden="true">/</span>
-          <a href="{{ routes.collections_url }}">Collections</a>
-          <span class="bl-col-breadcrumb-sep" aria-hidden="true">/</span>
-          <span aria-current="page">{{ collection.title | escape }}</span>
-        </nav>
-      {%- endif -%}
-      <div class="bl-col-eyebrow" aria-hidden="true">
-        <span class="bl-col-eyebrow-bar"></span>{{ eyebrow_text | escape }}
-      </div>
-      {%- assign title_words = collection.title | split: ' ' -%}
-      <h1 class="bl-col-hero-title{% if enable_animations %} bl-col-title-anim{% endif %}">
-        {%- for word in title_words -%}
-          <span class="bl-col-word"><span class="bl-col-word-inner">{{ word | escape }}</span></span>
-        {%- endfor -%}
-      </h1>
-      {%- if show_description and collection.description != blank -%}
-        <div class="bl-col-hero-desc">{{ collection.description }}</div>
-      {%- endif -%}
+  </div>
+  <div class="bl-col-hero-content">
+    {%- if show_breadcrumbs -%}
+      <nav class="bl-col-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ routes.root_url }}">Home</a>
+        <span class="bl-col-breadcrumb-sep" aria-hidden="true">/</span>
+        <a href="{{ routes.collections_url }}">Collections</a>
+        <span class="bl-col-breadcrumb-sep" aria-hidden="true">/</span>
+        <span aria-current="page">{{ collection.title | escape }}</span>
+      </nav>
+    {%- endif -%}
+    <div class="bl-col-eyebrow" aria-hidden="true">
+      <span class="bl-col-eyebrow-bar"></span>{{ eyebrow_text | escape }}
     </div>
+    {%- assign title_words = collection.title | split: ' ' -%}
+    <h1 class="bl-col-hero-title{% if enable_animations %} bl-col-title-anim{% endif %}">
+      {%- for word in title_words -%}
+        <span class="bl-col-word"><span class="bl-col-word-inner">{{ word | escape }}</span></span>
+      {%- endfor -%}
+    </h1>
+    {%- if show_description and collection.description != blank -%}
+      <div class="bl-col-hero-desc">{{ collection.description }}</div>
+    {%- endif -%}
   </div>
 
   <!-- ── Stats strip ───────────────────────────────────────── -->
@@ -853,15 +621,8 @@
   {%- endif -%}
 
   <!-- ── Filter / sort bar ─────────────────────────────────── -->
-  <div class="bl-col-filterbar" role="region" aria-label="Filter and sort">
+  <div class="bl-col-filterbar" role="region" aria-label="Sort">
     <div class="bl-col-filterbar-inner">
-      {%- if show_filters -%}
-        <button class="bl-col-filter-trigger" type="button" aria-expanded="false" aria-controls="bl-col-filter-panel-{{ section.id }}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-          Filters
-        </button>
-        {%- if show_sort and collection.sort_options.size > 0 -%}<div class="bl-col-divider" aria-hidden="true"></div>{%- endif -%}
-      {%- endif -%}
       {%- if show_sort and collection.sort_options.size > 0 -%}
         <div class="bl-col-sort-wrap">
           <span class="bl-col-sort-label" id="bl-sort-lbl-{{ section.id }}">Sort by</span>
@@ -876,65 +637,8 @@
     </div>
   </div>
 
-  <!-- ── Top filter panel ──────────────────────────────────── -->
-  {%- if show_filters and filter_position == 'top' -%}
-    <div class="bl-col-filter-top" id="bl-col-filter-panel-{{ section.id }}" aria-hidden="true">
-      <div class="bl-col-filter-top-inner">
-        {%- if price_control == 'slider' -%}
-          <div class="bl-price-slider-wrap" style="min-width:24rem;flex:0 0 24rem;">
-            <div class="bl-price-slider-title">Price Range</div>
-            <div class="bl-price-slider-vals">
-              <span class="bl-price-val bl-price-val-min">{{ currency_symbol }}{{ price_floor }}</span>
-              <span class="bl-price-val bl-price-val-max">{{ currency_symbol }}{{ price_ceil }}</span>
-            </div>
-            <div class="bl-price-track-wrap">
-              <div class="bl-price-track" id="bl-price-track-{{ section.id }}">
-                <div class="bl-price-fill" id="bl-price-fill-{{ section.id }}"></div>
-                <button class="bl-price-thumb" id="bl-thumb-min-{{ section.id }}" aria-label="Minimum price">
-                  <svg viewBox="0 0 40 20" fill="currentColor" aria-hidden="true"><rect x="0" y="4" width="10" height="12" rx="2.5"/><rect x="10" y="7" width="4" height="6" rx="1.5"/><rect x="14" y="8" width="12" height="4" rx="2"/><rect x="26" y="7" width="4" height="6" rx="1.5"/><rect x="30" y="4" width="10" height="12" rx="2.5"/></svg>
-                </button>
-                <button class="bl-price-thumb" id="bl-thumb-max-{{ section.id }}" aria-label="Maximum price">
-                  <svg viewBox="0 0 40 20" fill="currentColor" aria-hidden="true"><rect x="0" y="4" width="10" height="12" rx="2.5"/><rect x="10" y="7" width="4" height="6" rx="1.5"/><rect x="14" y="8" width="12" height="4" rx="2"/><rect x="26" y="7" width="4" height="6" rx="1.5"/><rect x="30" y="4" width="10" height="12" rx="2.5"/></svg>
-                </button>
-              </div>
-            </div>
-            <button class="bl-price-slider-apply" id="bl-price-apply-top-{{ section.id }}" type="button">Apply Price</button>
-          </div>
-        {%- endif -%}
-        {%- render 'filters', result: collection, enable_filtering: true, enable_sorting: false, filter_type: 'vertical' -%}
-      </div>
-    </div>
-  {%- endif -%}
-
   <!-- ── Main layout ───────────────────────────────────────── -->
   <div class="bl-col-layout">
-
-    {%- if show_filters and filter_position == 'sidebar' -%}
-      <aside class="bl-col-sidebar" id="bl-col-filter-panel-{{ section.id }}" aria-label="Product filters">
-        {%- if price_control == 'slider' -%}
-          <div class="bl-price-slider-wrap">
-            <div class="bl-price-slider-title">Price Range</div>
-            <div class="bl-price-slider-vals">
-              <span class="bl-price-val bl-price-val-min">{{ currency_symbol }}{{ price_floor }}</span>
-              <span class="bl-price-val bl-price-val-max">{{ currency_symbol }}{{ price_ceil }}</span>
-            </div>
-            <div class="bl-price-track-wrap">
-              <div class="bl-price-track" id="bl-price-track-{{ section.id }}">
-                <div class="bl-price-fill" id="bl-price-fill-{{ section.id }}"></div>
-                <button class="bl-price-thumb" id="bl-thumb-min-{{ section.id }}" aria-label="Minimum price">
-                  <svg viewBox="0 0 40 20" fill="currentColor" aria-hidden="true"><rect x="0" y="4" width="10" height="12" rx="2.5"/><rect x="10" y="7" width="4" height="6" rx="1.5"/><rect x="14" y="8" width="12" height="4" rx="2"/><rect x="26" y="7" width="4" height="6" rx="1.5"/><rect x="30" y="4" width="10" height="12" rx="2.5"/></svg>
-                </button>
-                <button class="bl-price-thumb" id="bl-thumb-max-{{ section.id }}" aria-label="Maximum price">
-                  <svg viewBox="0 0 40 20" fill="currentColor" aria-hidden="true"><rect x="0" y="4" width="10" height="12" rx="2.5"/><rect x="10" y="7" width="4" height="6" rx="1.5"/><rect x="14" y="8" width="12" height="4" rx="2"/><rect x="26" y="7" width="4" height="6" rx="1.5"/><rect x="30" y="4" width="10" height="12" rx="2.5"/></svg>
-                </button>
-              </div>
-            </div>
-            <button class="bl-price-slider-apply" id="bl-price-apply-{{ section.id }}" type="button">Apply Price</button>
-          </div>
-        {%- endif -%}
-        {%- render 'filters', result: collection, enable_filtering: true, enable_sorting: false, filter_type: 'vertical' -%}
-      </aside>
-    {%- endif -%}
 
     <div class="bl-col-main">
       {%- if show_description and collection.description != blank -%}
@@ -945,7 +649,7 @@
       <ul class="bl-col-grid" role="list">
         {%- for product in collection.products -%}
 
-          {%- comment -%} Compute discount percentage {%- endcomment -%}
+          {%- comment -%} Compute badge: sold-out > product-tag label > discount %, per badge_mode setting {%- endcomment -%}
           {%- assign show_badge = false -%}
           {%- assign badge_text = '' -%}
           {%- unless product.available -%}
@@ -954,10 +658,37 @@
             {%- assign badge_sold = true -%}
           {%- else -%}
             {%- assign badge_sold = false -%}
-            {%- if product.compare_at_price > product.price -%}
+            {%- assign tag_badge_text = '' -%}
+            {%- if badge_mode == 'tags' or badge_mode == 'both' -%}
+              {%- for tag in product.tags -%}
+                {%- assign tag_key = tag | handleize -%}
+                {%- case tag_key -%}
+                  {%- when 'bestseller' -%}
+                    {%- assign tag_badge_text = 'Bestseller' -%}
+                  {%- when 'most-sold' -%}
+                    {%- assign tag_badge_text = 'Most Sold' -%}
+                  {%- when 'new', 'new-launch' -%}
+                    {%- assign tag_badge_text = 'New Launch' -%}
+                  {%- when 'staff-pick' -%}
+                    {%- assign tag_badge_text = 'Staff Pick' -%}
+                  {%- when 'trending' -%}
+                    {%- assign tag_badge_text = 'Trending' -%}
+                {%- endcase -%}
+                {%- if tag_badge_text != '' -%}{%- break -%}{%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+
+            {%- if tag_badge_text != '' -%}
+              {%- assign show_badge = true -%}
+              {%- assign badge_text = tag_badge_text -%}
+            {%- elsif badge_mode != 'tags' and product.compare_at_price > product.price -%}
               {%- assign show_badge = true -%}
               {%- assign disc = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price -%}
               {%- assign badge_text = disc | append: '% Off' -%}
+            {%- endif -%}
+
+            {%- if show_badge and badge_icon != blank -%}
+              {%- assign badge_text = badge_icon | append: ' ' | append: badge_text -%}
             {%- endif -%}
           {%- endunless -%}
 
@@ -991,10 +722,19 @@
                 <h3 class="bl-col-card-title">{{ product.title | escape }}</h3>
                 <div class="bl-col-card-price">
                   {%- if product.price_varies -%}
-                    {%- if hide_decimal -%}
-                      <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency | split: '.' | first }} – {{ currency_symbol }}{{ product.price_max | money_without_currency | split: '.' | first }}</span>
+                    {%- if price_range_style == 'from' -%}
+                      <span class="bl-col-price-prefix">{{ price_from_prefix }}</span>
+                      {%- if hide_decimal -%}
+                        <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency | split: '.' | first }}</span>
+                      {%- else -%}
+                        <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency }}</span>
+                      {%- endif -%}
                     {%- else -%}
-                      <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency }} – {{ currency_symbol }}{{ product.price_max | money_without_currency }}</span>
+                      {%- if hide_decimal -%}
+                        <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency | split: '.' | first }} – {{ currency_symbol }}{{ product.price_max | money_without_currency | split: '.' | first }}</span>
+                      {%- else -%}
+                        <span class="bl-col-price-main">{{ currency_symbol }}{{ product.price_min | money_without_currency }} – {{ currency_symbol }}{{ product.price_max | money_without_currency }}</span>
+                      {%- endif -%}
                     {%- endif -%}
                   {%- elsif product.compare_at_price > product.price -%}
                     {%- if hide_decimal -%}
@@ -1109,105 +849,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   {% endif %}
 
-  // ── Filter trigger (top layout expand / sidebar mobile) ───
-  var filterBtn   = root.querySelector('.bl-col-filter-trigger');
-  var filterPanel = document.getElementById('bl-col-filter-panel-{{ section.id }}');
-  if (filterBtn && filterPanel) {
-    filterBtn.addEventListener('click', function () {
-      {% if filter_position == 'top' %}
-        var isOpen = filterPanel.classList.contains('is-open');
-        filterPanel.classList.toggle('is-open', !isOpen);
-        filterPanel.setAttribute('aria-hidden', String(isOpen));
-        filterBtn.setAttribute('aria-expanded', String(!isOpen));
-      {% else %}
-        var isOpen = filterPanel.style.display === 'block';
-        filterPanel.style.display = isOpen ? 'none' : 'block';
-        filterBtn.setAttribute('aria-expanded', String(!isOpen));
-      {% endif %}
-    });
-  }
-
-  // ── Custom price range slider ─────────────────────────────
-  {% if price_control == 'slider' %}
-  (function () {
-    var track    = document.getElementById('bl-price-track-{{ section.id }}');
-    var fill     = document.getElementById('bl-price-fill-{{ section.id }}');
-    var thumbMin = document.getElementById('bl-thumb-min-{{ section.id }}');
-    var thumbMax = document.getElementById('bl-thumb-max-{{ section.id }}');
-    var applyBtn = document.getElementById('bl-price-apply-{{ section.id }}');
-    var applyTop = document.getElementById('bl-price-apply-top-{{ section.id }}');
-    if (!track) return;
-
-    var valMinEls = root.querySelectorAll('.bl-price-val-min');
-    var valMaxEls = root.querySelectorAll('.bl-price-val-max');
-    var sym       = '{{ currency_symbol | escape }}';
-    var priceFloor = {{ price_floor }};
-    var priceCeil  = {{ price_ceil }};
-    if (priceCeil <= priceFloor) priceCeil = priceFloor + 10000;
-
-    var urlP   = new URLSearchParams(window.location.search);
-    var curMin = parseFloat(urlP.get('filter.v.price.gte')) || priceFloor;
-    var curMax = parseFloat(urlP.get('filter.v.price.lte')) || priceCeil;
-    curMin = Math.max(priceFloor, Math.min(curMin, priceCeil - 1));
-    curMax = Math.min(priceCeil,  Math.max(curMax, priceFloor + 1));
-
-    function pct(v) { return ((v - priceFloor) / (priceCeil - priceFloor)) * 100; }
-    function fmt(v) { return sym + Math.round(v).toLocaleString('en-IN'); }
-
-    function updateUI() {
-      var lo = pct(curMin), hi = pct(curMax);
-      if (thumbMin) thumbMin.style.left = lo + '%';
-      if (thumbMax) thumbMax.style.left = hi + '%';
-      if (fill) { fill.style.left = lo + '%'; fill.style.width = (hi - lo) + '%'; }
-      valMinEls.forEach(function (el) { el.textContent = fmt(curMin); });
-      valMaxEls.forEach(function (el) { el.textContent = fmt(curMax); });
-    }
-
-    function setupDrag(thumb, isMin) {
-      if (!thumb) return;
-      function onMove(e) {
-        var rect = track.getBoundingClientRect();
-        var cx   = e.touches ? e.touches[0].clientX : e.clientX;
-        var p    = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
-        var v    = Math.round(priceFloor + p * (priceCeil - priceFloor));
-        if (isMin) curMin = Math.min(v, curMax - 1);
-        else       curMax = Math.max(v, curMin + 1);
-        updateUI();
-        if (e.cancelable) e.preventDefault();
-      }
-      function onEnd() {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('mouseup',   onEnd);
-        document.removeEventListener('touchend',  onEnd);
-      }
-      thumb.addEventListener('mousedown', function (e) {
-        e.preventDefault();
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup',   onEnd);
-      });
-      thumb.addEventListener('touchstart', function () {
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend',  onEnd);
-      }, { passive: true });
-    }
-
-    setupDrag(thumbMin, true);
-    setupDrag(thumbMax, false);
-
-    function applyFilter() {
-      var p = new URLSearchParams(window.location.search);
-      p.set('filter.v.price.gte', curMin);
-      p.set('filter.v.price.lte', curMax);
-      window.location.href = window.location.pathname + '?' + p.toString() + '#{{ section_id }}';
-    }
-    if (applyBtn) applyBtn.addEventListener('click', applyFilter);
-    if (applyTop) applyTop.addEventListener('click', applyFilter);
-
-    updateUI();
-  }());
-  {% endif %}
-
   // Scroll to section if arrived via pagination hash
   if (window.location.hash === '#{{ section_id }}') {
     setTimeout(function () { root.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
@@ -1221,7 +862,6 @@ document.addEventListener('DOMContentLoaded', function () {
   "name": "BurnLab Collection",
   "settings": [
     { "type": "header", "content": "Collection Hero" },
-    { "type": "range",    "id": "hero_height",          "label": "Hero height",                "min": 240, "max": 800, "step": 8,  "unit": "px", "default": 480 },
     { "type": "color",    "id": "hero_overlay_color",   "label": "Hero overlay color",         "default": "#001a2e" },
     { "type": "range",    "id": "hero_overlay_opacity", "label": "Hero overlay opacity",       "min": 0,   "max": 100, "step": 4,  "unit": "%",  "default": 60 },
     { "type": "text",     "id": "eyebrow_text",         "label": "Eyebrow label",              "default": "Collection" },
@@ -1240,26 +880,22 @@ document.addEventListener('DOMContentLoaded', function () {
     { "type": "header", "content": "Currency" },
     { "type": "text",     "id": "currency_symbol",      "label": "Currency symbol",            "default": "₹" },
     { "type": "checkbox", "id": "hide_decimal",         "label": "Hide .00 from prices",       "default": true },
-    { "type": "header", "content": "Filters and Sorting" },
-    { "type": "checkbox", "id": "show_filters",         "label": "Show filters",               "default": true },
-    { "type": "select",   "id": "filter_position",      "label": "Filter position",
+    { "type": "header", "content": "Price Display" },
+    { "type": "select",   "id": "price_range_style",    "label": "Multi-price display style",
+      "info": "Controls how products with multiple variant prices are shown on the card.",
       "options": [
-        { "value": "sidebar", "label": "Sidebar left of products" },
-        { "value": "top",     "label": "Top bar above products" }
+        { "value": "range", "label": "Full range (₹X – ₹Y)" },
+        { "value": "from",  "label": "Starting-from prefix (Prefix ₹X)" }
       ],
-      "default": "sidebar"
+      "default": "range"
     },
-    { "type": "checkbox", "id": "sidebar_sticky",       "label": "Sticky sidebar on desktop",  "default": true },
-    { "type": "range",    "id": "sidebar_sticky_top",   "label": "Sticky offset from top",     "min": 0, "max": 120, "step": 4, "unit": "px", "default": 80 },
+    { "type": "text",     "id": "price_from_prefix",    "label": "Starting-from prefix text",  "default": "Starting from" },
+    { "type": "color",    "id": "price_prefix_color",   "label": "Starting-from prefix color", "default": "#8fa6ab" },
+    { "type": "range",    "id": "price_prefix_font_size","label": "Starting-from prefix font size", "min": 8, "max": 24, "step": 1, "unit": "px", "default": 12 },
+    { "type": "color",    "id": "price_value_color",    "label": "Price value color",          "default": "#07d16e" },
+    { "type": "header", "content": "Sorting" },
     { "type": "checkbox", "id": "show_sort",            "label": "Show sort dropdown",         "default": true },
     { "type": "checkbox", "id": "show_collection_stats","label": "Show product count",         "default": true },
-    { "type": "select",   "id": "price_control",        "label": "Price filter style",
-      "options": [
-        { "value": "slider", "label": "Custom range slider with dumbbell handles" },
-        { "value": "inputs", "label": "Manual min and max price inputs" }
-      ],
-      "default": "slider"
-    },
     { "type": "header", "content": "Product Grid" },
     { "type": "range",    "id": "paginate",             "label": "Products per page",   "min": 8, "max": 48, "step": 4, "default": 12 },
     { "type": "select",   "id": "columns_desktop",      "label": "Columns on desktop",
@@ -1275,6 +911,33 @@ document.addEventListener('DOMContentLoaded', function () {
     { "type": "select",   "id": "card_hover_effect",    "label": "Card hover effect",
       "options": [{"value":"glow","label":"Green glow"},{"value":"lift","label":"Deep lift shadow"},{"value":"border","label":"Accent border"}],
       "default": "glow"
+    },
+    { "type": "header", "content": "Product Badges" },
+    { "type": "select",   "id": "badge_mode",           "label": "Badge source",
+      "info": "Tag labels are triggered by product tags: bestseller, most-sold, new / new-launch, staff-pick, trending.",
+      "options": [
+        { "value": "discount", "label": "Discount percentage only" },
+        { "value": "tags",     "label": "Product tag labels only" },
+        { "value": "both",     "label": "Tag label, fallback to discount %" }
+      ],
+      "default": "discount"
+    },
+    { "type": "color",    "id": "badge_bg_color",       "label": "Badge background color",     "default": "#ffffff" },
+    { "type": "color",    "id": "badge_text_color",     "label": "Badge text color",           "default": "#001a2e" },
+    { "type": "text",     "id": "badge_icon",           "label": "Badge icon prefix",
+      "info": "Emoji or short text shown before the badge label, e.g. 🔥. Leave blank for none. Not applied to Sold Out.",
+      "default": "🔥"
+    },
+    { "type": "range",    "id": "badge_font_size",      "label": "Badge font size",             "min": 8,  "max": 20, "step": 1, "unit": "px", "default": 12 },
+    { "type": "range",    "id": "badge_radius",         "label": "Badge corner radius",         "min": 0,  "max": 40, "step": 2, "unit": "px", "default": 20 },
+    { "type": "range",    "id": "badge_padding",        "label": "Badge inner padding",         "min": 0,  "max": 20, "step": 1, "unit": "px", "default": 6 },
+    { "type": "select",   "id": "badge_style",          "label": "Badge style",
+      "info": "Floating: inset from corner, padded, with shadow. Flush: attached to top-left, no padding.",
+      "options": [
+        { "value": "floating", "label": "Floating pill" },
+        { "value": "flush",    "label": "Flush corner" }
+      ],
+      "default": "floating"
     },
     { "type": "header", "content": "Empty State" },
     { "type": "text",     "id": "empty_title",          "label": "Empty state heading", "default": "No Products Found" },
