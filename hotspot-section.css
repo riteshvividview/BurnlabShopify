@@ -7,6 +7,7 @@
     padding: 2rem;
     background: var(--color-background);
     border-radius: var(--border-radius);
+    transition: background-color 0.35s ease;
 }
 .lg-image {
     display: block;
@@ -102,7 +103,8 @@
     justify-content: space-between;
     gap: 1.5%;
     padding: 3rem 3rem;
-    background:var(--color-secondary-bg)
+    background:var(--color-secondary-bg);
+    transition: background-color 0.35s ease;
 }
 .featured_htp_img img {
     border-radius: var(--border-radius);
@@ -116,6 +118,7 @@
     border-radius: var(--border-radius);
     background: var(--color-background);
     color: var(--color-secondary-heading);
+    transition: background-color 0.35s ease, color 0.35s ease;
 }
 .htp_product_info {
     padding: 2rem 0 0 0;

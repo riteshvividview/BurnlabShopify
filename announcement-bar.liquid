@@ -1,0 +1,205 @@
+{% comment %}
+  ============================================================
+  BURNLAB — Announcement Bar
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Standalone scrolling marquee bar — same markup/behavior as the
+  one built into hero-section.liquid, extracted into its own
+  section so it can be placed anywhere independently of the hero.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id = 'burnlab-ann-' | append: section.id
+  assign ann_text       = section.settings.announcement_text
+  assign ann_bg          = section.settings.announcement_bg          | default: '#ff4d6d'
+  assign ann_text_color  = section.settings.announcement_text_color  | default: '#ffffff'
+  assign ann_speed        = section.settings.announcement_speed       | default: 20
+  assign ann_height       = section.settings.announcement_height      | default: 38
+  assign ann_icon_size    = section.settings.announcement_icon_size   | default: 14
+  assign ann_position     = section.settings.announcement_position    | default: 'relative'
+
+  assign ann_visible = false
+  if section.settings.announcement_enabled and ann_text != blank
+    assign ann_visible = true
+  endif
+-%}
+
+<style>
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  #{{ section_id }} .bl-announcement-bar {
+    {%- if ann_position == 'fixed' -%}
+      position: fixed; top: 0; left: 0; right: 0;
+    {%- elsif ann_position == 'sticky' -%}
+      position: sticky; top: 0;
+    {%- else -%}
+      position: relative;
+    {%- endif -%}
+    width: 100%;
+    overflow: hidden;
+    background: {{ ann_bg }};
+    height: {{ ann_height }}px;
+    display: flex;
+    align-items: center;
+    z-index: 210;
+    box-sizing: border-box;
+  }
+  {%- if ann_position == 'fixed' and ann_visible -%}
+  #{{ section_id }} .bl-announcement-spacer {
+    display: block;
+    height: {{ ann_height }}px;
+  }
+  {%- endif -%}
+  #{{ section_id }} .bl-announcement-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: bl-ann-marquee {{ ann_speed }}s linear infinite;
+    will-change: transform;
+  }
+  #{{ section_id }} .bl-ann-copy {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #{{ section_id }} .bl-ann-item {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: {{ ann_text_color }};
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 28px;
+    white-space: nowrap;
+  }
+  #{{ section_id }} .bl-ann-sep {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: {{ ann_text_color }};
+    opacity: 0.75;
+  }
+  #{{ section_id }} .bl-ann-sep svg {
+    width: {{ ann_icon_size }}px;
+    height: {{ ann_icon_size }}px;
+    display: block;
+    fill: currentColor;
+  }
+  @keyframes bl-ann-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bl-announcement-track { animation-play-state: paused; }
+  }
+</style>
+
+{%- if ann_visible -%}
+<div id="{{ section_id }}" data-section-id="{{ section.id }}">
+  {%- if ann_position == 'fixed' -%}
+    <div class="bl-announcement-spacer" aria-hidden="true"></div>
+  {%- endif -%}
+  <div class="bl-announcement-bar" role="marquee" aria-label="Announcement">
+    <div class="bl-announcement-track">
+      <div class="bl-ann-copy">
+        {%- for i in (1..10) -%}
+          <span class="bl-ann-item">{{ ann_text }}</span>
+          <span class="bl-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+        {%- endfor -%}
+      </div>
+      <div class="bl-ann-copy" aria-hidden="true">
+        {%- for i in (1..10) -%}
+          <span class="bl-ann-item">{{ ann_text }}</span>
+          <span class="bl-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Announcement Bar",
+  "tag": "section",
+  "class": "burnlab-announcement-section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "announcement_enabled",
+      "label": "Show announcement bar",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "Free shipping on orders above ₹999",
+      "info": "This text repeats and scrolls across the bar."
+    },
+    {
+      "type": "color",
+      "id": "announcement_bg",
+      "label": "Background color",
+      "default": "#ff4d6d"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "announcement_speed",
+      "label": "Scroll speed",
+      "min": 5,
+      "max": 60,
+      "step": 5,
+      "unit": "s",
+      "default": 20,
+      "info": "Seconds per full scroll cycle. Lower = faster."
+    },
+    {
+      "type": "range",
+      "id": "announcement_height",
+      "label": "Bar height",
+      "min": 28,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 38
+    },
+    {
+      "type": "range",
+      "id": "announcement_icon_size",
+      "label": "Separator icon size",
+      "min": 8,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 14,
+      "info": "Size of the sparkle icon between each announcement text."
+    },
+    {
+      "type": "select",
+      "id": "announcement_position",
+      "label": "Bar position",
+      "options": [
+        { "value": "fixed",    "label": "Fixed — always floats above page" },
+        { "value": "sticky",   "label": "Sticky — sticks to top on scroll" },
+        { "value": "relative", "label": "Static — scrolls away with page" }
+      ],
+      "default": "relative"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement Bar Pro"
+    }
+  ]
+}
+{% endschema %}

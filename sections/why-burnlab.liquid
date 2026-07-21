@@ -16,6 +16,8 @@
   assign heading_align     = section.settings.heading_alignment | default: 'center'
   assign card_align        = section.settings.card_alignment    | default: 'center'
   assign card_style        = section.settings.card_style        | default: 'cards'
+  assign section_width     = section.settings.section_width     | default: 'boxed'
+  assign card_width        = section.settings.card_width        | default: 220
 
   assign cols_desktop = section.settings.columns_desktop | default: 5
   assign cols_tablet  = section.settings.columns_tablet  | default: 3
@@ -67,6 +69,7 @@
   --wb-cols-d:    {{ cols_desktop }};
   --wb-cols-t:    {{ cols_tablet }};
   --wb-cols-m:    {{ cols_mobile }};
+  --wb-card-w:    {{ card_width }}px;
   --wb-title-fs:      {{ title_fs }}px;
   --wb-title-fs-m:    {{ title_fs_m }}px;
   --wb-subtitle-fs:   {{ subtitle_fs }}px;
@@ -103,7 +106,11 @@
 
 /* ── Container ── */
 #{{ section_id }} .wb-inner {
+  {% if section_width == 'full' %}
+  max-width: 100%;
+  {% else %}
   max-width: 84rem;
+  {% endif %}
   margin: 0 auto;
   padding-inline: clamp(1.6rem, 4vw, 3.2rem);
 }
@@ -114,8 +121,8 @@
   text-align: {{ heading_align }};
 }
 #{{ section_id }} .wb-title {
-  font-family: 'Archivo Black', sans-serif;
-  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--wb-text);
   font-size: var(--wb-title-fs-m);
@@ -173,7 +180,10 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);
   transform: translateY(-3px);
 }
-/* Flex grid so orphaned last-row cards center themselves */
+/* Flex grid so orphaned last-row cards center themselves.
+   Card width is driven directly by --wb-card-w (px) rather than the column
+   count — cards wrap to fewer per row automatically if they don't all fit.
+   Widen "Container width" to Full to fit more cards at a larger width. */
 #{{ section_id }}[data-style="cards"] .wb-grid {
   display: flex;
   flex-wrap: wrap;
@@ -181,19 +191,32 @@
   align-items: stretch;
 }
 #{{ section_id }}[data-style="cards"] .wb-card {
-  flex: 0 0 calc((100% - 1.4rem * (var(--wb-cols-m) - 1)) / var(--wb-cols-m));
-  max-width: calc((100% - 1.4rem * (var(--wb-cols-m) - 1)) / var(--wb-cols-m));
+  flex: 0 1 var(--wb-card-w, 220px);
+  max-width: min(var(--wb-card-w, 220px), 100%);
 }
-@media (min-width: 590px) {
-  #{{ section_id }}[data-style="cards"] .wb-card {
-    flex: 0 0 calc((100% - 1.4rem * (var(--wb-cols-t) - 1)) / var(--wb-cols-t));
-    max-width: calc((100% - 1.4rem * (var(--wb-cols-t) - 1)) / var(--wb-cols-t));
+
+/* ── Mobile: full-width, equal-height, centered cards ──
+   Overrides the fixed --wb-card-w sizing above — on small screens every
+   card stretches edge-to-edge (within the section's side padding), gets
+   a shared minimum height so short/long cards line up, and content is
+   centered both horizontally and vertically regardless of the merchant's
+   "Block content alignment" setting. */
+@media (max-width: 640px) {
+  #{{ section_id }}[data-style="cards"] .wb-grid {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
   }
-}
-@media (min-width: 990px) {
   #{{ section_id }}[data-style="cards"] .wb-card {
-    flex: 0 0 calc((100% - 1rem * (var(--wb-cols-d) - 1)) / var(--wb-cols-d));
-    max-width: calc((100% - 1rem * (var(--wb-cols-d) - 1)) / var(--wb-cols-d));
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-height: 190px;
+    padding: 2rem 1.6rem;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-inline: 0;
   }
 }
 
@@ -338,7 +361,8 @@
   position: absolute;
   top: 1.2rem;
   right: 1.8rem;
-  font-family: 'Archivo Black', sans-serif;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
   font-size: clamp(4rem, 7vw, 6rem);
   color: var(--wb-accent);
   opacity: 0.07;
@@ -350,8 +374,8 @@
 
 #{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-card__title {
   font-size: clamp(1.3rem, 2.4vw, 1.9rem);
-  font-family: 'Archivo Black', sans-serif;
-  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
   line-height: 1.25;
 }
 #{{ section_id }}[data-style="spotlight"] .wb-sp-content .wb-card__subtitle {
@@ -407,7 +431,8 @@
 }
 
 #{{ section_id }}[data-style="spotlight"] .wb-sp-num {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
   font-size: 0.72rem;
   color: var(--wb-accent);
   opacity: 0.55;
@@ -983,6 +1008,28 @@
     },
     {
       "type": "select",
+      "id": "section_width",
+      "label": "Container width",
+      "options": [
+        { "value": "boxed", "label": "Boxed (contained)" },
+        { "value": "full",  "label": "Full width" }
+      ],
+      "default": "boxed",
+      "info": "Full width gives more room for wider cards to still fit in one row."
+    },
+    {
+      "type": "range",
+      "id": "card_width",
+      "label": "Card width (px) — Boxed cards style",
+      "min": 140,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "default": 220,
+      "info": "Only applies to the Boxed cards layout style. Cards wrap to fewer per row automatically if they don't all fit — increase Container width above to fit more per row at a larger size."
+    },
+    {
+      "type": "select",
       "id": "card_alignment",
       "label": "Block content alignment",
       "options": [
@@ -996,7 +1043,8 @@
       "type": "range",
       "id": "columns_desktop",
       "label": "Columns (desktop)",
-      "min": 1, "max": 5, "step": 1, "default": 5
+      "min": 1, "max": 5, "step": 1, "default": 5,
+      "info": "Applies to the Minimal strip layout. Boxed cards width is controlled by \"Card width (px)\" above instead."
     },
     {
       "type": "select",

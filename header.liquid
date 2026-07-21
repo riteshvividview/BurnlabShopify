@@ -42,6 +42,38 @@
   else
     assign acct_dest = routes.account_login_url
   endif
+
+  assign ann_enabled     = section.settings.announcement_enabled
+  assign ann_text        = section.settings.announcement_text
+  assign ann_bg_dark          = section.settings.announcement_bg_dark          | default: '#ff4d6d'
+  assign ann_bg_light         = section.settings.announcement_bg_light         | default: '#ff4d6d'
+  assign ann_text_color_dark  = section.settings.announcement_text_color_dark  | default: '#ffffff'
+  assign ann_text_color_light = section.settings.announcement_text_color_light | default: '#ffffff'
+  assign ann_speed       = section.settings.announcement_speed      | default: 20
+  assign ann_height      = section.settings.announcement_height     | default: 38
+  assign ann_icon_size   = section.settings.announcement_icon_size  | default: 14
+  assign ann_position    = section.settings.announcement_position   | default: 'fixed'
+
+  assign ann_visible = false
+  if ann_enabled and ann_text != blank
+    assign ann_visible = true
+  endif
+
+  assign ann_offset = 0
+  if ann_visible and ann_position == 'fixed'
+    assign ann_offset = ann_height
+  endif
+
+  assign spacer_height     = ann_offset
+  assign spacer_height_mob = ann_offset
+  if header_position == 'fixed'
+    assign spacer_height     = spacer_height     | plus: header_height
+    assign spacer_height_mob = spacer_height_mob | plus: hdr_height_mob
+  endif
+  assign show_spacer = false
+  if spacer_height > 0
+    assign show_spacer = true
+  endif
 -%}
 
 {% style %}
@@ -67,6 +99,8 @@
   --bl-drawer-text:      {{ drawer_txt_dark }};
   --bl-drawer-accent:    {{ drawer_accent }};
   --bl-drawer-border:    rgba(51, 104, 112, 0.25);
+  --bl-ann-bg:           {{ ann_bg_dark }};
+  --bl-ann-text:         {{ ann_text_color_dark }};
 }
 
 [data-theme="light"] {
@@ -85,6 +119,8 @@
   --bl-drawer-text:      {{ drawer_txt_light }};
   --bl-drawer-accent:    {{ drawer_accent }};
   --bl-drawer-border:    rgba(0, 26, 46, 0.12);
+  --bl-ann-bg:           {{ ann_bg_light }};
+  --bl-ann-text:         {{ ann_text_color_light }};
 }
 
 html {
@@ -96,6 +132,78 @@ body {
   color: var(--bl-mode-text);
   transition: background-color 0.35s ease, color 0.35s ease;
   overflow-x: clip;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANNOUNCEMENT BAR — sits directly above the header. Default
+   "Fixed" pins it to the very top of the viewport, with the
+   header (sticky/fixed) offset down by its height so they stay
+   attached as one unit while scrolling.
+   ═══════════════════════════════════════════════════════════════ */
+#{{ section_id }} .bl-hdr-announcement-bar {
+  {% if ann_position == 'fixed' %}
+    position: fixed; top: 0; left: 0 !important; right: 0 !important;
+  {% elsif ann_position == 'sticky' %}
+    position: sticky; top: 0;
+  {% else %}
+    position: relative;
+  {% endif %}
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: hidden;
+  background: var(--bl-ann-bg);
+  height: {{ ann_height }}px;
+  display: flex;
+  align-items: center;
+  z-index: 210;
+  box-sizing: border-box !important;
+  transition: background-color 0.35s ease;
+}
+#{{ section_id }} .bl-hdr-ann-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: bl-hdr-ann-marquee {{ ann_speed }}s linear infinite;
+  will-change: transform;
+}
+#{{ section_id }} .bl-hdr-ann-copy {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#{{ section_id }} .bl-hdr-ann-item {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bl-ann-text);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0 28px;
+  white-space: nowrap;
+  transition: color 0.35s ease;
+}
+#{{ section_id }} .bl-hdr-ann-sep {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--bl-ann-text);
+  opacity: 0.75;
+  transition: color 0.35s ease;
+}
+#{{ section_id }} .bl-hdr-ann-sep svg {
+  width: {{ ann_icon_size }}px;
+  height: {{ ann_icon_size }}px;
+  display: block;
+  fill: currentColor;
+}
+@keyframes bl-hdr-ann-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .bl-hdr-ann-track { animation-play-state: paused; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -514,9 +622,9 @@ header-element {
 
 #{{ section_id }} .bl-hdr-outer {
   {% if header_position == 'sticky' %}
-    position: sticky; top: 0;
+    position: sticky; top: {{ ann_offset }}px;
   {% elsif header_position == 'fixed' %}
-    position: fixed; top: 0; left: 0 !important; right: 0 !important;
+    position: fixed; top: {{ ann_offset }}px; left: 0 !important; right: 0 !important;
   {% else %}
     position: relative;
   {% endif %}
@@ -537,10 +645,10 @@ header-element {
   box-sizing: border-box !important;
 }
 
-{% if header_position == 'fixed' %}
-  #{{ section_id }} .bl-hdr-spacer { display: block; height: {{ header_height }}px; }
+{% if show_spacer %}
+  #{{ section_id }} .bl-hdr-spacer { display: block; height: {{ spacer_height }}px; }
   @media (max-width: 1024px) {
-    #{{ section_id }} .bl-hdr-spacer { height: {{ hdr_height_mob }}px; }
+    #{{ section_id }} .bl-hdr-spacer { height: {{ spacer_height_mob }}px; }
   }
 {% else %}
   #{{ section_id }} .bl-hdr-spacer { display: none; }
@@ -1164,7 +1272,26 @@ header-element {
 <header-element class="color_scheme color-{{ section.settings.color_scheme }}">
   <div id="{{ section_id }}">
 
-    {%- if header_position == 'fixed' -%}
+    {%- if ann_visible -%}
+      <div class="bl-hdr-announcement-bar" role="marquee" aria-label="Announcement">
+        <div class="bl-hdr-ann-track">
+          <div class="bl-hdr-ann-copy">
+            {%- for i in (1..10) -%}
+              <span class="bl-hdr-ann-item">{{ ann_text }}</span>
+              <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+            {%- endfor -%}
+          </div>
+          <div class="bl-hdr-ann-copy" aria-hidden="true">
+            {%- for i in (1..10) -%}
+              <span class="bl-hdr-ann-item">{{ ann_text }}</span>
+              <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if show_spacer -%}
       <div class="bl-hdr-spacer" aria-hidden="true"></div>
     {%- endif -%}
 
@@ -1713,6 +1840,92 @@ document.addEventListener('DOMContentLoaded', function () {
   "name": "Header",
   "class": "header_block",
   "settings": [
+    {
+      "type": "header",
+      "content": "Announcement Bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "announcement_enabled",
+      "label": "Show announcement bar",
+      "default": true,
+      "info": "Shown directly above the header, on every page."
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "Free shipping on orders above ₹999",
+      "info": "This text repeats and scrolls across the bar."
+    },
+    {
+      "type": "color",
+      "id": "announcement_bg_dark",
+      "label": "Background color (dark mode)",
+      "default": "#ff4d6d"
+    },
+    {
+      "type": "color",
+      "id": "announcement_bg_light",
+      "label": "Background color (light mode)",
+      "default": "#ff4d6d"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color_dark",
+      "label": "Text color (dark mode)",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color_light",
+      "label": "Text color (light mode)",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "announcement_speed",
+      "label": "Scroll speed",
+      "min": 5,
+      "max": 60,
+      "step": 5,
+      "unit": "s",
+      "default": 20,
+      "info": "Seconds per full scroll cycle. Lower = faster."
+    },
+    {
+      "type": "range",
+      "id": "announcement_height",
+      "label": "Bar height",
+      "min": 28,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 38
+    },
+    {
+      "type": "range",
+      "id": "announcement_icon_size",
+      "label": "Separator icon size",
+      "min": 8,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 14,
+      "info": "Size of the sparkle icon between each announcement text."
+    },
+    {
+      "type": "select",
+      "id": "announcement_position",
+      "label": "Announcement bar position",
+      "options": [
+        { "value": "fixed",    "label": "Fixed — always floats above page" },
+        { "value": "sticky",   "label": "Sticky — sticks to top on scroll" },
+        { "value": "relative", "label": "Static — scrolls away with page" }
+      ],
+      "default": "fixed",
+      "info": "When Fixed, the header attaches directly below it and offsets automatically."
+    },
     {
       "type": "header",
       "content": "Brand Logo"

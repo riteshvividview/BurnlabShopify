@@ -11,7 +11,7 @@
   assign hero_overlay_color    = section.settings.hero_overlay_color    | default: '#001a2e'
   assign hero_overlay_opacity  = section.settings.hero_overlay_opacity  | default: 60
   assign hero_ov_alpha         = hero_overlay_opacity | times: 0.01
-  assign eyebrow_text          = section.settings.eyebrow_text          | default: 'Collection'
+  assign eyebrow_text          = section.settings.eyebrow_text
   assign show_breadcrumbs      = section.settings.show_breadcrumbs
   assign show_description      = section.settings.show_description
   assign accent_color          = section.settings.accent_color          | default: '#07d16e'
@@ -587,9 +587,11 @@
         <span aria-current="page">{{ collection.title | escape }}</span>
       </nav>
     {%- endif -%}
-    <div class="bl-col-eyebrow" aria-hidden="true">
-      <span class="bl-col-eyebrow-bar"></span>{{ eyebrow_text | escape }}
-    </div>
+    {%- if eyebrow_text != blank -%}
+      <div class="bl-col-eyebrow" aria-hidden="true">
+        <span class="bl-col-eyebrow-bar"></span>{{ eyebrow_text | escape }}
+      </div>
+    {%- endif -%}
     {%- assign title_words = collection.title | split: ' ' -%}
     <h1 class="bl-col-hero-title{% if enable_animations %} bl-col-title-anim{% endif %}">
       {%- for word in title_words -%}

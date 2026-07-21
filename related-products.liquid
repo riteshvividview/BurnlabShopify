@@ -9,11 +9,18 @@
 {%- assign section_id = 'burnlab-related-' | append: section.id -%}
 
 {%- liquid
-  assign section_bg   = section.settings.section_bg   | default: '#001a2e'
-  assign text_color   = section.settings.text_color   | default: '#eaf4f5'
-  assign accent_color = section.settings.accent_color | default: '#07d16e'
-  assign muted_color  = section.settings.muted_color  | default: '#336870'
-  assign card_bg      = section.settings.card_bg      | default: '#001e35'
+  assign bg_dark      = section.settings.section_bg   | default: '#001a2e'
+  assign text_dark    = section.settings.text_color   | default: '#eaf4f5'
+  assign accent_dark  = section.settings.accent_color | default: '#07d16e'
+  assign muted_dark   = section.settings.muted_color  | default: '#336870'
+  assign card_bg_dark = section.settings.card_bg      | default: '#001e35'
+
+  assign bg_light      = section.settings.bg_light      | default: '#eaf4f5'
+  assign text_light    = section.settings.text_light    | default: '#001a2e'
+  assign accent_light  = section.settings.accent_light  | default: '#07d16e'
+  assign muted_light   = section.settings.muted_light   | default: '#6a8a92'
+  assign card_bg_light = section.settings.card_bg_light | default: '#ffffff'
+
   assign eyebrow      = section.settings.eyebrow      | default: 'You May Also Need'
   assign show_eyebrow = section.settings.show_eyebrow
   assign heading      = section.settings.heading      | default: 'Related Products'
@@ -54,16 +61,28 @@
 #{{ section_id }} * { box-sizing: border-box; }
 
 #{{ section_id }} {
-  --bl-rp-bg:     {{ section_bg }};
-  --bl-rp-text:   {{ text_color }};
-  --bl-rp-accent: {{ accent_color }};
-  --bl-rp-muted:  {{ muted_color }};
-  --bl-rp-card:   {{ card_bg }};
+  --bl-rp-bg:     {{ bg_dark }};
+  --bl-rp-text:   {{ text_dark }};
+  --bl-rp-accent: {{ accent_dark }};
+  --bl-rp-muted:  {{ muted_dark }};
+  --bl-rp-card:   {{ card_bg_dark }};
+  --bl-rp-desc:   {{ text_dark | color_modify: 'alpha', 0.5 }};
   position: relative;
   isolation: isolate;
   overflow: hidden;
   background: var(--bl-rp-bg);
   color: var(--bl-rp-text);
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ── Light theme override (CSS layer — JS inline wins) ── */
+[data-theme="light"] #{{ section_id }} {
+  --bl-rp-bg:     {{ bg_light }};
+  --bl-rp-text:   {{ text_light }};
+  --bl-rp-accent: {{ accent_light }};
+  --bl-rp-muted:  {{ muted_light }};
+  --bl-rp-card:   {{ card_bg_light }};
+  --bl-rp-desc:   {{ text_light | color_modify: 'alpha', 0.55 }};
 }
 
 /* ── Blobs ────────────────────────────────────────────── */
@@ -121,27 +140,6 @@
   color: var(--bl-rp-accent);
   margin-bottom: 1.2rem;
 }
-#{{ section_id }} .bl-rp-eyebrow::before,
-#{{ section_id }} .bl-rp-eyebrow::after {
-  content: '';
-  display: block;
-  height: 2px;
-  background: var(--bl-rp-accent);
-  border-radius: 2px;
-  flex-shrink: 0;
-  width: clamp(2rem, 3vw, 3.5rem);
-}
-{% if enable_anims %}
-#{{ section_id }} .bl-rp-eyebrow::before,
-#{{ section_id }} .bl-rp-eyebrow::after {
-  width: 0;
-  transition: width 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s;
-}
-#{{ section_id }} .bl-rp-eyebrow.is-visible::before,
-#{{ section_id }} .bl-rp-eyebrow.is-visible::after {
-  width: clamp(2rem, 3vw, 3.5rem);
-}
-{% endif %}
 
 #{{ section_id }} .bl-rp-heading {
   font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
@@ -314,7 +312,7 @@
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(0.75rem, 0.88vw, 0.85rem);
   line-height: 1.55;
-  color: rgba(234,244,245,0.5);
+  color: var(--bl-rp-desc);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -379,10 +377,6 @@
   #{{ section_id }} .bl-rp-card {
     opacity: 1 !important; transform: none !important; transition: none !important;
   }
-  #{{ section_id }} .bl-rp-eyebrow::before,
-  #{{ section_id }} .bl-rp-eyebrow::after {
-    width: clamp(2rem, 3vw, 3.5rem) !important; transition: none !important;
-  }
 }
 {% endif %}
 
@@ -390,10 +384,6 @@
 .shopify-design-mode #{{ section_id }} .bl-rp-reveal,
 .shopify-design-mode #{{ section_id }} .bl-rp-card {
   opacity: 1 !important; transform: none !important;
-}
-.shopify-design-mode #{{ section_id }} .bl-rp-eyebrow::before,
-.shopify-design-mode #{{ section_id }} .bl-rp-eyebrow::after {
-  width: clamp(2rem, 3vw, 3.5rem) !important;
 }
 
 /* ── Responsive ──────────────────────────────────────── */
@@ -566,6 +556,54 @@
 
   </div>
 </section>
+
+<script>
+(function () {
+  var SECTION = document.getElementById('{{ section_id }}');
+  if (!SECTION) return;
+
+  /* ── Theme color maps — mirrors scroll-testimonial-image.liquid ── */
+  var RP_DARK = {
+    bg:     '{{ bg_dark }}',
+    text:   '{{ text_dark }}',
+    accent: '{{ accent_dark }}',
+    muted:  '{{ muted_dark }}',
+    card:   '{{ card_bg_dark }}',
+    desc:   '{{ text_dark | color_modify: "alpha", 0.5 }}'
+  };
+  var RP_LIGHT = {
+    bg:     '{{ bg_light }}',
+    text:   '{{ text_light }}',
+    accent: '{{ accent_light }}',
+    muted:  '{{ muted_light }}',
+    card:   '{{ card_bg_light }}',
+    desc:   '{{ text_light | color_modify: "alpha", 0.55 }}'
+  };
+
+  function applyRpTheme() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var c = isLight ? RP_LIGHT : RP_DARK;
+    SECTION.style.setProperty('--bl-rp-bg', c.bg);
+    SECTION.style.setProperty('--bl-rp-text', c.text);
+    SECTION.style.setProperty('--bl-rp-accent', c.accent);
+    SECTION.style.setProperty('--bl-rp-muted', c.muted);
+    SECTION.style.setProperty('--bl-rp-card', c.card);
+    SECTION.style.setProperty('--bl-rp-desc', c.desc);
+    SECTION.style.backgroundColor = c.bg;
+    SECTION.style.color = c.text;
+  }
+
+  applyRpTheme();
+  var rpThemeObs = new MutationObserver(applyRpTheme);
+  rpThemeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (e.detail.sectionId === '{{ section.id }}') {
+      rpThemeObs.disconnect();
+    }
+  });
+})();
+</script>
 
 {% if enable_anims %}
 <script>
@@ -833,7 +871,11 @@ document.addEventListener('DOMContentLoaded', function () {
       "min": 1000, "max": 8000, "step": 500, "unit": "ms", "default": 3000,
       "info": "Time between each slide advance."
     },
-    { "type": "header", "content": "Colors" },
+    {
+      "type": "header",
+      "content": "Colors — Dark Mode",
+      "info": "Swaps out automatically for the Light Mode colors below when a visitor toggles the site theme."
+    },
     {
       "type": "color",
       "id": "section_bg",
@@ -863,6 +905,37 @@ document.addEventListener('DOMContentLoaded', function () {
       "id": "card_bg",
       "label": "Card background",
       "default": "#001e35"
+    },
+    { "type": "header", "content": "Colors — Light Mode" },
+    {
+      "type": "color",
+      "id": "bg_light",
+      "label": "Section background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "text_light",
+      "label": "Text color",
+      "default": "#001a2e"
+    },
+    {
+      "type": "color",
+      "id": "accent_light",
+      "label": "Accent color",
+      "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "muted_light",
+      "label": "Muted text color",
+      "default": "#6a8a92"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Card background",
+      "default": "#ffffff"
     },
     { "type": "header", "content": "Pricing display" },
     {

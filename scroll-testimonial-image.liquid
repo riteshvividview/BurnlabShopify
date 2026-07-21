@@ -32,7 +32,7 @@
   assign enable_parallax     = section.settings.enable_parallax
 
   assign heading_size        = section.settings.heading_size       | default: 56
-  assign heading_size_mob    = heading_size | times: 0.6 | round
+  assign heading_size_mob    = section.settings.heading_size_mobile | default: 32
   assign sub_size            = section.settings.sub_size           | default: 18
   assign sub_size_mob        = sub_size | times: 0.85 | round
 
@@ -178,9 +178,9 @@
   border-radius: 99px;
 }
 #{{ section_id }} .sti-heading {
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
-  font-weight: 400;
-  font-size: clamp(2rem, 5vw, {{ heading_size }}px);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
+  font-size: clamp({{ heading_size_mob }}px, 5vw, {{ heading_size }}px);
   line-height: 1.05;
   letter-spacing: -0.025em;
   color: var(--sti-text);
@@ -272,6 +272,10 @@
 #{{ section_id }} .sti-center-cta {
   text-align: center;
   width: 100%;
+}
+#{{ section_id }} .sti-center-cta a {
+  padding: 1rem 2.6rem;
+  display: inline-block;
 }
 
 /* ── Badge (floating circle) ──────────────────────────── */
@@ -558,15 +562,13 @@
     order: 2;
   }
   #{{ section_id }} .sti-center-img-wrap {
-    aspect-ratio: 4/3;
+    aspect-ratio: 3/4;
+    min-height: 46rem;
   }
 }
 
 /* ── Small mobile (max 480px) ───────────────────────────── */
 @media (max-width: 480px) {
-  #{{ section_id }} .sti-heading {
-    font-size: clamp(2rem, 8vw, 3rem);
-  }
   #{{ section_id }} .sti-badge-circle {
     width: 6rem;
     height: 6rem;
@@ -1513,7 +1515,7 @@
     {
       "type": "textarea",
       "id": "center_hover_quote",
-      "label": "Testimonial Quote",
+      "label": "Testimonial Quote"
     },
     {
       "type": "range",
@@ -1542,12 +1544,12 @@
     {
       "type": "text",
       "id": "center_hover_name",
-      "label": "User Name",
+      "label": "User Name"
     },
     {
       "type": "text",
       "id": "center_hover_meta",
-      "label": "User Role or Location",
+      "label": "User Role or Location"
     },
     {
       "type": "header",
@@ -1656,12 +1658,22 @@
     {
       "type": "range",
       "id": "heading_size",
-      "label": "Heading Size",
+      "label": "Heading Size (Desktop)",
       "min": 28,
       "max": 80,
       "step": 2,
       "unit": "px",
       "default": 56
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "label": "Heading Size (Mobile)",
+      "min": 20,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 32
     },
     {
       "type": "range",
@@ -1865,7 +1877,7 @@
         {
           "type": "textarea",
           "id": "hover_quote",
-          "label": "Testimonial Quote",
+          "label": "Testimonial Quote"
         },
         {
           "type": "range",
@@ -1894,12 +1906,12 @@
         {
           "type": "text",
           "id": "hover_name",
-          "label": "User Name",
+          "label": "User Name"
         },
         {
           "type": "text",
           "id": "hover_meta",
-          "label": "User Role or Location",
+          "label": "User Role or Location"
         }
       ]
     },
@@ -2052,7 +2064,7 @@
         {
           "type": "textarea",
           "id": "hover_quote",
-          "label": "Testimonial Quote",
+          "label": "Testimonial Quote"
         },
         {
           "type": "range",
@@ -2081,12 +2093,12 @@
         {
           "type": "text",
           "id": "hover_name",
-          "label": "User Name",
+          "label": "User Name"
         },
         {
           "type": "text",
           "id": "hover_meta",
-          "label": "User Role or Location",
+          "label": "User Role or Location"
         }
       ]
     },
@@ -2239,7 +2251,7 @@
         {
           "type": "textarea",
           "id": "hover_quote",
-          "label": "Testimonial Quote",
+          "label": "Testimonial Quote"
         },
         {
           "type": "range",
@@ -2268,12 +2280,12 @@
         {
           "type": "text",
           "id": "hover_name",
-          "label": "User Name",
+          "label": "User Name"
         },
         {
           "type": "text",
           "id": "hover_meta",
-          "label": "User Role or Location",
+          "label": "User Role or Location"
         }
       ]
     },

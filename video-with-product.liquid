@@ -15,11 +15,11 @@
   assign heading         = section.settings.heading              
   assign subheading      = section.settings.subheading
   assign heading_size    = section.settings.heading_size         | default: 44
+  assign heading_size_m  = section.settings.heading_size_mobile  | default: 28
   assign columns         = section.settings.columns              | default: 4
   assign card_gap        = section.settings.card_gap             | default: 16
   assign aspect_ratio    = section.settings.aspect_ratio         | default: 'portrait'
   assign card_radius     = section.settings.card_radius          | default: 16
-  assign show_arrows     = section.settings.show_arrows
   assign show_shop_btn   = section.settings.show_shop_button
   assign shop_btn_label  = section.settings.shop_btn_label       | default: 'Shop Now'
   assign bg_dark         = section.settings.bg_color_dark        | default: '#001a2e'
@@ -180,19 +180,15 @@
 }
 
 #{{ section_id }} .vwp-heading {
-  font-family: 'Archivo Black', sans-serif;
-  font-weight: 400;
-  font-size: clamp(2rem, 5vw, {{ heading_size }}px);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
+  font-size: clamp({{ heading_size_m }}px, 5vw, {{ heading_size }}px);
   line-height: 1.05;
   letter-spacing: -0.025em;
   color: var(--vwp-text);
   overflow-wrap: break-word;
   word-break: break-word;
   margin-bottom: 0.8rem;
-}
-
-@media (max-width: 480px) {
-  #{{ section_id }} .vwp-heading { font-size: clamp(2rem, 8vw, 3rem); }
 }
 
 #{{ section_id }} .vwp-subheading {
@@ -203,51 +199,6 @@
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 52rem;
-}
-
-/* ── Nav arrows ── */
-#{{ section_id }} .vwp-arrows {
-  display: flex;
-  gap: 0.8rem;
-  flex-shrink: 0;
-  align-self: center;
-}
-
-#{{ section_id }} .vwp-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 50%;
-  border: 1.5px solid var(--vwp-border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--vwp-text);
-  cursor: pointer;
-  transition: background 0.25s ease, border-color 0.25s ease,
-              color 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: transform;
-}
-
-[data-theme="light"] #{{ section_id }} .vwp-arrow { background: rgba(0, 0, 0, 0.04); }
-
-#{{ section_id }} .vwp-arrow:hover:not(.is-disabled) {
-  background: rgba(7, 209, 110, 0.12);
-  border-color: rgba(7, 209, 110, 0.55);
-  color: var(--vwp-accent);
-  transform: scale(1.1);
-}
-
-#{{ section_id }} .vwp-arrow.is-disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-#{{ section_id }} .vwp-arrow svg {
-  width: 1.8rem;
-  height: 1.8rem;
-  display: block;
-  pointer-events: none;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -292,8 +243,6 @@
   width: 100%;
   scroll-snap-align: none;
 }
-
-#{{ section_id }}.vwp--grid .vwp-arrows { display: none !important; }
 
 /* ══════════════════════════════════════════════════════
    CARD — flex-shrink based on columns
@@ -393,29 +342,22 @@
 /* Subtle zoom on hover (video plays, image breathes) */
 #{{ section_id }} .vwp-card:hover .vwp-media img { transform: scale(1.06); }
 
-/* ── Gradient overlay (bottom fade to panel bg) ── */
+/* ── Gradient overlay (dark scrim for legibility) ──
+   Always a dark wash, regardless of theme — a video needs a dark vignette
+   for the tag badge/play button to read well, not a card-bg-coloured one
+   that turns into a pale/white wash in light mode. */
 #{{ section_id }} .vwp-media-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    transparent 35%,
-    {{ card_bg_dark | color_modify: 'alpha', 0.18 }} 55%,
-    {{ card_bg_dark | color_modify: 'alpha', 0.72 }} 85%,
-    {{ card_bg_dark | color_modify: 'alpha', 0.88 }} 100%
+    transparent 40%,
+    rgba(0, 8, 16, 0.22) 60%,
+    rgba(0, 8, 16, 0.62) 85%,
+    rgba(0, 8, 16, 0.82) 100%
   );
   pointer-events: none;
   z-index: 2;
-}
-
-[data-theme="light"] #{{ section_id }} .vwp-media-overlay {
-  background: linear-gradient(
-    180deg,
-    transparent 35%,
-    {{ card_bg_light | color_modify: 'alpha', 0.12 }} 55%,
-    {{ card_bg_light | color_modify: 'alpha', 0.70 }} 85%,
-    {{ card_bg_light | color_modify: 'alpha', 0.88 }} 100%
-  );
 }
 
 /* ── Tag badge ── */
@@ -557,8 +499,8 @@
 #{{ section_id }} .vwp-panel-info { flex: 1; min-width: 0; }
 
 #{{ section_id }} .vwp-title {
-  font-family: 'Archivo Black', sans-serif;
-  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
   font-size: clamp(1.1rem, 1.2vw, 1.3rem);
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -595,7 +537,7 @@
   font-family: 'DM Sans', sans-serif;
   font-size: clamp(1rem, 1.05vw, 1.15rem);
   font-weight: 700;
-  color: var(--vwp-accent);
+  color: color-mix(in srgb, var(--vwp-accent) 65%, black);
   white-space: nowrap;
 }
 
@@ -634,7 +576,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.9rem;
+  margin-top: 1.4rem;
   padding: 0.65rem 1.4rem;
   font-family: 'DM Sans', sans-serif;
   font-size: clamp(1rem, 1.1vw, 1.15rem);
@@ -741,21 +683,28 @@
 ══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   #{{ section_id }} .vwp-header { flex-direction: column; align-items: flex-start; gap: 1.4rem; }
-  #{{ section_id }} .vwp-arrows { align-self: flex-start; }
 }
 
 @media (max-width: 480px) {
-  #{{ section_id }} .vwp-arrow { width: 3.4rem; height: 3.4rem; }
   #{{ section_id }} .vwp-panel { padding: 0.9rem; }
   #{{ section_id }} .vwp-product-thumb { width: 3rem; height: 3rem; }
   #{{ section_id }} .vwp-title { font-size: 1.15rem; }
   #{{ section_id }} .vwp-product-name,
   #{{ section_id }} .vwp-price { font-size: 1rem; }
   {% if show_shop_btn %}
-  #{{ section_id }} .vwp-shop-btn { opacity: 1; transform: none; pointer-events: auto; margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
+  #{{ section_id }} .vwp-shop-btn { opacity: 1; transform: none; pointer-events: auto; margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; }
   {% endif %}
   #{{ section_id }} .vwp-desc-wrap { grid-template-rows: 1fr; }
   #{{ section_id }} .vwp-description { font-size: 1.1rem; -webkit-line-clamp: 2; }
+}
+
+@media (max-width: 360px) {
+  #{{ section_id }} .vwp-panel { padding: 0.8rem; }
+  #{{ section_id }} .vwp-panel-top { gap: 0.6rem; }
+  #{{ section_id }} .vwp-product-thumb { width: 2.6rem; height: 2.6rem; }
+  #{{ section_id }} .vwp-title { font-size: 1.05rem; }
+  #{{ section_id }} .vwp-product-name,
+  #{{ section_id }} .vwp-price { font-size: 0.92rem; }
 }
 
 @media (max-width: 300px) {
@@ -816,30 +765,6 @@
         {%- endif -%}
       </div>
 
-      {%- if show_arrows -%}
-        <div class="vwp-arrows" aria-label="Scroll controls">
-          <button
-            class="vwp-arrow vwp-arrow--prev is-disabled"
-            id="vwp-prev-{{ section.id }}"
-            aria-label="Previous"
-            type="button"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="15,18 9,12 15,6"/>
-            </svg>
-          </button>
-          <button
-            class="vwp-arrow vwp-arrow--next"
-            id="vwp-next-{{ section.id }}"
-            aria-label="Next"
-            type="button"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="9,6 15,12 9,18"/>
-            </svg>
-          </button>
-        </div>
-      {%- endif -%}
     </div>
 
     <!-- Scroll track -->
@@ -994,11 +919,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var SECTION = document.getElementById('{{ section_id }}');
   if (!SECTION) return;
 
-  var track   = document.getElementById('vwp-track-{{ section.id }}');
-  var prevBtn = document.getElementById('vwp-prev-{{ section.id }}');
-  var nextBtn = document.getElementById('vwp-next-{{ section.id }}');
-  var isGrid  = SECTION.classList.contains('vwp--grid');
-
   // ─── Video hover / tap play ───────────────────────────────────
   SECTION.querySelectorAll('[data-vwp-card]').forEach(function (card) {
     var video   = card.querySelector('.vwp-video');
@@ -1053,36 +973,6 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }, { threshold: 0.25 });
     sectionObs.observe(SECTION);
-  }
-
-  // ─── Scroll arrows (slider mode only) ─────────────────────────
-  if (!isGrid && track && prevBtn && nextBtn) {
-    function scrollStep() {
-      var card = track.querySelector('.vwp-card');
-      if (!card) return 280;
-      var gap = parseFloat(getComputedStyle(track).gap) || {{ card_gap }};
-      return card.offsetWidth + gap;
-    }
-
-    function syncArrows() {
-      var atStart = track.scrollLeft <= 2;
-      var atEnd   = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
-      prevBtn.disabled = atStart;
-      nextBtn.disabled = atEnd;
-      prevBtn.classList.toggle('is-disabled', atStart);
-      nextBtn.classList.toggle('is-disabled', atEnd);
-    }
-
-    prevBtn.addEventListener('click', function () {
-      track.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
-    });
-
-    nextBtn.addEventListener('click', function () {
-      track.scrollBy({ left: scrollStep(), behavior: 'smooth' });
-    });
-
-    track.addEventListener('scroll', syncArrows, { passive: true });
-    requestAnimationFrame(syncArrows);
   }
 
   // ─── Theme toggle: reapply CSS vars on data-theme change ──────
@@ -1164,6 +1054,16 @@ document.addEventListener('DOMContentLoaded', function () {
       "default": 44
     },
     {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "label": "Heading size (mobile)",
+      "min": 20,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 28
+    },
+    {
       "type": "select",
       "id": "content_alignment",
       "label": "Content alignment",
@@ -1219,12 +1119,6 @@ document.addEventListener('DOMContentLoaded', function () {
       "step": 2,
       "unit": "px",
       "default": 16
-    },
-    {
-      "type": "checkbox",
-      "id": "show_arrows",
-      "label": "Show scroll arrows",
-      "default": true
     },
     {
       "type": "select",

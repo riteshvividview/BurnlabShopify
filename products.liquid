@@ -23,9 +23,13 @@
   assign muted_light   = section.settings.muted_color_light    | default: '#336870'
   assign surface_light = section.settings.surface_color_light  | default: '#ffffff'
 
+  assign desc_accent       = section.settings.desc_highlight_color       | default: '#07d16e'
+  assign desc_accent_light = section.settings.desc_highlight_color_light | default: '#07d16e'
+
   assign enable_anim   = section.settings.enable_animations
   assign enable_zoom   = section.settings.enable_image_zoom
   assign enable_sticky = section.settings.enable_sticky_atc
+  assign sticky_atc_position = section.settings.sticky_atc_position | default: 'top'
   assign enable_para   = section.settings.enable_parallax
   assign enable_glow   = section.settings.enable_glow
   assign show_crumbs   = section.settings.show_breadcrumbs
@@ -49,6 +53,111 @@
   endif
 -%}
 
+{%- comment -%}
+  Product specifications table — captured once here so both the Tabbed
+  and Accordion description modes can reuse the same markup without a
+  separate snippet file (avoids "could not find asset" errors when this
+  section file is deployed on its own).
+{%- endcomment -%}
+{%- capture _specs_table_html -%}
+<table class="bl-pd-specs-table">
+  <tbody>
+    {%- if product.metafields.custom.material != blank -%}
+      <tr><th scope="row">Material</th><td>{{ product.metafields.custom.material }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.dimensions != blank -%}
+      <tr><th scope="row">Dimensions</th><td>{{ product.metafields.custom.dimensions }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.weight != blank -%}
+      <tr><th scope="row">Weight</th><td>{{ product.metafields.custom.weight }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.max_load != blank -%}
+      <tr><th scope="row">Max Load</th><td>{{ product.metafields.custom.max_load }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.frame_material != blank -%}
+      <tr><th scope="row">Frame Material</th><td>{{ product.metafields.custom.frame_material }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.color != blank -%}
+      <tr><th scope="row">Color</th><td>{{ product.metafields.custom.color }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.care_instructions != blank -%}
+      <tr><th scope="row">Care Instructions</th><td>{{ product.metafields.custom.care_instructions }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.warranty != blank -%}
+      <tr><th scope="row">Warranty</th><td>{{ product.metafields.custom.warranty }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.country_of_origin != blank -%}
+      <tr><th scope="row">Country of Origin</th><td>{{ product.metafields.custom.country_of_origin }}</td></tr>
+    {%- endif -%}
+    {%- if product.metafields.custom.assembly_required != blank -%}
+      <tr><th scope="row">Assembly Required</th><td>{{ product.metafields.custom.assembly_required }}</td></tr>
+    {%- endif -%}
+    {%- comment -%}── Every variant option (Size, Weight, Color, Style, etc.) shown as "X Available" ──{%- endcomment -%}
+    {%- for opt in product.options_with_values -%}
+      <tr><th scope="row">{{ opt.name }} Available</th><td>{{ opt.values | join: ' / ' }}</td></tr>
+    {%- endfor -%}
+
+    {%- comment -%}── Package weight ──{%- endcomment -%}
+    {%- assign _pw = product.selected_or_first_available_variant.weight -%}
+    {%- if _pw > 0 -%}
+      <tr><th scope="row">Package Weight</th><td>{{ _pw | weight_with_unit }}</td></tr>
+    {%- endif -%}
+  </tbody>
+</table>
+{%- endcapture -%}
+
+{%- comment -%}
+  Additional Info table — externally/administratively-facing catalog data
+  (SKU, stock, barcode, vendor, product type, tags), kept separate from the
+  Product Specifications table above which covers physical product attributes.
+{%- endcomment -%}
+{%- assign _ai_variant = product.selected_or_first_available_variant -%}
+{%- assign _has_addl_info = false -%}
+{%- if _ai_variant.sku != blank
+  or _ai_variant.barcode != blank
+  or _ai_variant.inventory_management == 'shopify'
+  or product.vendor != blank
+  or product.type != blank
+  or product.tags.size > 0
+-%}
+  {%- assign _has_addl_info = true -%}
+{%- endif -%}
+{%- capture _addl_info_table_html -%}
+<table class="bl-pd-specs-table">
+  <tbody>
+    {%- if _ai_variant.sku != blank -%}
+      <tr><th scope="row">SKU</th><td>{{ _ai_variant.sku }}</td></tr>
+    {%- endif -%}
+    {%- if _ai_variant.barcode != blank -%}
+      <tr><th scope="row">Barcode</th><td>{{ _ai_variant.barcode }}</td></tr>
+    {%- endif -%}
+    {%- if _ai_variant.inventory_management == 'shopify' -%}
+      <tr>
+        <th scope="row">Availability</th>
+        <td>
+          {%- if _ai_variant.inventory_quantity > 0 -%}
+            {{ _ai_variant.inventory_quantity }} unit{% if _ai_variant.inventory_quantity != 1 %}s{% endif %} in stock
+          {%- elsif _ai_variant.inventory_policy == 'continue' -%}
+            Available on backorder
+          {%- else -%}
+            Out of stock
+          {%- endif -%}
+        </td>
+      </tr>
+    {%- endif -%}
+    {%- if product.vendor != blank -%}
+      <tr><th scope="row">Brand</th><td>{{ product.vendor }}</td></tr>
+    {%- endif -%}
+    {%- if product.type != blank -%}
+      <tr><th scope="row">Product Type</th><td>{{ product.type }}</td></tr>
+    {%- endif -%}
+    {%- if product.tags.size > 0 -%}
+      <tr><th scope="row">Tags</th><td>{{ product.tags | join: ', ' }}</td></tr>
+    {%- endif -%}
+  </tbody>
+</table>
+{%- endcapture -%}
+
 {% style %}
 
 #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
@@ -59,6 +168,7 @@
   --bl-pd-bg:      {{ bg_color }};
   --bl-pd-text:    {{ text_color }};
   --bl-pd-accent:  {{ accent_color }};
+  --bl-pd-desc-accent: {{ desc_accent }};
   --bl-pd-muted:   {{ muted_color }};
   --bl-pd-surface: {{ surface_color }};
   --bl-pd-divider: rgba(51, 104, 112, 0.22);
@@ -78,6 +188,7 @@
   --bl-pd-bg:      {{ bg_light }};
   --bl-pd-text:    {{ text_light }};
   --bl-pd-accent:  {{ accent_light }};
+  --bl-pd-desc-accent: {{ desc_accent_light }};
   --bl-pd-muted:   {{ muted_light }};
   --bl-pd-surface: {{ surface_light }};
   --bl-pd-divider: rgba(0, 26, 46, 0.12);
@@ -108,34 +219,25 @@
 }
 {% endif %}
 
-/* ── Ghost bg text ─── */
-#{{ section_id }} .bl-pd-bg-text {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
-  font-weight: 400;
-  font-size: clamp(5rem, 15vw, 18rem);
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(7,209,110,0.055);
-  white-space: nowrap; pointer-events: none; user-select: none;
-  z-index: 2; letter-spacing: -0.04em; overflow: hidden; max-width: 100%;
-}
-
-/* ── Breadcrumbs ─── */
+/* ── Breadcrumbs ───
+   Theme-reactive: derived from --bl-pd-accent/--bl-pd-text via color-mix
+   instead of a fixed rgba(green), so links stay readable in both themes
+   instead of washing out to pale green on a light background. */
 #{{ section_id }} .bl-pd-crumbs {
   display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   margin-bottom: clamp(2rem, 3vw, 3.2rem);
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(1.1rem, 1.2vw, 1.3rem);
-  color: rgba(7,209,110,0.5);
+  color: color-mix(in srgb, var(--bl-pd-accent) 65%, var(--bl-pd-text));
 }
 #{{ section_id }} .bl-pd-crumbs a {
-  color: rgba(7,209,110,0.7) !important; text-decoration: none;
+  color: color-mix(in srgb, var(--bl-pd-accent) 85%, var(--bl-pd-text)) !important;
+  text-decoration: none;
   transition: color 0.22s ease;
 }
 #{{ section_id }} .bl-pd-crumbs a:hover { color: var(--bl-pd-accent) !important; }
 #{{ section_id }} .bl-pd-crumbs span[aria-current] { color: var(--bl-pd-text) !important; opacity: 0.8; }
-#{{ section_id }} .bl-pd-crumbs-sep { color: rgba(7,209,110,0.35) !important; }
+#{{ section_id }} .bl-pd-crumbs-sep { color: color-mix(in srgb, var(--bl-pd-accent) 45%, var(--bl-pd-text)) !important; }
 
 /* ── Main grid ─── */
 #{{ section_id }} .bl-pd-grid {
@@ -195,8 +297,6 @@
   {% elsif aspect_ratio == 'landscape' %}aspect-ratio: 4/3;
   {% else %}min-height: 420px;{% endif %}
   cursor: {% if enable_zoom %}zoom-in{% else %}default{% endif %};
-  will-change: transform;
-  transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
 }
 
 /* ── Slides ─── */
@@ -298,8 +398,8 @@
 
 /* ── Title ─── */
 #{{ section_id }} .bl-pd-title {
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
-  font-weight: 400; font-size: var(--bl-pd-h-size);
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700; font-size: var(--bl-pd-h-size);
   line-height: 1.05; letter-spacing: -0.02em;
   color: var(--bl-pd-text); overflow-wrap: break-word; word-break: break-word;
 }
@@ -307,55 +407,58 @@
   #{{ section_id }} .bl-pd-title { font-size: clamp(2rem, 8vw, 3rem); }
 }
 
-/* ── Price — set the entire block to accent green via inheritance ─── */
+/* ── Price ─── */
 #{{ section_id }} .bl-pd-price {
-  color: {{ accent_color }} !important;
-  color: var(--price-clr, {{ accent_color }}) !important;
+  display: flex; flex-direction: column; gap: 0.6rem;
 }
-/* Ensure all child elements inside the price block inherit green */
-#{{ section_id }} .bl-pd-price .price,
-#{{ section_id }} .bl-pd-price [class*="price"],
-#{{ section_id }} .bl-pd-price [class*="Price"],
-#{{ section_id }} .bl-pd-price .money {
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif) !important;
-  font-weight: 400 !important;
+#{{ section_id }} .bl-pd-price-row {
+  display: flex; align-items: baseline; flex-wrap: wrap;
+  gap: var(--price-gap, 16px);
+}
+#{{ section_id }} .bl-pd-price-current {
+  font-family: var(--price-font, var(--bl-font-primary, 'Archivo Black', sans-serif)) !important;
+  font-weight: var(--price-weight, 400) !important;
   font-size: var(--bl-pd-p-size) !important;
-  color: {{ accent_color }} !important;
-  color: var(--price-clr, {{ accent_color }}) !important;
+  color: var(--price-clr-dark, var(--bl-pd-accent)) !important;
   line-height: 1.1 !important;
 }
+[data-theme="light"] #{{ section_id }} .bl-pd-price-current {
+  color: var(--price-clr-light, var(--bl-pd-accent)) !important;
+}
 /* Compare / original price — muted + strikethrough */
-#{{ section_id }} .bl-pd-price s,
-#{{ section_id }} .bl-pd-price del,
-#{{ section_id }} .bl-pd-price s *,
-#{{ section_id }} .bl-pd-price del *,
-#{{ section_id }} .bl-pd-price [class*="compare"],
-#{{ section_id }} .bl-pd-price [class*="Compare"],
-#{{ section_id }} .bl-pd-price .price__compare {
+#{{ section_id }} .bl-pd-price-compare {
+  font-family: var(--price-font, var(--bl-font-primary, 'Archivo Black', sans-serif)) !important;
+  font-weight: var(--price-weight, 400) !important;
   font-size: clamp(1.4rem, 2vw, 1.8rem) !important;
-  color: {{ muted_color }} !important;
-  color: var(--compare-clr, {{ muted_color }}) !important;
+  color: var(--compare-clr-dark, var(--bl-pd-muted)) !important;
   text-decoration: line-through !important;
 }
+[data-theme="light"] #{{ section_id }} .bl-pd-price-compare {
+  color: var(--compare-clr-light, var(--bl-pd-muted)) !important;
+}
 /* Sale / off badge */
-#{{ section_id }} .bl-pd-price [class*="badge"],
-#{{ section_id }} .bl-pd-price [class*="sale-badge"],
-#{{ section_id }} .bl-pd-price .price__badge {
-  background: {{ accent_color }} !important; color: #001a2e !important;
+#{{ section_id }} .bl-pd-price-badge {
+  background: var(--badge-bg-dark, var(--bl-pd-accent)) !important;
+  color: var(--badge-text-dark, #001a2e) !important;
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
   font-weight: 700 !important; border-radius: 4px !important; padding: 0.2rem 0.55rem !important;
   font-size: clamp(1rem, 1.1vw, 1.2rem) !important; text-decoration: none !important;
   line-height: 1.4 !important;
 }
+[data-theme="light"] #{{ section_id }} .bl-pd-price-badge {
+  background: var(--badge-bg-light, var(--bl-pd-accent)) !important;
+  color: var(--badge-text-light, #001a2e) !important;
+}
 /* Tax / shipping helper text */
-#{{ section_id }} .bl-pd-price .product_tax,
-#{{ section_id }} .bl-pd-price [class*="tax"],
-#{{ section_id }} .bl-pd-price [class*="shipping"] {
+#{{ section_id }} .bl-pd-price-helper {
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
   font-size: clamp(1.1rem, 1.2vw, 1.3rem) !important;
-  color: var(--bl-pd-muted) !important; margin-top: 0.5rem !important;
+  color: var(--helper-clr-dark, var(--bl-pd-muted)) !important;
 }
-#{{ section_id }} .bl-pd-price a { color: var(--bl-pd-accent) !important; }
+[data-theme="light"] #{{ section_id }} .bl-pd-price-helper {
+  color: var(--helper-clr-light, var(--bl-pd-muted)) !important;
+}
+#{{ section_id }} .bl-pd-price-helper a { color: var(--bl-pd-accent) !important; text-decoration: underline !important; }
 
 /* ── SKU ─── */
 #{{ section_id }} .bl-pd-sku {
@@ -410,10 +513,17 @@
 #{{ section_id }} .bl-pd-desc h4 { font-size: clamp(1.2rem, 1.4vw, 1.45rem) !important; }
 #{{ section_id }} .bl-pd-desc h5,
 #{{ section_id }} .bl-pd-desc h6 { font-size: clamp(1.1rem, 1.3vw, 1.3rem) !important; }
-#{{ section_id }} .bl-pd-desc strong, #{{ section_id }} .bl-pd-desc b {
-  color: var(--bl-pd-accent) !important; font-weight: 700 !important;
+#{{ section_id }} .bl-pd-desc strong,
+#{{ section_id }} .bl-pd-desc b,
+#{{ section_id }} .bl-pd-desc [style*="font-weight:bold"],
+#{{ section_id }} .bl-pd-desc [style*="font-weight: bold"],
+#{{ section_id }} .bl-pd-desc [style*="font-weight:700"],
+#{{ section_id }} .bl-pd-desc [style*="font-weight: 700"],
+#{{ section_id }} .bl-pd-desc [style*="font-weight:600"],
+#{{ section_id }} .bl-pd-desc [style*="font-weight: 600"] {
+  color: var(--bl-pd-desc-accent) !important; font-weight: 700 !important;
 }
-#{{ section_id }} .bl-pd-desc a { color: var(--bl-pd-accent) !important; }
+#{{ section_id }} .bl-pd-desc a { color: var(--bl-pd-desc-accent) !important; }
 #{{ section_id }} .bl-pd-desc a:hover { opacity: 0.8; }
 #{{ section_id }} .bl-pd-desc p { margin-bottom: 0.9em !important; }
 #{{ section_id }} .bl-pd-desc p:last-child { margin-bottom: 0 !important; }
@@ -477,44 +587,38 @@
   background: var(--bl-pd-accent);
 }
 
-/* ── Variant picker — option label color from schema ─── */
-{% for block in section.blocks %}
-  {%- if block.type == 'variant-picker' -%}
-    {%- assign _vp_lbl_clr = block.settings.option_label_color -%}
-    {%- if _vp_lbl_clr == blank -%}{%- assign _vp_lbl_clr = '#eaf4f5' -%}{%- endif -%}
-    #{{ section_id }} .bl-pd-vars legend,
-    #{{ section_id }} .bl-pd-vars fieldset > legend,
-    #{{ section_id }} .bl-pd-vars .form__label,
-    #{{ section_id }} .bl-pd-vars label:not([class*="swatch_circle"]):not([class*="swatch_image"]):not([class*="swatch_label"]):not(input + label),
-    #{{ section_id }} .bl-pd-vars [class*="option_name"],
-    #{{ section_id }} .bl-pd-vars [class*="option_title"],
-    #{{ section_id }} .bl-pd-vars [class*="option_label"],
-    #{{ section_id }} .bl-pd-vars [class*="variant_label"],
-    #{{ section_id }} .bl-pd-vars [class*="options_header"],
-    #{{ section_id }} .bl-pd-vars [class*="selected_option"],
-    #{{ section_id }} .bl-pd-vars [class*="variant_name"],
-    #{{ section_id }} .bl-pd-vars [class*="form_label"] {
-      color: {{ _vp_lbl_clr }} !important;
-      font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
-      font-size: clamp(1.2rem, 1.3vw, 1.4rem) !important;
-      font-weight: 600 !important;
-      letter-spacing: 0.04em;
-    }
-  {%- endif -%}
-{% endfor %}
+/* ── Variant picker — option name label (e.g. "Color") above the swatches ─── */
+#{{ section_id }} .bl-pd-vars legend,
+#{{ section_id }} .bl-pd-vars fieldset > legend,
+#{{ section_id }} .bl-pd-vars .form__label,
+#{{ section_id }} .bl-pd-vars [class*="option_name"],
+#{{ section_id }} .bl-pd-vars [class*="option_title"],
+#{{ section_id }} .bl-pd-vars [class*="option_label"],
+#{{ section_id }} .bl-pd-vars [class*="variant_label"],
+#{{ section_id }} .bl-pd-vars [class*="options_header"],
+#{{ section_id }} .bl-pd-vars [class*="selected_option"],
+#{{ section_id }} .bl-pd-vars [class*="variant_name"],
+#{{ section_id }} .bl-pd-vars [class*="form_label"] {
+  display: block !important;
+  color: #eaf4f5 !important;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
+  font-size: clamp(1.2rem, 1.3vw, 1.4rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.6rem;
+}
 #{{ section_id }} .bl-pd-vars select {
   background: var(--bl-pd-surface) !important; color: var(--bl-pd-text) !important;
   border: 2px solid rgba(51,104,112,0.35) !important; border-radius: 10px !important;
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
   font-size: var(--bl-pd-b-size) !important; padding: 0.8rem 1.2rem !important;
 }
-/* Default state — all button/swatch variants */
+/* Default state — text/button variants only (Size, Style, etc.) — native color swatches are left untouched so Shopify's own swatch circles/images render cleanly */
 #{{ section_id }} .bl-pd-vars .btn,
 #{{ section_id }} .bl-pd-vars .btn--secondary,
 #{{ section_id }} .bl-pd-vars [class*="variant-button"],
 #{{ section_id }} .bl-pd-vars [class*="variant_button"],
-#{{ section_id }} .bl-pd-vars input[type="radio"] + label,
-#{{ section_id }} .bl-pd-vars .swatch_label {
+#{{ section_id }} .bl-pd-vars input[type="radio"] + label:not(.swatch_label):not(.swatch_circle):not(.swatch_square) {
   background: var(--bl-pd-surface) !important;
   color: var(--bl-pd-text) !important;
   border: 2px solid rgba(51,104,112,0.35) !important;
@@ -534,8 +638,7 @@
 #{{ section_id }} .bl-pd-vars .btn--secondary:hover,
 #{{ section_id }} .bl-pd-vars [class*="variant-button"]:hover,
 #{{ section_id }} .bl-pd-vars [class*="variant_button"]:hover,
-#{{ section_id }} .bl-pd-vars input[type="radio"] + label:hover,
-#{{ section_id }} .bl-pd-vars .swatch_label:hover {
+#{{ section_id }} .bl-pd-vars input[type="radio"] + label:not(.swatch_label):not(.swatch_circle):not(.swatch_square):hover {
   border-color: var(--bl-pd-accent) !important;
   color: var(--bl-pd-accent) !important;
   transform: scale(1.05) translateY(-1px) !important;
@@ -551,14 +654,46 @@
 #{{ section_id }} .bl-pd-vars [class*="variant_button"].is-active,
 #{{ section_id }} .bl-pd-vars [class*="variant-button"][aria-checked="true"],
 #{{ section_id }} .bl-pd-vars [class*="variant_button"][aria-checked="true"],
-#{{ section_id }} .bl-pd-vars input[type="radio"]:checked + label,
-#{{ section_id }} .bl-pd-vars .swatch_label.active,
-#{{ section_id }} .bl-pd-vars .swatch_label.is-active {
+#{{ section_id }} .bl-pd-vars input[type="radio"]:checked + label:not(.swatch_label):not(.swatch_circle):not(.swatch_square) {
   background: rgba(7,209,110,0.12) !important;
   color: var(--bl-pd-accent) !important;
   border-color: var(--bl-pd-accent) !important;
   box-shadow: 0 0 0 1px var(--bl-pd-accent), 0 4px 18px rgba(7,209,110,0.2) !important;
   transform: none !important;
+}
+/* Light mode — the dark-tuned glow blur reads as a dim, washed-out halo on
+   a light surface, so swap it for a clean flat ring with no blur. */
+[data-theme="light"] #{{ section_id }} .bl-pd-vars .btn.active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars .btn.is-active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars .btn--secondary.active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars .btn--secondary.is-active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant-button"].active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant-button"].is-active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant_button"].active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant_button"].is-active,
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant-button"][aria-checked="true"],
+[data-theme="light"] #{{ section_id }} .bl-pd-vars [class*="variant_button"][aria-checked="true"],
+[data-theme="light"] #{{ section_id }} .bl-pd-vars input[type="radio"]:checked + label:not(.swatch_label):not(.swatch_circle):not(.swatch_square) {
+  background: color-mix(in srgb, var(--bl-pd-accent) 10%, transparent) !important;
+  box-shadow: 0 0 0 1.5px var(--bl-pd-accent) !important;
+}
+/* Active state for native color swatches — ring highlight only, shape/size untouched */
+#{{ section_id }} .bl-pd-vars .swatch_label.active,
+#{{ section_id }} .bl-pd-vars .swatch_label.is-active,
+#{{ section_id }} .bl-pd-vars .swatch_circle.active,
+#{{ section_id }} .bl-pd-vars .swatch_circle.is-active,
+#{{ section_id }} .bl-pd-vars .swatch_square.active,
+#{{ section_id }} .bl-pd-vars .swatch_square.is-active,
+#{{ section_id }} .bl-pd-vars input[type="radio"]:checked + .swatch_label,
+#{{ section_id }} .bl-pd-vars [class*="swatch"][aria-checked="true"] {
+  box-shadow: 0 0 0 2px var(--bl-pd-surface), 0 0 0 4px var(--bl-pd-accent) !important;
+  border-color: transparent !important;
+  transform: scale(1.08);
+}
+#{{ section_id }} .bl-pd-vars .swatch_label:hover:not(.active):not(.is-active),
+#{{ section_id }} .bl-pd-vars .swatch_circle:hover:not(.active):not(.is-active),
+#{{ section_id }} .bl-pd-vars .swatch_square:hover:not(.active):not(.is-active) {
+  box-shadow: 0 0 0 2px var(--bl-pd-surface), 0 0 0 3px rgba(255,255,255,0.4) !important;
 }
 /* Unavailable / soldout variant */
 #{{ section_id }} .bl-pd-vars .btn.disabled,
@@ -644,6 +779,41 @@
   background: var(--bl-pd-surface) !important; color: var(--bl-pd-muted) !important;
   transform: none !important; box-shadow: none !important; cursor: not-allowed !important;
 }
+/* Dynamic checkout button ("Buy it now") — recolored + restyled to match theme.
+   Broad selector list covers the different class names Shopify has shipped for
+   the unbranded fallback button across checkout versions. */
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] .shopify-payment-button__button--unbranded,
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] .shopify-payment-button__button,
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] button {
+  width: 100% !important; padding: 1.5rem 2.4rem !important;
+  background: var(--dyn-btn-clr, #336870) !important; color: var(--dyn-btn-text-clr, #eaf4f5) !important;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
+  font-weight: var(--dyn-btn-weight, 300) !important; font-size: clamp(1.3rem, 1.5vw, 1.6rem) !important;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border: var(--dyn-btn-border, none) !important; border-radius: 50px !important; cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease !important;
+}
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] .shopify-payment-button__button--unbranded:hover,
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] .shopify-payment-button__button:hover,
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] button:hover {
+  filter: brightness(1.1); transform: translateY(-2px) !important;
+}
+#{{ section_id }} .bl-pd-atc [data-shopify="payment-button"] .shopify-payment-button__more-options {
+  color: var(--bl-pd-muted) !important; font-family: var(--bl-font-secondary, 'DM Sans', sans-serif) !important;
+}
+/* Style variants */
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--outline [data-shopify="payment-button"] .shopify-payment-button__button--unbranded,
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--outline [data-shopify="payment-button"] .shopify-payment-button__button,
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--outline [data-shopify="payment-button"] button {
+  background: transparent !important; color: var(--dyn-btn-clr, #336870) !important;
+  border: 2px solid var(--dyn-btn-clr, #336870) !important;
+}
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--ghost [data-shopify="payment-button"] .shopify-payment-button__button--unbranded,
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--ghost [data-shopify="payment-button"] .shopify-payment-button__button,
+#{{ section_id }} .bl-pd-atc.bl-dyn-style--ghost [data-shopify="payment-button"] button {
+  background: transparent !important; color: var(--dyn-btn-clr, #336870) !important;
+  border: none !important; text-decoration: underline; text-underline-offset: 4px;
+}
 
 /* ── Collapsible tab ─── */
 #{{ section_id }} .bl-pd-tab details {
@@ -664,11 +834,11 @@
   transition: color 0.22s ease, background 0.22s ease; user-select: none;
 }
 #{{ section_id }} .bl-pd-tab details[open] > summary {
-  color: var(--bl-pd-accent) !important;
+  color: var(--bl-pd-desc-accent) !important;
   border-bottom: 1px solid rgba(7,209,110,0.2) !important;
 }
 #{{ section_id }} .bl-pd-tab details summary::-webkit-details-marker { display: none; }
-#{{ section_id }} .bl-pd-tab details summary:hover { color: var(--bl-pd-accent) !important; }
+#{{ section_id }} .bl-pd-tab details summary:hover { color: var(--bl-pd-desc-accent) !important; }
 /* Plus/minus toggle icon */
 #{{ section_id }} .bl-pd-tab .square {
   position: relative; width: 1.8rem; height: 1.8rem; flex-shrink: 0;
@@ -677,7 +847,7 @@
   transition: border-color 0.22s ease, background 0.22s ease;
 }
 #{{ section_id }} .bl-pd-tab details[open] .square {
-  background: rgba(7,209,110,0.12); border-color: var(--bl-pd-accent);
+  background: rgba(7,209,110,0.12); border-color: var(--bl-pd-desc-accent);
 }
 #{{ section_id }} .bl-pd-tab .hori {
   width: 0.9rem; height: 2px; background: currentColor !important;
@@ -707,8 +877,14 @@
   color: var(--bl-pd-text) !important;
 }
 #{{ section_id }} .bl-pd-tab .rte strong,
-#{{ section_id }} .bl-pd-tab .rte b { color: var(--bl-pd-accent) !important; }
-#{{ section_id }} .bl-pd-tab .rte a { color: var(--bl-pd-accent) !important; }
+#{{ section_id }} .bl-pd-tab .rte b,
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight:bold"],
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight: bold"],
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight:700"],
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight: 700"],
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight:600"],
+#{{ section_id }} .bl-pd-tab .rte [style*="font-weight: 600"] { color: var(--bl-pd-desc-accent) !important; font-weight: 700 !important; }
+#{{ section_id }} .bl-pd-tab .rte a { color: var(--bl-pd-desc-accent) !important; }
 
 /* ── Inventory ─── */
 #{{ section_id }} .bl-pd-inv {
@@ -746,6 +922,24 @@
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--bl-pd-muted) !important; margin-bottom: 0.8rem !important;
 }
+
+/* ── Promo badges block (Best Seller + Reviews) ─── */
+#{{ section_id }} .bl-pd-promo {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem;
+}
+#{{ section_id }} .bl-pd-promo-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--bl-pd-surface); border: 1px solid var(--bl-pd-divider);
+  border-radius: 50px; padding: 0.5rem 1.2rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.1rem, 1.2vw, 1.3rem); font-weight: 700;
+  color: var(--bl-pd-text); white-space: nowrap;
+}
+#{{ section_id }} .bl-pd-promo-icon { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: #ff3d68; }
+#{{ section_id }} .bl-pd-promo-icon--star { color: #07d16e; }
+#{{ section_id }} .bl-pd-promo-icon-img { width: 1.8rem; height: 1.8rem; flex-shrink: 0; object-fit: contain; }
+#{{ section_id }} .bl-pd-promo-rating { font-weight: 700; }
+#{{ section_id }} .bl-pd-promo-count { font-weight: 400; color: var(--bl-pd-muted); }
 
 /* ── Social share ─── */
 #{{ section_id }} .bl-pd-share a,
@@ -865,13 +1059,12 @@
   /* Badges */
   #{{ section_id }} .bl-pd-badges { gap: 0.6rem; }
   #{{ section_id }} .bl-pd-badge { font-size: 1.2rem !important; padding: 0.45rem 0.9rem 0.45rem 0.6rem !important; }
-  /* Variant buttons */
+  /* Variant buttons (text/button options only — native color swatches keep their shape) */
   #{{ section_id }} .bl-pd-vars .btn,
   #{{ section_id }} .bl-pd-vars .btn--secondary,
   #{{ section_id }} .bl-pd-vars [class*="variant-button"],
   #{{ section_id }} .bl-pd-vars [class*="variant_button"],
-  #{{ section_id }} .bl-pd-vars input[type="radio"] + label,
-  #{{ section_id }} .bl-pd-vars .swatch_label {
+  #{{ section_id }} .bl-pd-vars input[type="radio"] + label:not(.swatch_label):not(.swatch_circle):not(.swatch_square) {
     padding: 0.65rem 1.2rem !important; min-height: 4rem !important;
     font-size: 1.3rem !important;
   }
@@ -879,7 +1072,7 @@
   #{{ section_id }} .bl-pd-share { display: flex !important; flex-wrap: wrap !important; gap: 0.8rem !important; }
   #{{ section_id }} .bl-pd-desc { font-size: 1.45rem !important; line-height: 1.68 !important; }
   /* Price responsive font */
-  #{{ section_id }} .bl-pd-price { font-size: clamp(2rem, 6vw, 2.8rem) !important; }
+  #{{ section_id }} .bl-pd-price-current { font-size: clamp(2rem, 6vw, 2.8rem) !important; }
   /* Sticky ATC inner */
   #bl-satc-{{ section.id }} .bl-satc-inner { padding: 0.75rem 1.2rem; gap: 0.8rem; }
   #bl-satc-{{ section.id }} .bl-satc-title { font-size: 1.2rem; }
@@ -1051,42 +1244,7 @@
 #{{ section_id }} .bl-pd-thumb:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 4px 16px rgba(7,209,110,0.2); }
 #{{ section_id }} .bl-pd-thumb.is-active { box-shadow: 0 0 0 2px var(--bl-pd-accent), 0 4px 16px rgba(7,209,110,0.22); }
 
-/* ── Gallery main wrap — smooth border glow on hover ─── */
-#{{ section_id }} .bl-pd-main-wrap {
-  transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease;
-}
-#{{ section_id }} .bl-pd-main-wrap:hover {
-  box-shadow: 0 0 0 1.5px rgba(7,209,110,0.3), 0 24px 80px rgba(0,0,0,0.28);
-}
-
-/* ── Auto color swatches (applied by JS to Color/Colour options) ── */
-#{{ section_id }} .bl-pd-vars .bl-color-swatch {
-  width: 3.2rem !important;
-  height: 3.2rem !important;
-  min-height: 3.2rem !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  font-size: 0 !important;       /* hide text */
-  color: transparent !important;
-  letter-spacing: -99em !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-  border: 2.5px solid rgba(128,128,128,0.3) !important;
-  box-shadow: none !important;
-  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease !important;
-}
-#{{ section_id }} .bl-pd-vars .bl-color-swatch.active,
-#{{ section_id }} .bl-pd-vars .bl-color-swatch.is-active,
-#{{ section_id }} .bl-pd-vars input[type="radio"]:checked + .bl-color-swatch {
-  box-shadow: 0 0 0 2.5px var(--bl-pd-surface), 0 0 0 4.5px var(--bl-pd-accent) !important;
-  border-color: transparent !important;
-  transform: scale(1.12) !important;
-}
-#{{ section_id }} .bl-pd-vars .bl-color-swatch:hover:not(.active):not(.is-active) {
-  transform: scale(1.1) !important;
-  box-shadow: 0 0 0 2px var(--bl-pd-surface), 0 0 0 3.5px rgba(255,255,255,0.45) !important;
-  border-color: transparent !important;
-}
+/* Main image: no hover border/shadow — stays visually normal at all times */
 
 /* ── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
@@ -1166,19 +1324,41 @@
 /* ── Sticky ATC ─── */
 /* No backdrop-filter here — it creates a stacking context that fights the header dropdown */
 #bl-satc-{{ section.id }} {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
+  position: fixed; left: 0; right: 0; z-index: 150;
   background: #000e1c;
-  border-bottom: 1px solid rgba(7,209,110,0.2);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.42);
-  transform: translateY(-110%);
-  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), background 0.35s ease;
   will-change: transform;
 }
-#bl-satc-{{ section.id }}.is-visible { transform: translateY(0); }
+/* Reacts to the site-wide theme toggle (see header.liquid) — this bar lives
+   outside the section's own themed wrapper, so it needs its own explicit
+   light-mode colors rather than inheriting --bl-pd-* custom properties. */
+[data-theme="light"] #bl-satc-{{ section.id }} {
+  background: #ffffff;
+}
+/* Top mode (default) — sits just below the header. var(--header-height) is
+   measured live in JS (header + announcement bar combined, whichever is
+   taller), so this never overlaps the header regardless of whether the
+   announcement bar is enabled or how tall it is. */
+#bl-satc-{{ section.id }}[data-position="top"] {
+  top: calc(var(--header-height, 6.4rem) + 10px);
+  border-bottom: 1px solid rgba(7,209,110,0.2);
+  transform: translateY(-110%);
+}
+#bl-satc-{{ section.id }}[data-position="top"].is-visible { transform: translateY(0); }
+/* Bottom mode — pinned to the bottom of the viewport, no header math needed */
+#bl-satc-{{ section.id }}[data-position="bottom"] {
+  bottom: 0;
+  border-top: 1px solid rgba(7,209,110,0.2);
+  transform: translateY(110%);
+}
+#bl-satc-{{ section.id }}[data-position="bottom"].is-visible { transform: translateY(0); }
 #bl-satc-{{ section.id }} .bl-satc-inner {
   max-width: 1400px; margin-inline: auto;
   padding: 0.9rem clamp(1.6rem, 4vw, 4.8rem);
   display: flex; align-items: center; gap: 1.4rem;
+}
+#bl-satc-{{ section.id }}[data-position="bottom"] .bl-satc-inner {
+  padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
 }
 #bl-satc-{{ section.id }} .bl-satc-img {
   width: 4.8rem; height: 4.8rem; border-radius: 8px;
@@ -1189,15 +1369,42 @@
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(1.2rem, 1.4vw, 1.5rem); font-weight: 600;
   color: #eaf4f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.35s ease;
 }
+[data-theme="light"] #bl-satc-{{ section.id }} .bl-satc-title { color: #001a2e; }
 #bl-satc-{{ section.id }} .bl-satc-price {
   font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
   font-weight: 400; font-size: clamp(1.4rem, 1.8vw, 2rem); color: #07d16e;
 }
+#bl-satc-{{ section.id }} .bl-satc-select {
+  flex-shrink: 0;
+  max-width: 14rem;
+  padding: 0.85rem 2.4rem 0.85rem 1.1rem;
+  background: #001828
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2307d16e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+    no-repeat right 0.8rem center / 1.1rem;
+  color: #eaf4f5;
+  border: 1.5px solid rgba(7,209,110,0.35);
+  border-radius: 8px;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.1rem, 1.3vw, 1.3rem); font-weight: 600;
+  appearance: none; -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.35s ease, color 0.35s ease;
+}
+[data-theme="light"] #bl-satc-{{ section.id }} .bl-satc-select {
+  background-color: #f0f5f8;
+  color: #001a2e;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2307d16e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+#bl-satc-{{ section.id }} .bl-satc-select:hover,
+#bl-satc-{{ section.id }} .bl-satc-select:focus { border-color: #07d16e; outline: none; }
+#bl-satc-{{ section.id }} .bl-satc-select option:disabled { color: rgba(234,244,245,0.4); }
+[data-theme="light"] #bl-satc-{{ section.id }} .bl-satc-select option { color: #001a2e; }
 #bl-satc-{{ section.id }} .bl-satc-btn {
   padding: 0.9rem 2.4rem; background: #07d16e; color: #001a2e;
-  font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
-  font-weight: 400; font-size: clamp(1.2rem, 1.4vw, 1.5rem);
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-weight: 700; font-size: clamp(1.2rem, 1.4vw, 1.5rem);
   letter-spacing: 0.05em; text-transform: uppercase;
   border: none; border-radius: 50px; cursor: pointer; flex-shrink: 0;
   white-space: nowrap; transition: background 0.25s ease, transform 0.2s ease;
@@ -1211,6 +1418,7 @@
 @media (max-width: 480px) {
   #bl-satc-{{ section.id }} .bl-satc-img { display: none; }
   #bl-satc-{{ section.id }} .bl-satc-inner { gap: 0.9rem; }
+  #bl-satc-{{ section.id }} .bl-satc-select { max-width: 9rem; font-size: 1.1rem; padding-right: 2rem; }
 }
 
 /* ── Description — full-width below grid ─── */
@@ -1239,11 +1447,11 @@
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(0.95rem, 1vw, 1.1rem); font-weight: 700;
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--bl-pd-accent); margin-bottom: 0.8rem;
+  color: var(--bl-pd-desc-accent); margin-bottom: 0.8rem;
 }
 #{{ section_id }} .bl-pd-desc-paged-eyebrow::before {
   content: ''; width: 2.4rem; height: 2px;
-  background: var(--bl-pd-accent); display: block;
+  background: var(--bl-pd-desc-accent); display: block;
 }
 #{{ section_id }} .bl-pd-desc-paged-title {
   font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
@@ -1381,8 +1589,8 @@
 }
 #{{ section_id }} .bl-pd-tab-btn:hover { color: rgba(234,244,245,0.75); }
 #{{ section_id }} .bl-pd-tab-btn.is-active {
-  color: var(--bl-pd-accent);
-  border-bottom-color: var(--bl-pd-accent);
+  color: var(--bl-pd-desc-accent);
+  border-bottom-color: var(--bl-pd-desc-accent);
 }
 
 /* Tab panels */
@@ -1444,7 +1652,7 @@
   width: 35%; padding: 1rem 1.2rem 1rem 0;
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(1.2rem, 1.3vw, 1.4rem); font-weight: 700;
-  letter-spacing: 0.04em; color: var(--bl-pd-accent);
+  letter-spacing: 0.04em; color: var(--bl-pd-desc-accent);
   text-align: left; vertical-align: top;
 }
 #{{ section_id }} .bl-pd-specs-table td {
@@ -1453,6 +1661,97 @@
   font-size: clamp(1.2rem, 1.3vw, 1.4rem); font-weight: 400;
   color: var(--bl-pd-text); line-height: 1.6; vertical-align: top;
 }
+
+/* ══════════════════════════════════════════════════════
+   ACCORDION DESCRIPTION MODE — stacked collapsible rows
+══════════════════════════════════════════════════════ */
+#{{ section_id }} .bl-pd-acc-wrap {
+  max-width: 900px; margin: clamp(3.5rem, 5vw, 6rem) auto 0;
+  padding-top: clamp(3rem, 4.5vw, 5rem);
+  border-top: 1px solid rgba(7,209,110,0.18);
+  position: relative; z-index: 10;
+}
+#{{ section_id }} .bl-pd-acc-item {
+  border-bottom: 1px solid var(--bl-pd-divider);
+}
+#{{ section_id }} .bl-pd-acc-item:first-child {
+  border-top: 1px solid var(--bl-pd-divider);
+}
+#{{ section_id }} .bl-pd-acc-summary {
+  list-style: none; display: flex; align-items: center; justify-content: space-between;
+  gap: 1.2rem; padding: 1.8rem 0.2rem;
+  font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+  font-size: clamp(1.4rem, 1.8vw, 1.8rem); font-weight: 700;
+  color: var(--bl-pd-text); cursor: pointer; user-select: none;
+  transition: color 0.22s ease;
+}
+#{{ section_id }} .bl-pd-acc-summary::-webkit-details-marker { display: none; }
+#{{ section_id }} .bl-pd-acc-item[open] .bl-pd-acc-summary,
+#{{ section_id }} .bl-pd-acc-summary:hover { color: var(--bl-pd-desc-accent); }
+#{{ section_id }} .bl-pd-acc-chevron { flex-shrink: 0; display: flex; }
+#{{ section_id }} .bl-pd-acc-chevron svg { transition: transform 0.3s ease; }
+#{{ section_id }} .bl-pd-acc-item[open] .bl-pd-acc-chevron svg { transform: rotate(180deg); }
+/* Height is toggled 0 → scrollHeight by JS (see script below) for a smooth
+   open/close instead of the browser's instant show/hide. */
+#{{ section_id }} .bl-pd-acc-panel {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#{{ section_id }} .bl-pd-acc-panel-inner {
+  padding: 0 0.2rem clamp(1.8rem, 2.5vw, 2.4rem);
+}
+#{{ section_id }} .bl-pd-acc-panel p { margin-bottom: 0.7em; }
+#{{ section_id }} .bl-pd-acc-panel p:last-child { margin-bottom: 0; }
+#{{ section_id }} .bl-pd-acc-panel a { color: var(--bl-pd-desc-accent) !important; }
+/* Shrink oversized marketing images inside the description text so they don't dominate the panel */
+#{{ section_id }} .bl-pd-acc-panel img {
+  max-width: 480px !important; width: 100% !important; height: auto !important;
+  display: block !important; margin: 1.2rem auto !important;
+}
+@media (max-width: 600px) {
+  #{{ section_id }} .bl-pd-acc-panel img { max-width: 100% !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #{{ section_id }} .bl-pd-acc-chevron svg { transition: none; }
+  #{{ section_id }} .bl-pd-acc-panel { transition: none; }
+}
+@media (max-width: 480px) {
+  #{{ section_id }} .bl-pd-acc-summary { font-size: 1.4rem; padding: 1.4rem 0.1rem; }
+}
+
+/* Any raw <details> pasted straight into the product description (e.g. a
+   copied spec sheet) is flattened into plain flowing text instead of
+   rendering as a mismatched native mini-accordion inside our big tabs. */
+/* display:contents removes the <details> element's own box entirely,
+   which — unlike display:block — also bypasses the browser's built-in
+   "hide everything except summary until opened" behavior, so nested
+   content always renders flat as plain text regardless of the open
+   attribute or whether a <summary> is even present. */
+#{{ section_id }} .bl-pd-desc.rte details { display: contents; }
+#{{ section_id }} .bl-pd-desc.rte details > summary { display: none; }
+
+/* ── Custom accordion tabs — optional small side image ── */
+#{{ section_id }} .bl-pd-acc-panel-body {
+  display: flex;
+  gap: clamp(1rem, 2vw, 1.6rem);
+  align-items: flex-start;
+}
+#{{ section_id }} .bl-pd-acc-panel-body--img-right { flex-direction: row-reverse; }
+#{{ section_id }} .bl-pd-acc-img {
+  flex-shrink: 0;
+  width: clamp(72px, 14vw, 128px);
+}
+#{{ section_id }} .bl-pd-acc-img img {
+  width: 100%; height: auto; display: block; border-radius: 10px; object-fit: cover;
+}
+#{{ section_id }} .bl-pd-acc-text { flex: 1; min-width: 0; }
+@media (max-width: 480px) {
+  #{{ section_id }} .bl-pd-acc-panel-body,
+  #{{ section_id }} .bl-pd-acc-panel-body--img-right { flex-direction: column; }
+  #{{ section_id }} .bl-pd-acc-img { width: clamp(64px, 30vw, 96px); }
+}
+
 /* ── Tabbed section: mobile responsive ── */
 @media (max-width: 768px) {
   /* Single column for both split and CSS-columns layouts */
@@ -1544,8 +1843,14 @@
 }
 #{{ section_id }} .bl-canvas-text * { color: var(--bl-pd-text) !important; }
 #{{ section_id }} .bl-canvas-text strong,
-#{{ section_id }} .bl-canvas-text b    { color: var(--bl-pd-accent) !important; }
-#{{ section_id }} .bl-canvas-text a    { color: var(--bl-pd-accent) !important; }
+#{{ section_id }} .bl-canvas-text b,
+#{{ section_id }} .bl-canvas-text [style*="font-weight:bold"],
+#{{ section_id }} .bl-canvas-text [style*="font-weight: bold"],
+#{{ section_id }} .bl-canvas-text [style*="font-weight:700"],
+#{{ section_id }} .bl-canvas-text [style*="font-weight: 700"],
+#{{ section_id }} .bl-canvas-text [style*="font-weight:600"],
+#{{ section_id }} .bl-canvas-text [style*="font-weight: 600"] { color: var(--bl-pd-desc-accent) !important; font-weight: 700 !important; }
+#{{ section_id }} .bl-canvas-text a    { color: var(--bl-pd-desc-accent) !important; }
 #{{ section_id }} .bl-canvas-text h1,
 #{{ section_id }} .bl-canvas-text h2,
 #{{ section_id }} .bl-canvas-text h3,
@@ -1583,7 +1888,7 @@
   font-family: 'DM Sans', sans-serif;
   font-size: clamp(0.85rem, 0.95vw, 1rem); font-weight: 700;
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--bl-pd-accent);
+  color: var(--bl-pd-desc-accent);
   display: flex; align-items: center; gap: 0.6rem;
   margin-bottom: 1.4rem;
   padding-bottom: 1rem;
@@ -1591,7 +1896,7 @@
 }
 #{{ section_id }} .bl-canvas-info-heading::before {
   content: ''; width: 1.8rem; height: 2px;
-  background: var(--bl-pd-accent); border-radius: 2px; flex-shrink: 0;
+  background: var(--bl-pd-desc-accent); border-radius: 2px; flex-shrink: 0;
 }
 #{{ section_id }} .bl-canvas-info-row {
   display: flex; gap: 0.8rem; padding: 0.75rem 0;
@@ -1786,8 +2091,6 @@
     <div class="bl-pd-glow bl-pd-glow--2" aria-hidden="true"></div>
   {%- endif -%}
 
-  <div class="bl-pd-bg-text" aria-hidden="true">{{ product.title | upcase | truncate: 20, '' }}</div>
-
   <div class="bl-pd-wrap">
 
     {%- if show_crumbs -%}
@@ -1964,22 +2267,69 @@
                   </div>
 
                 {%- when 'price' -%}
-                  {%- assign _p_clr = block.settings.price_color -%}
-                  {%- assign _cp_clr = block.settings.compare_price_color -%}
-                  {%- if _p_clr == blank -%}{%- assign _p_clr = accent_color -%}{%- endif -%}
-                  {%- if _cp_clr == blank -%}{%- assign _cp_clr = muted_color -%}{%- endif -%}
+                  {%- comment -%}
+                    Dark/light pairs, each set as its own CSS custom property
+                    (never blank-defaulted to the other mode's colour) — the
+                    stylesheet below picks whichever one applies via
+                    [data-theme="light"], so these react to the toggle
+                    instead of a single value baked in at render time.
+                  {%- endcomment -%}
+                  {%- assign _p_clr_dark    = block.settings.price_color -%}
+                  {%- assign _p_clr_light   = block.settings.price_color_light -%}
+                  {%- assign _cp_clr_dark   = block.settings.compare_price_color -%}
+                  {%- assign _cp_clr_light  = block.settings.compare_price_color_light -%}
+                  {%- assign _badge_bg_dark   = block.settings.badge_bg_color -%}
+                  {%- assign _badge_bg_light  = block.settings.badge_bg_color_light -%}
+                  {%- assign _badge_text_dark  = block.settings.badge_text_color | default: '#001a2e' -%}
+                  {%- assign _badge_text_light = block.settings.badge_text_color_light | default: '#001a2e' -%}
+                  {%- assign _helper_clr_dark  = block.settings.helper_text_color -%}
+                  {%- assign _helper_clr_light = block.settings.helper_text_color_light -%}
+                  {%- assign _price_gap = block.settings.price_gap | default: 16 -%}
+                  {%- assign _hide_zeros = block.settings.hide_trailing_zeros -%}
+                  {%- assign _shipping_label = block.settings.shipping_label | default: 'Free Shipping' -%}
+                  {%- if block.settings.price_font == 'secondary' -%}
+                    {%- assign _price_font_css = "var(--bl-font-secondary, 'DM Sans', sans-serif)" -%}
+                    {%- assign _price_weight = 700 -%}
+                  {%- else -%}
+                    {%- assign _price_font_css = "var(--bl-font-primary, 'Archivo Black', sans-serif)" -%}
+                    {%- assign _price_weight = 400 -%}
+                  {%- endif -%}
+                  {%- assign current_variant = product.selected_or_first_available_variant -%}
+                  {%- capture _price_style -%}
+                    {%- if _p_clr_dark != blank -%}--price-clr-dark: {{ _p_clr_dark }};{%- endif -%}
+                    {%- if _p_clr_light != blank -%}--price-clr-light: {{ _p_clr_light }};{%- endif -%}
+                    {%- if _cp_clr_dark != blank -%}--compare-clr-dark: {{ _cp_clr_dark }};{%- endif -%}
+                    {%- if _cp_clr_light != blank -%}--compare-clr-light: {{ _cp_clr_light }};{%- endif -%}
+                    {%- if _badge_bg_dark != blank -%}--badge-bg-dark: {{ _badge_bg_dark }};{%- endif -%}
+                    {%- if _badge_bg_light != blank -%}--badge-bg-light: {{ _badge_bg_light }};{%- endif -%}
+                    --badge-text-dark: {{ _badge_text_dark }}; --badge-text-light: {{ _badge_text_light }};
+                    {%- if _helper_clr_dark != blank -%}--helper-clr-dark: {{ _helper_clr_dark }};{%- endif -%}
+                    {%- if _helper_clr_light != blank -%}--helper-clr-light: {{ _helper_clr_light }};{%- endif -%}
+                    --price-gap: {{ _price_gap }}px; --price-font: {{ _price_font_css }}; --price-weight: {{ _price_weight }};
+                  {%- endcapture -%}
                   <div class="bl-pd-block bl-pd-price" id="Price-{{ section.id }}"
-                    style="--price-clr: {{ _p_clr }}; --compare-clr: {{ _cp_clr }};"
+                    style="{{ _price_style }}"
                     {{ block.shopify_attributes }}>
-                    {%- render 'product-price', product: product, is_product_section: true, show_badges: true -%}
+                    <div class="bl-pd-price-row">
+                      <span class="bl-pd-price-current">
+                        {%- if _hide_zeros -%}{{ current_variant.price | money_without_trailing_zeros }}{%- else -%}{{ current_variant.price | money }}{%- endif -%}
+                      </span>
+                      {%- if current_variant.compare_at_price > current_variant.price -%}
+                        <span class="bl-pd-price-compare">
+                          {%- if _hide_zeros -%}{{ current_variant.compare_at_price | money_without_trailing_zeros }}{%- else -%}{{ current_variant.compare_at_price | money }}{%- endif -%}
+                        </span>
+                        {%- assign _off_pct = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round -%}
+                        <span class="bl-pd-price-badge">-{{ _off_pct }}% OFF</span>
+                      {%- endif -%}
+                    </div>
                     {%- if cart.taxes_included or cart.duties_included or shop.shipping_policy.body != blank -%}
-                      <div class="product_tax" style="margin-top:0.5rem; font-family:'DM Sans',sans-serif; font-size:1.2rem; color:{{ muted_color }};">
+                      <div class="bl-pd-price-helper">
                         {%- if cart.duties_included and cart.taxes_included -%}{{ 'products.product.duties_and_taxes_included' | t }}
                         {%- elsif cart.taxes_included -%}{{ 'products.product.taxes_included' | t }}
                         {%- elsif cart.duties_included -%}{{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          &nbsp;·&nbsp;{{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                          &nbsp;·&nbsp;<a href="{{ shop.shipping_policy.url }}">{{ _shipping_label }}</a>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -2017,6 +2367,71 @@
                       {%- endif -%}
                     {%- endfor -%}
                   </div>
+
+                {%- when 'promo-badges' -%}
+                  {%- assign _best_seller = product.metafields.custom.best_seller -%}
+                  {%- assign _rating_ok = false -%}
+                  {%- assign _rating_display = blank -%}
+                  {%- assign _count_display = blank -%}
+
+                  {%- comment -%}
+                    Primary source: the legacy reviews.rating / reviews.rating_count
+                    namespace — some review apps (Loox, Stamped, Yotpo, Okendo) write
+                    here automatically.
+                  {%- endcomment -%}
+                  {%- assign _rating = product.metafields.reviews.rating -%}
+                  {%- assign _rating_count = product.metafields.reviews.rating_count -%}
+                  {%- if _rating != blank and _rating_count != blank and _rating.value > 0 and _rating_count.value > 0 -%}
+                    {%- assign _rating_ok = true -%}
+                    {%- assign _rating_display = _rating.value | round: 1 -%}
+                    {%- assign _count_display = _rating_count.value -%}
+                  {%- else -%}
+                    {%- comment -%}
+                      Fallback: Judge.me on this store doesn't mirror into the legacy
+                      reviews.* namespace, but it does write its own HTML badge
+                      metafield (product.metafields.judgeme.badge) with the live
+                      rating/count as data-attributes — pull the numbers straight out
+                      of that instead of waiting on a sync that isn't coming.
+                    {%- endcomment -%}
+                    {%- assign _jdgm_badge = product.metafields.judgeme.badge -%}
+                    {%- if _jdgm_badge != blank -%}
+                      {%- assign _jdgm_rating_parts = _jdgm_badge | split: "data-average-rating='" -%}
+                      {%- assign _jdgm_count_parts  = _jdgm_badge | split: "data-number-of-reviews='" -%}
+                      {%- if _jdgm_rating_parts.size > 1 and _jdgm_count_parts.size > 1 -%}
+                        {%- assign _jdgm_rating = _jdgm_rating_parts[1] | split: "'" | first -%}
+                        {%- assign _jdgm_count  = _jdgm_count_parts[1]  | split: "'" | first -%}
+                        {%- assign _jdgm_rating_num = _jdgm_rating | times: 1.0 -%}
+                        {%- assign _jdgm_count_num  = _jdgm_count | times: 1.0 -%}
+                        {%- if _jdgm_rating_num > 0 and _jdgm_count_num > 0 -%}
+                          {%- assign _rating_ok = true -%}
+                          {%- assign _rating_display = _jdgm_rating_num | round: 1 -%}
+                          {%- assign _count_display = _jdgm_count -%}
+                        {%- endif -%}
+                      {%- endif -%}
+                    {%- endif -%}
+                  {%- endif -%}
+
+                  {%- if _best_seller or _rating_ok -%}
+                    <div class="bl-pd-block bl-pd-promo" {{ block.shopify_attributes }}>
+                      {%- if _best_seller -%}
+                        <div class="bl-pd-promo-badge bl-pd-promo-badge--seller">
+                          {%- if block.settings.badge_icon != blank -%}
+                            <img src="{{ block.settings.badge_icon | image_url: width: 40 }}" alt="" class="bl-pd-promo-icon-img" width="18" height="18" loading="lazy">
+                          {%- else -%}
+                            <svg class="bl-pd-promo-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.3-8.1C1.1 10.6 1 8 2.6 6.2 4.2 4.4 7 4.3 8.7 6l3.3 3.4L15.3 6c1.7-1.7 4.5-1.6 6.1.2 1.6 1.8 1.5 4.4-.1 6.7C18.7 16.65 12 21 12 21z"/></svg>
+                          {%- endif -%}
+                          <span>{{ block.settings.badge_label | default: 'Best Seller' }}</span>
+                        </div>
+                      {%- endif -%}
+                      {%- if _rating_ok -%}
+                        <div class="bl-pd-promo-badge bl-pd-promo-badge--reviews">
+                          <svg class="bl-pd-promo-icon bl-pd-promo-icon--star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                          <span class="bl-pd-promo-rating">{{ _rating_display }}</span>
+                          <span class="bl-pd-promo-count">({{ _count_display }} Reviews)</span>
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  {%- endif -%}
 
                 {%- when 'sku' -%}
                   <div class="bl-pd-block bl-pd-sku" id="SKU-{{ section.id }}" {{ block.shopify_attributes }}>
@@ -2075,10 +2490,8 @@
                   {%- endif -%}
 
                 {%- when 'variant-picker' -%}
-                  {%- assign _opt_lbl_clr = block.settings.option_label_color -%}
-                  {%- if _opt_lbl_clr == blank -%}{%- assign _opt_lbl_clr = '#eaf4f5' -%}{%- endif -%}
-                  <div class="bl-pd-block bl-pd-vars" id="Variant_picker-{{ section.id }}" data-label-color="{{ _opt_lbl_clr }}" {{ block.shopify_attributes }}>
-                    {%- render 'variant-picker', product: product, picker_type: block.settings.options_type, swatch_shape: settings.swatch_shape -%}
+                  <div class="bl-pd-block bl-pd-vars" id="Variant_picker-{{ section.id }}" data-label-color="#eaf4f5" {{ block.shopify_attributes }}>
+                    {%- render 'variant-picker', product: product, picker_type: 'button', swatch_shape: settings.swatch_shape -%}
                   </div>
 
                 {%- when 'quantity' -%}
@@ -2087,7 +2500,12 @@
                   </div>
 
                 {%- when 'add-to-cart' -%}
-                  <div class="bl-pd-block bl-pd-atc" id="Action_buttons-{{ section.id }}" {{ block.shopify_attributes }}>
+                  {%- assign _dyn_clr = block.settings.dynamic_button_color | default: '#336870' -%}
+                  {%- assign _dyn_text_clr = block.settings.dynamic_button_text_color | default: '#eaf4f5' -%}
+                  {%- assign _dyn_style = block.settings.dynamic_button_style | default: 'solid' -%}
+                  <div class="bl-pd-block bl-pd-atc bl-dyn-style--{{ _dyn_style }}" id="Action_buttons-{{ section.id }}"
+                    style="--dyn-btn-clr: {{ _dyn_clr }}; --dyn-btn-text-clr: {{ _dyn_text_clr }};"
+                    {{ block.shopify_attributes }}>
                     {%- assign gift_card_feature = false -%}
                     {%- if block.settings.show_gift_card_feature and product.gift_card? -%}
                       {%- assign gift_card_feature = true -%}
@@ -2309,7 +2727,7 @@
         {%- assign desc_layout = block.settings.desc_layout | default: 'column' -%}
         {%- if product.description != blank and desc_layout != 'column' -%}
 
-          {%- if desc_layout == 'tabbed' or desc_layout == 'story' -%}
+          {%- if desc_layout == 'tabbed' or desc_layout == 'story' or desc_layout == 'accordion' -%}
             {%- comment -%}These layouts are rendered in their own loops below{%- endcomment -%}
           {%- elsif desc_layout == 'paginated' -%}
 
@@ -2447,86 +2865,7 @@
               {%- if tab2_content != blank -%}
                 <div class="bl-pd-desc rte">{{ tab2_content }}</div>
               {%- else -%}
-                <table class="bl-pd-specs-table">
-                  <tbody>
-                    {%- if product.metafields.custom.material != blank -%}
-                      <tr><th scope="row">Material</th><td>{{ product.metafields.custom.material }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.dimensions != blank -%}
-                      <tr><th scope="row">Dimensions</th><td>{{ product.metafields.custom.dimensions }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.weight != blank -%}
-                      <tr><th scope="row">Weight</th><td>{{ product.metafields.custom.weight }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.max_load != blank -%}
-                      <tr><th scope="row">Max Load</th><td>{{ product.metafields.custom.max_load }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.frame_material != blank -%}
-                      <tr><th scope="row">Frame Material</th><td>{{ product.metafields.custom.frame_material }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.color != blank -%}
-                      <tr><th scope="row">Color</th><td>{{ product.metafields.custom.color }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.care_instructions != blank -%}
-                      <tr><th scope="row">Care Instructions</th><td>{{ product.metafields.custom.care_instructions }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.warranty != blank -%}
-                      <tr><th scope="row">Warranty</th><td>{{ product.metafields.custom.warranty }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.country_of_origin != blank -%}
-                      <tr><th scope="row">Country of Origin</th><td>{{ product.metafields.custom.country_of_origin }}</td></tr>
-                    {%- endif -%}
-                    {%- if product.metafields.custom.assembly_required != blank -%}
-                      <tr><th scope="row">Assembly Required</th><td>{{ product.metafields.custom.assembly_required }}</td></tr>
-                    {%- endif -%}
-                    {%- comment -%}── Weights / sizes available from product options ──{%- endcomment -%}
-                    {%- for opt in product.options_with_values -%}
-                      {%- assign _opt_lc = opt.name | downcase -%}
-                      {%- if _opt_lc == 'weight' or _opt_lc contains 'weight' or _opt_lc contains 'kg' or _opt_lc == 'size' or _opt_lc contains 'capacity' -%}
-                        <tr><th scope="row">{{ opt.name }} Available</th><td>{{ opt.values | join: ' / ' }}</td></tr>
-                      {%- endif -%}
-                    {%- endfor -%}
-
-                    {%- comment -%}── Stock count (total across all available variants) ──{%- endcomment -%}
-                    {%- assign _total_stock = 0 -%}
-                    {%- for _v in product.variants -%}
-                      {%- if _v.available and _v.inventory_quantity > 0 -%}
-                        {%- assign _total_stock = _total_stock | plus: _v.inventory_quantity -%}
-                      {%- endif -%}
-                    {%- endfor -%}
-                    {%- if _total_stock > 0 -%}
-                      <tr><th scope="row">Stock Available</th><td>{{ _total_stock }} units</td></tr>
-                    {%- endif -%}
-
-                    {%- comment -%}── SKU ──{%- endcomment -%}
-                    {%- assign _sku = product.selected_or_first_available_variant.sku -%}
-                    {%- if _sku != blank -%}
-                      <tr><th scope="row">SKU</th><td>{{ _sku }}</td></tr>
-                    {%- endif -%}
-
-                    {%- comment -%}── Barcode ──{%- endcomment -%}
-                    {%- assign _bc = product.selected_or_first_available_variant.barcode -%}
-                    {%- if _bc != blank -%}
-                      <tr><th scope="row">Barcode</th><td>{{ _bc }}</td></tr>
-                    {%- endif -%}
-
-                    {%- comment -%}── Package weight ──{%- endcomment -%}
-                    {%- assign _pw = product.selected_or_first_available_variant.weight -%}
-                    {%- if _pw > 0 -%}
-                      <tr><th scope="row">Package Weight</th><td>{{ _pw | weight_with_unit }}</td></tr>
-                    {%- endif -%}
-
-                    {%- comment -%}Fallback: always-available Shopify product fields{%- endcomment -%}
-                    {%- unless has_addl_mf -%}
-                      {%- if product.type != blank -%}
-                        <tr><th scope="row">Product Type</th><td>{{ product.type }}</td></tr>
-                      {%- endif -%}
-                      {%- if product.vendor != blank -%}
-                        <tr><th scope="row">Brand</th><td>{{ product.vendor }}</td></tr>
-                      {%- endif -%}
-                    {%- endunless -%}
-                  </tbody>
-                </table>
+                {{ _specs_table_html }}
               {%- endif -%}
             </div>
             {%- endif -%}
@@ -2552,9 +2891,6 @@
             <div id="bl-canvas-addl-{{ section.id }}" style="display:none;" aria-hidden="true">
 
               {%- comment -%}── Basic product identity ──{%- endcomment -%}
-              {%- if product.vendor != blank -%}
-                <div data-key="Brand" data-val="{{ product.vendor | escape }}"></div>
-              {%- endif -%}
               {%- if product.type != blank -%}
                 <div data-key="Product Type" data-val="{{ product.type | escape }}"></div>
               {%- endif -%}
@@ -2568,17 +2904,6 @@
               {%- endfor -%}
 
               {%- comment -%}── Availability & pricing ──{%- endcomment -%}
-              {%- assign _ts = 0 -%}
-              {%- for _v in product.variants -%}
-                {%- if _v.available and _v.inventory_quantity > 0 -%}
-                  {%- assign _ts = _ts | plus: _v.inventory_quantity -%}
-                {%- endif -%}
-              {%- endfor -%}
-              {%- if _ts > 0 -%}
-                <div data-key="In Stock" data-val="{{ _ts }} units"></div>
-              {%- else -%}
-                <div data-key="Availability" data-val="Out of Stock"></div>
-              {%- endif -%}
               {%- if product.variants.size > 1 -%}
                 <div data-key="Variants" data-val="{{ product.variants.size }} options available"></div>
               {%- endif -%}
@@ -2588,11 +2913,8 @@
                 <div data-key="Price Range" data-val="{{ _min | money }} – {{ _max | money }}"></div>
               {%- endif -%}
 
-              {%- comment -%}── SKU & barcode ──{%- endcomment -%}
+              {%- comment -%}── Barcode ──{%- endcomment -%}
               {%- assign _cv = product.selected_or_first_available_variant -%}
-              {%- if _cv.sku != blank -%}
-                <div data-key="SKU" data-val="{{ _cv.sku | escape }}"></div>
-              {%- endif -%}
               {%- if _cv.barcode != blank -%}
                 <div data-key="Barcode" data-val="{{ _cv.barcode | escape }}"></div>
               {%- endif -%}
@@ -2647,6 +2969,164 @@
       {%- endif -%}
     {%- endfor -%}
 
+    {%- comment -%}── Description — Accordion layout ──{%- endcomment -%}
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'description' -%}
+        {%- assign desc_layout = block.settings.desc_layout | default: 'column' -%}
+        {%- if desc_layout == 'accordion' -%}
+
+          {%- comment -%}
+            Auto-split the description into tabs at every <h2> heading, so
+            each product's OWN content — written once in the normal product
+            description editor, using "Heading 2" for section titles —
+            determines what tabs exist and what they're titled. Nothing is
+            typed into theme settings, and the tabs simply update whenever
+            the description changes. A description with no <h2> headings
+            just gets a single "Description" tab holding the whole body.
+          {%- endcomment -%}
+          {%- assign _acc_h2_chunks = product.description | split: '<h2>' -%}
+          {%- assign _acc_intro_html = _acc_h2_chunks[0] -%}
+          {%- assign _acc_intro_text = _acc_intro_html | strip_html | strip -%}
+
+          {%- assign _acc_email = block.settings.accordion_care_email -%}
+          {%- assign _acc_phone = block.settings.accordion_care_phone -%}
+          {%- assign _acc_show_specs = block.settings.accordion_show_specs -%}
+          {%- if block.settings.accordion_show_specs == blank -%}{%- assign _acc_show_specs = true -%}{%- endif -%}
+          {%- assign _acc_show_addl_info = block.settings.accordion_show_addl_info -%}
+          {%- if block.settings.accordion_show_addl_info == blank -%}{%- assign _acc_show_addl_info = true -%}{%- endif -%}
+
+          <div class="bl-pd-acc-wrap" id="bl-pd-acc-{{ section.id }}">
+
+            {%- if _acc_intro_text != blank -%}
+              <details class="bl-pd-acc-item">
+                <summary class="bl-pd-acc-summary">
+                  <span>Description</span>
+                  <span class="bl-pd-acc-chevron" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="bl-pd-acc-panel">
+                  <div class="bl-pd-acc-panel-inner bl-pd-desc rte">
+                    {{ _acc_intro_html }}
+                  </div>
+                </div>
+              </details>
+            {%- endif -%}
+
+            {%- for _acc_chunk in _acc_h2_chunks offset: 1 -%}
+              {%- assign _acc_h2_raw = _acc_chunk | split: '</h2>' | first -%}
+              {%- assign _acc_h2_title = _acc_h2_raw | strip_html | strip -%}
+              {%- assign _acc_h2_body = _acc_chunk | remove_first: _acc_h2_raw | remove_first: '</h2>' -%}
+              {%- if _acc_h2_title != blank -%}
+                <details class="bl-pd-acc-item">
+                  <summary class="bl-pd-acc-summary">
+                    <span>{{ _acc_h2_title }}</span>
+                    <span class="bl-pd-acc-chevron" aria-hidden="true">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </span>
+                  </summary>
+                  <div class="bl-pd-acc-panel">
+                    <div class="bl-pd-acc-panel-inner bl-pd-desc rte">
+                      {{ _acc_h2_body }}
+                    </div>
+                  </div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- comment -%}── Shared tabs — same title + content on every product using this section (e.g. store-wide policies) ──{%- endcomment -%}
+            {%- for i in (1..3) -%}
+              {%- assign _t_title_key = 'custom_tab' | append: i | append: '_title' -%}
+              {%- assign _t_content_key = 'custom_tab' | append: i | append: '_content' -%}
+              {%- assign _t_image_key = 'custom_tab' | append: i | append: '_image' -%}
+              {%- assign _t_pos_key = 'custom_tab' | append: i | append: '_image_position' -%}
+              {%- assign _t_title = block.settings[_t_title_key] -%}
+              {%- assign _t_content = block.settings[_t_content_key] -%}
+              {%- assign _t_image = block.settings[_t_image_key] -%}
+              {%- assign _t_pos = block.settings[_t_pos_key] | default: 'left' -%}
+              {%- if _t_title != blank -%}
+                <details class="bl-pd-acc-item">
+                  <summary class="bl-pd-acc-summary">
+                    <span>{{ _t_title | escape }}</span>
+                    <span class="bl-pd-acc-chevron" aria-hidden="true">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </span>
+                  </summary>
+                  <div class="bl-pd-acc-panel">
+                    <div class="bl-pd-acc-panel-inner">
+                      <div class="bl-pd-acc-panel-body{% if _t_image != blank %} bl-pd-acc-panel-body--img-{{ _t_pos }}{% endif %}">
+                        {%- if _t_image != blank -%}
+                          <div class="bl-pd-acc-img">
+                            <img src="{{ _t_image | image_url: width: 260 }}" alt="{{ _t_title | escape }}" loading="lazy" width="128" height="128">
+                          </div>
+                        {%- endif -%}
+                        <div class="bl-pd-acc-text bl-pd-desc rte">{{ _t_content }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- if _acc_show_specs -%}
+              <details class="bl-pd-acc-item">
+                <summary class="bl-pd-acc-summary">
+                  <span>Product Specifications</span>
+                  <span class="bl-pd-acc-chevron" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="bl-pd-acc-panel">
+                  <div class="bl-pd-acc-panel-inner">
+                    {{ _specs_table_html }}
+                  </div>
+                </div>
+              </details>
+            {%- endif -%}
+
+            {%- if _acc_show_addl_info and _has_addl_info -%}
+              <details class="bl-pd-acc-item">
+                <summary class="bl-pd-acc-summary">
+                  <span>Additional Info</span>
+                  <span class="bl-pd-acc-chevron" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="bl-pd-acc-panel">
+                  <div class="bl-pd-acc-panel-inner">
+                    {{ _addl_info_table_html }}
+                  </div>
+                </div>
+              </details>
+            {%- endif -%}
+
+            {%- if _acc_email != blank or _acc_phone != blank -%}
+              <details class="bl-pd-acc-item">
+                <summary class="bl-pd-acc-summary">
+                  <span>Return & Refund</span>
+                  <span class="bl-pd-acc-chevron" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="bl-pd-acc-panel">
+                  <div class="bl-pd-acc-panel-inner bl-pd-desc">
+                    <p>If you have any issues with your order, kindly contact us:</p>
+                    {%- if _acc_email != blank -%}
+                      <p>Email: <a href="mailto:{{ _acc_email }}">{{ _acc_email }}</a></p>
+                    {%- endif -%}
+                    {%- if _acc_phone != blank -%}
+                      <p>Phone: <a href="tel:{{ _acc_phone | replace: ' ', '' }}">{{ _acc_phone }}</a></p>
+                    {%- endif -%}
+                  </div>
+                </div>
+              </details>
+            {%- endif -%}
+
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+
   </div>
 </div>
 
@@ -2693,7 +3173,7 @@
 
 {%- comment -%}── Sticky ATC ──{%- endcomment -%}
 {%- if enable_sticky -%}
-<div id="bl-satc-{{ section.id }}" aria-hidden="true">
+<div id="bl-satc-{{ section.id }}" data-position="{{ sticky_atc_position }}" aria-hidden="true">
   <div class="bl-satc-inner">
     {%- if product.featured_image -%}
       <img
@@ -2707,6 +3187,22 @@
       <div class="bl-satc-title">{{ product.title }}</div>
       <div class="bl-satc-price" data-sticky-price>{{ product.selected_or_first_available_variant.price | money }}</div>
     </div>
+    {%- if product.has_only_default_variant == false -%}
+    <select class="bl-satc-select" id="bl-satc-select-{{ section.id }}" aria-label="Select {{ product.title | escape }} option">
+      {%- for variant in product.variants -%}
+        <option
+          value="{{ variant.id }}"
+          data-price="{{ variant.price | money }}"
+          data-available="{{ variant.available }}"
+          data-options="{{ variant.options | join: '|||' }}"
+          {% if variant.id == product.selected_or_first_available_variant.id %}selected{% endif %}
+          {% unless variant.available %}disabled{% endunless %}
+        >
+          {{ variant.title }}{% unless variant.available %} - {{ 'products.product.sold_out' | t }}{% endunless %}
+        </option>
+      {%- endfor -%}
+    </select>
+    {%- endif -%}
     <button
       type="button"
       class="bl-satc-btn"
@@ -2726,9 +3222,81 @@
 <script type="application/ld+json">{{ product | structured_data }}</script>
 
 <script>
+(function () {
+  /* ── Measure real header height (nav + announcement bar, if any) so the
+     sticky ATC bar — and anything else on the page using var(--header-height)
+     — never overlaps a fixed/sticky header, at any announcement bar height.
+
+     Reading header-element's own box height isn't reliable: its announcement
+     bar and nav can each independently be position:fixed/sticky (pulled out
+     of normal flow), so the wrapper's height doesn't always reflect what's
+     actually pinned on screen. Instead, measure the real viewport-space
+     bottom edge of every fixed/sticky element anchored near the top —
+     covering both the header's built-in announcement bar and the standalone
+     Announcement Bar section — and use whichever one extends lowest. */
+  var headerEl = document.querySelector('header-element');
+  if (!headerEl) return;
+
+  function setHeaderHeightVar() {
+    var maxBottom = 0;
+    var candidates = document.querySelectorAll(
+      '.bl-hdr-outer, .bl-hdr-announcement-bar, .bl-announcement-bar'
+    );
+    candidates.forEach(function (el) {
+      var cs = window.getComputedStyle(el);
+      if (cs.position !== 'fixed' && cs.position !== 'sticky') return;
+      if (cs.display === 'none' || cs.visibility === 'hidden') return;
+      var rect = el.getBoundingClientRect();
+      /* A sticky element not yet "stuck" still sits at its natural in-flow
+         position near the top (e.g. right below the announcement bar) —
+         filtering by rect.top would wrongly exclude it before the user
+         scrolls. Fixed/sticky headers are always near the top of the
+         document, so just take the lowest bottom edge among them. */
+      if (rect.height > 0 && rect.bottom > maxBottom) maxBottom = rect.bottom;
+    });
+    if (maxBottom <= 0) {
+      maxBottom = headerEl.getBoundingClientRect().height;
+    }
+    if (maxBottom > 0) {
+      document.documentElement.style.setProperty('--header-height', maxBottom + 'px');
+    }
+  }
+
+  var scrollTicking = false;
+  function onScrollThrottled() {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(function () {
+      setHeaderHeightVar();
+      scrollTicking = false;
+    });
+  }
+
+  setHeaderHeightVar();
+  window.addEventListener('resize', setHeaderHeightVar, { passive: true });
+  window.addEventListener('load', setHeaderHeightVar);
+  window.addEventListener('scroll', onScrollThrottled, { passive: true });
+
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(setHeaderHeightVar);
+    ro.observe(headerEl);
+    document.querySelectorAll('.bl-hdr-outer, .bl-hdr-announcement-bar, .bl-announcement-bar')
+      .forEach(function (el) { ro.observe(el); });
+  }
+})();
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', function () {
   var sec    = document.getElementById('{{ section_id }}');
   if (!sec) return;
+
+  // Declared unconditionally (not gated by "enable sticky ATC") — if that
+  // markup doesn't exist on the page, these just resolve to null and every
+  // consumer below already checks for that before touching them.
+  var satcBar    = document.getElementById('bl-satc-{{ section.id }}');
+  var satcSelect = document.getElementById('bl-satc-select-{{ section.id }}');
+  var satcBtn    = document.getElementById('bl-satc-btn-{{ section.id }}');
 
   var slides = Array.from(sec.querySelectorAll('.bl-pd-slide'));
   var thumbs = Array.from(sec.querySelectorAll('.bl-pd-thumb'));
@@ -2772,22 +3340,75 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // variant media
-  sec.addEventListener('variant:changed', function (e) {
-    if (e.detail && e.detail.variant && e.detail.variant.featured_media) {
-      var mid = String(e.detail.variant.featured_media.id);
+  // ── Variant change — single source of truth ──
+  // Nothing in this theme ever actually dispatches a "variant:changed" DOM
+  // event (checked — there's no dispatchEvent call for it anywhere), so
+  // every listener that depended on it was dead code. Instead: read the
+  // product's full variant list once, and whenever any radio in the main
+  // picker changes, work out which variant that combination resolves to
+  // and drive every dependent UI piece (media, inventory, price block,
+  // sticky bar, hidden id fields) from that one place. The sticky bar's own
+  // select reuses the exact same function, so both controls always agree.
+
+  var PRODUCT_VARIANTS_ALL = {{ product.variants | json }};
+
+  function findVariantByOptions(values) {
+    return PRODUCT_VARIANTS_ALL.find(function (v) {
+      if (!v.options || v.options.length !== values.length) return false;
+      return v.options.every(function (val) { return values.indexOf(val) !== -1; });
+    });
+  }
+  function findVariantById(id) {
+    id = String(id);
+    return PRODUCT_VARIANTS_ALL.find(function (v) { return String(v.id) === id; });
+  }
+  // Every "id" field on the page tied to this product — the real
+  // add-to-cart form (drives Add to Cart + the dynamic "Buy it now" /
+  // Shop Pay button) AND the separate installment-message form (drives the
+  // "or 4 payments of ₹X" text). Both need to stay in sync, not just the
+  // cart form, or the checkout button / installment text goes stale after
+  // switching variants.
+  function getAllIdFields() {
+    return Array.from(sec.querySelectorAll('form [name="id"]'));
+  }
+  // Sets both the live property AND the DOM attribute (some Shopify-hosted
+  // widgets, like the dynamic checkout button, watch the attribute via
+  // MutationObserver rather than re-reading .value), then dispatches
+  // input/change so anything listening for user-driven edits picks it up.
+  function setVariantIdField(field, id) {
+    if (!field) return;
+    field.value = id;
+    field.setAttribute('value', id);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  // Clicks the matching option(s) in the real on-page variant picker so its
+  // own visual state (active class) stays correct too, not just the data.
+  function syncMainPicker(optionValues) {
+    if (!optionValues || !optionValues.length) return;
+    optionValues.forEach(function (val) {
+      var radio = sec.querySelector('.bl-pd-vars input[type="radio"][value="' + CSS.escape(String(val)) + '"]');
+      if (radio && !radio.checked) radio.checked = true;
+    });
+  }
+
+  function applyVariantUpdate(v) {
+    if (!v) return;
+
+    // Media
+    if (v.featured_media) {
+      var mid = String(v.featured_media.id);
       var idx = slides.findIndex(function (s) { return s.dataset.mediaId === mid; });
       if (idx >= 0) goTo(idx);
     }
 
-    // Update custom inventory badge
+    // Custom inventory badge
     var invEl = document.getElementById('bl-inv-custom-{{ section.id }}');
-    if (invEl && e.detail && e.detail.variant) {
-      var v         = e.detail.variant;
-      var thresh    = parseInt(invEl.dataset.threshold || '10', 10);
-      var inClr     = invEl.dataset.inClr   || '#07d16e';
-      var outClr    = invEl.dataset.outClr  || '#ff4444';
-      var lowClr    = invEl.dataset.lowClr  || '#e8a000';
+    if (invEl) {
+      var thresh = parseInt(invEl.dataset.threshold || '10', 10);
+      var inClr  = invEl.dataset.inClr  || '#07d16e';
+      var outClr = invEl.dataset.outClr || '#ff4444';
+      var lowClr = invEl.dataset.lowClr || '#e8a000';
       var label, clr, bg, bdr, state;
       if (v.available) {
         if (v.inventory_management && v.inventory_quantity <= thresh) {
@@ -2805,9 +3426,82 @@ document.addEventListener('DOMContentLoaded', function () {
       invEl.style.cssText = '--_inv-clr:' + clr + ';--_inv-bg:' + bg + ';--_inv-border:' + bdr + ';';
       var dot  = invEl.querySelector('.bl-inv-dot');
       var text = invEl.querySelector('.bl-inv-text');
-      if (dot)  dot.style.background  = clr;
+      if (dot)  dot.style.background = clr;
       if (text) text.textContent = label;
     }
+
+    // Price block — fully custom, not Shopify's native price snippet, so
+    // nothing updates it unless we do it here explicitly.
+    var priceWrap = document.getElementById('Price-{{ section.id }}');
+    if (priceWrap && v.price !== undefined) {
+      var pCurEl   = priceWrap.querySelector('.bl-pd-price-current');
+      var pCmpEl   = priceWrap.querySelector('.bl-pd-price-compare');
+      var pBadgeEl = priceWrap.querySelector('.bl-pd-price-badge');
+      var pRow     = priceWrap.querySelector('.bl-pd-price-row');
+
+      if (pCurEl) {
+        pCurEl.textContent = '{{ product.selected_or_first_available_variant.price | money }}'.replace(
+          /[\d,]+(\.\d+)?/, (v.price / 100).toFixed(2)
+        );
+      }
+
+      var hasCompare = v.compare_at_price && v.compare_at_price > v.price;
+      if (hasCompare) {
+        var cmpText = '{{ product.selected_or_first_available_variant.compare_at_price | default: 100 | money }}'.replace(
+          /[\d,]+(\.\d+)?/, (v.compare_at_price / 100).toFixed(2)
+        );
+        if (!pCmpEl && pRow) {
+          pCmpEl = document.createElement('span');
+          pCmpEl.className = 'bl-pd-price-compare';
+          pRow.appendChild(pCmpEl);
+        }
+        if (pCmpEl) { pCmpEl.textContent = cmpText; pCmpEl.style.display = ''; }
+
+        var pct = Math.round(((v.compare_at_price - v.price) / v.compare_at_price) * 100);
+        if (!pBadgeEl && pRow) {
+          pBadgeEl = document.createElement('span');
+          pBadgeEl.className = 'bl-pd-price-badge';
+          pRow.appendChild(pBadgeEl);
+        }
+        if (pBadgeEl) { pBadgeEl.textContent = '-' + pct + '% OFF'; pBadgeEl.style.display = ''; }
+      } else {
+        if (pCmpEl)   pCmpEl.style.display = 'none';
+        if (pBadgeEl) pBadgeEl.style.display = 'none';
+      }
+    }
+
+    // Sticky ATC bar
+    if (satcBar) {
+      var satcPriceEl = satcBar.querySelector('.bl-satc-price');
+      if (satcPriceEl && v.price !== undefined) {
+        satcPriceEl.textContent = '{{ product.selected_or_first_available_variant.price | money }}'.replace(
+          /[\d,]+(\.\d+)?/, (v.price / 100).toFixed(2)
+        );
+      }
+      if (satcBtn) satcBtn.disabled = !v.available;
+      if (satcSelect && v.id != null) satcSelect.value = String(v.id);
+    }
+
+    // Hidden variant-id field(s) — cart-add form AND the installment form
+    // both get updated, so the dynamic checkout ("Buy it now") button and
+    // the Shop Pay installment message ("or 4 payments of...") both refresh
+    // for the newly selected variant, not just the visible price block.
+    if (v.id != null) {
+      getAllIdFields().forEach(function (field) { setVariantIdField(field, v.id); });
+    }
+
+    try {
+      sec.dispatchEvent(new CustomEvent('variant:changed', { detail: { variant: v } }));
+    } catch (e) {}
+  }
+
+  // Main picker → resolve the full selected combination to a variant.
+  sec.addEventListener('change', function (e) {
+    if (!e.target || !e.target.matches || !e.target.matches('.bl-pd-vars input[type="radio"]')) return;
+    var selected = Array.from(sec.querySelectorAll('.bl-pd-vars input[type="radio"]:checked'))
+      .map(function (el) { return el.value; });
+    var variant = findVariantByOptions(selected);
+    if (variant) applyVariantUpdate(variant);
   });
 
   {% if enable_zoom %}
@@ -2977,7 +3671,7 @@ document.addEventListener('DOMContentLoaded', function () {
   {% endif %}
 
   {% if enable_para %}
-  // ── Parallax glow + image tilt ──
+  // ── Parallax glow (image tilt/"float" removed — image stays static) ──
   if (!reducedMotion) {
     var g1 = sec.querySelector('.bl-pd-glow--1');
     var g2 = sec.querySelector('.bl-pd-glow--2');
@@ -2992,14 +3686,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var dx = (mx - cx) / cx, dy = (my - cy) / cy;
         if (g1) g1.style.transform = 'translate(' + (dx * 22) + 'px,' + (dy * 18) + 'px)';
         if (g2) g2.style.transform = 'translate(' + (dx * -16) + 'px,' + (dy * -12) + 'px)';
-        if (wrap) {
-          var rx = dy * 3.5, ry = dx * -3.5;
-          wrap.style.transform = 'perspective(1200px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
-        }
       });
     });
     sec.addEventListener('mouseleave', function () {
-      if (wrap) wrap.style.transform = 'perspective(1200px) rotateX(0) rotateY(0)';
       if (g1) g1.style.transform = '';
       if (g2) g2.style.transform = '';
     });
@@ -3024,15 +3713,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   {% if enable_sticky %}
   // ── Sticky ATC ──
-  var satcBar = document.getElementById('bl-satc-{{ section.id }}');
-  var atcEl   = sec.querySelector('#Action_buttons-{{ section.id }}');
-
-  function blSetAtcTop() {
-    var hdr = document.querySelector('.bl-hdr-outer') || document.querySelector('header[role="banner"]') || document.querySelector('header');
-    if (hdr && satcBar) satcBar.style.top = hdr.offsetHeight + 'px';
-  }
-  blSetAtcTop();
-  window.addEventListener('resize', blSetAtcTop);
+  // Positioning (top offset below the header, or pinned to the bottom) is
+  // handled entirely by CSS via var(--header-height) / data-position — no
+  // inline "top" override here, since that used to win over the CSS calc()
+  // with an incomplete header-only measurement and cause the overlap.
+  // satcBar / satcSelect / satcBtn are declared near the top of this script;
+  // getIdField / syncMainPicker / applyVariantUpdate are the shared
+  // variant-change functions defined above, also used by the main picker.
+  var atcEl = sec.querySelector('#Action_buttons-{{ section.id }}');
 
   if (satcBar && atcEl) {
     var satcObs = new IntersectionObserver(function (entries) {
@@ -3048,27 +3736,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { threshold: 0 });
     satcObs.observe(atcEl);
 
-    // Clicking sticky ATC submits the main product form
-    var satcBtn = document.getElementById('bl-satc-btn-{{ section.id }}');
-    if (satcBtn) {
-      satcBtn.addEventListener('click', function () {
-        var form = sec.querySelector('form[action*="/cart/add"]') || sec.querySelector('[data-type="add-to-cart-form"]');
-        if (form) { if (form.requestSubmit) form.requestSubmit(); else form.submit(); }
+    if (satcSelect) {
+      satcSelect.addEventListener('change', function () {
+        var variant = findVariantById(satcSelect.value);
+        if (!variant) return;
+        applyVariantUpdate(variant);
+        syncMainPicker(variant.options);
       });
     }
 
-    // Update sticky price + availability on variant change
-    sec.addEventListener('variant:changed', function (e) {
-      if (!e.detail || !e.detail.variant) return;
-      var v = e.detail.variant;
-      var priceEl = satcBar.querySelector('.bl-satc-price');
-      if (priceEl && v.price !== undefined) {
-        priceEl.textContent = '{{ product.selected_or_first_available_variant.price | money }}'.replace(
-          /[\d,]+(\.\d+)?/, (v.price / 100).toFixed(2)
-        );
-      }
-      if (satcBtn) satcBtn.disabled = !v.available;
-    });
+    // Clicking sticky ATC submits the REAL add-to-cart form via
+    // requestSubmit() (not .submit(), which would skip the theme's own
+    // "submit" listener and its AJAX cart / drawer handling entirely).
+    // Submitting the actual form — rather than a hand-rolled fetch —
+    // keeps quantity, gift-wrap, and any other fields in the form intact,
+    // and reuses whatever cart-drawer/notification behavior the main Add
+    // to Cart button already triggers, instead of reinventing it.
+    if (satcBtn) {
+      satcBtn.addEventListener('click', function () {
+        var form = sec.querySelector('form[action*="/cart/add"]') || sec.querySelector('[data-type="add-to-cart-form"]');
+        if (form) {
+          if (satcSelect) {
+            getAllIdFields().forEach(function (field) { setVariantIdField(field, satcSelect.value); });
+          }
+          if (form.requestSubmit) form.requestSubmit(); else form.submit();
+        }
+      });
+    }
 
     // Hide sticky ATC bar when mobile drawer is open so it doesn't overlap
     if (satcBar) {
@@ -3248,6 +3942,89 @@ document.addEventListener('DOMContentLoaded', function () {
         if (split) { split.style.gridTemplateColumns = '1fr'; imgsCol.style.display = 'none'; }
       }
     }
+  })();
+
+  // ── Accordion description mode: strip images + unwrap stray <details> from every auto-generated panel ──
+  (function () {
+    var accWrap = document.getElementById('bl-pd-acc-{{ section.id }}');
+    if (!accWrap) return;
+    Array.from(accWrap.querySelectorAll('.bl-pd-desc.rte')).forEach(function (panel) {
+      Array.from(panel.querySelectorAll('img')).forEach(function (img) {
+        var wrapper = img.closest('figure') || img.parentNode;
+        img.remove();
+        if (wrapper && wrapper !== panel && wrapper.textContent.trim() === '' && !wrapper.querySelector('img, video, svg')) {
+          wrapper.remove();
+        }
+      });
+      /* Any <details> pasted straight into the product description (common
+         in copy-pasted spec sheets) is unwrapped into plain flowing text.
+         CSS alone can't reliably hide these — some browsers render a
+         built-in "Details" label with a native triangle when a <details>
+         has no <summary>, and that fallback isn't a real, selectable DOM
+         node — so we remove the tags outright instead of hiding them. */
+      Array.from(panel.querySelectorAll('details')).forEach(function (det) {
+        var summary = det.querySelector(':scope > summary');
+        if (summary) summary.remove();
+        while (det.firstChild) {
+          det.parentNode.insertBefore(det.firstChild, det);
+        }
+        det.remove();
+      });
+    });
+  })();
+
+  // ── Accordion description mode: smooth open/close (instead of the browser's instant show/hide) ──
+  (function () {
+    var accWrap = document.getElementById('bl-pd-acc-{{ section.id }}');
+    if (!accWrap) return;
+
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    Array.from(accWrap.children).forEach(function (item) {
+      var summary = item.querySelector(':scope > summary');
+      var panel   = item.querySelector(':scope > .bl-pd-acc-panel');
+      if (!summary || !panel) return;
+
+      summary.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        if (reducedMotion) {
+          item.open = !item.open;
+          panel.style.height = item.open ? 'auto' : '0px';
+          return;
+        }
+
+        if (item.open) {
+          // Closing: fix current height, then collapse to 0 on the next frame.
+          panel.style.height = panel.scrollHeight + 'px';
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              panel.style.height = '0px';
+            });
+          });
+          panel.addEventListener('transitionend', function onEnd(ev) {
+            if (ev.propertyName !== 'height') return;
+            panel.removeEventListener('transitionend', onEnd);
+            item.open = false;
+          });
+        } else {
+          // Opening: reveal content first so scrollHeight is measurable, then animate 0 → height.
+          item.open = true;
+          var target = panel.scrollHeight;
+          panel.style.height = '0px';
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              panel.style.height = target + 'px';
+            });
+          });
+          panel.addEventListener('transitionend', function onEnd(ev) {
+            if (ev.propertyName !== 'height') return;
+            panel.removeEventListener('transitionend', onEnd);
+            panel.style.height = 'auto';
+          });
+        }
+      });
+    });
   })();
 
   // ── Visual Canvas mode ─────────────────────────────────────────────
@@ -3509,6 +4286,7 @@ document.addEventListener('DOMContentLoaded', function () {
       bg:      '{{ bg_color }}',
       text:    '{{ text_color }}',
       accent:  '{{ accent_color }}',
+      descAccent: '{{ desc_accent }}',
       muted:   '{{ muted_color }}',
       surface: '{{ surface_color }}',
       divider: 'rgba(51,104,112,0.22)'
@@ -3517,6 +4295,7 @@ document.addEventListener('DOMContentLoaded', function () {
       bg:      '{{ bg_light }}',
       text:    '{{ text_light }}',
       accent:  '{{ accent_light }}',
+      descAccent: '{{ desc_accent_light }}',
       muted:   '{{ muted_light }}',
       surface: '{{ surface_light }}',
       divider: 'rgba(0,26,46,0.12)'
@@ -3528,6 +4307,7 @@ document.addEventListener('DOMContentLoaded', function () {
       sec.style.setProperty('--bl-pd-bg',      c.bg);
       sec.style.setProperty('--bl-pd-text',    c.text);
       sec.style.setProperty('--bl-pd-accent',  c.accent);
+      sec.style.setProperty('--bl-pd-desc-accent', c.descAccent);
       sec.style.setProperty('--bl-pd-muted',   c.muted);
       sec.style.setProperty('--bl-pd-surface', c.surface);
       sec.style.setProperty('--bl-pd-divider', c.divider);
@@ -3558,73 +4338,6 @@ document.addEventListener('DOMContentLoaded', function () {
   })();
 
 });
-</script>
-
-<script>
-/* ── Auto color swatch conversion ──────────────────────────────────
-   Detects any variant option whose name is "Color" / "Colour" and
-   converts its rendered buttons to circular CSS-named-color swatches.
-   All other options (Size, Weight, etc.) remain as regular buttons.
-   ───────────────────────────────────────────────────────────────── */
-(function () {
-  var SECTION = document.getElementById('{{ section_id }}');
-  if (!SECTION) return;
-
-  /* Product options injected from Liquid so we know the real option names */
-  var PRODUCT_OPTS = {{ product.options_with_values | json }};
-
-  function convertColorSwatches() {
-    var vp = document.getElementById('Variant_picker-{{ section.id }}');
-    if (!vp) return;
-
-    var fieldsets = Array.from(vp.querySelectorAll('fieldset'));
-
-    PRODUCT_OPTS.forEach(function (opt, idx) {
-      /* Only process options whose name is Color / Colour (case-insensitive) */
-      if (!/^colou?rs?$/i.test(opt.name.trim())) return;
-
-      /* Find the matching fieldset by position */
-      var fs = fieldsets[idx];
-      if (!fs) return;
-
-      /* Convert each label/button in this fieldset to a color circle */
-      fs.querySelectorAll(
-        'label, .swatch_label, .btn, .btn--secondary, input[type="radio"] + label'
-      ).forEach(function (el) {
-        /* Skip if already converted */
-        if (el.classList.contains('bl-color-swatch')) return;
-
-        /* Derive color name from data-value, value attr, or visible text */
-        var colorName = (
-          el.getAttribute('data-value') ||
-          el.getAttribute('value') ||
-          el.textContent ||
-          ''
-        ).trim();
-
-        el.classList.add('bl-color-swatch');
-        /* CSS named colors work directly: "pink" → pink, "orange" → orange */
-        el.style.setProperty('background', colorName, 'important');
-        el.setAttribute('title', colorName); /* tooltip on hover */
-        el.setAttribute('aria-label', colorName);
-      });
-    });
-  }
-
-  /* Run after Evolve's custom elements have initialised */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { setTimeout(convertColorSwatches, 150); });
-  } else {
-    setTimeout(convertColorSwatches, 150);
-  }
-
-  /* Re-run when Shopify editor reloads the section */
-  document.addEventListener('shopify:section:load',   convertColorSwatches);
-  document.addEventListener('shopify:section:select', convertColorSwatches);
-
-  /* Re-run when variant changes (Evolve may re-render the picker) */
-  SECTION.addEventListener('variant:changed', function () { setTimeout(convertColorSwatches, 80); });
-})();
 </script>
 
 {% schema %}
@@ -3704,6 +4417,16 @@ document.addEventListener('DOMContentLoaded', function () {
       "id": "enable_sticky_atc",
       "label": "Enable sticky add to cart bar",
       "default": true
+    },
+    {
+      "type": "select",
+      "id": "sticky_atc_position",
+      "label": "Sticky add to cart position",
+      "options": [
+        { "value": "top",    "label": "Top — below the header" },
+        { "value": "bottom", "label": "Bottom — pinned to the bottom of the screen" }
+      ],
+      "default": "top"
     },
     {
       "type": "header",
@@ -3809,6 +4532,23 @@ document.addEventListener('DOMContentLoaded', function () {
     },
     {
       "type": "header",
+      "content": "Colors — Description & Tabs Highlight"
+    },
+    {
+      "type": "color",
+      "id": "desc_highlight_color",
+      "label": "Highlight color (dark mode)",
+      "default": "#07d16e",
+      "info": "Used for bold text, links, tab titles and spec labels inside Description / Product Specifications / Additional Info / shared tabs."
+    },
+    {
+      "type": "color",
+      "id": "desc_highlight_color_light",
+      "label": "Highlight color (light mode)",
+      "default": "#07d16e"
+    },
+    {
+      "type": "header",
       "content": "Effects"
     },
     {
@@ -3905,14 +4645,104 @@ document.addEventListener('DOMContentLoaded', function () {
         {
           "type": "color",
           "id": "price_color",
-          "label": "Price color",
+          "label": "Price color (Dark Mode)",
+          "default": "#07d16e"
+        },
+        {
+          "type": "color",
+          "id": "price_color_light",
+          "label": "Price color (Light Mode)",
           "default": "#07d16e"
         },
         {
           "type": "color",
           "id": "compare_price_color",
-          "label": "Compare at price color",
+          "label": "Compare at price color (Dark Mode)",
           "default": "#336870"
+        },
+        {
+          "type": "color",
+          "id": "compare_price_color_light",
+          "label": "Compare at price color (Light Mode)",
+          "default": "#5b7a82"
+        },
+        {
+          "type": "select",
+          "id": "price_font",
+          "label": "Price font",
+          "options": [
+            { "value": "primary",   "label": "Archivo Black (heading font)" },
+            { "value": "secondary", "label": "DM Sans (body font)" }
+          ],
+          "default": "primary"
+        },
+        {
+          "type": "checkbox",
+          "id": "hide_trailing_zeros",
+          "label": "Hide trailing zeros (e.g. INR. 1,800 instead of INR. 1,800.00)",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "price_gap",
+          "label": "Gap between price and compare-at price",
+          "min": 0,
+          "max": 48,
+          "step": 2,
+          "unit": "px",
+          "default": 16
+        },
+        {
+          "type": "header",
+          "content": "Discount badge"
+        },
+        {
+          "type": "color",
+          "id": "badge_bg_color",
+          "label": "Badge background color (Dark Mode)",
+          "default": "#07d16e"
+        },
+        {
+          "type": "color",
+          "id": "badge_bg_color_light",
+          "label": "Badge background color (Light Mode)",
+          "default": "#07d16e"
+        },
+        {
+          "type": "color",
+          "id": "badge_text_color",
+          "label": "Badge text color (Dark Mode)",
+          "default": "#001a2e"
+        },
+        {
+          "type": "color",
+          "id": "badge_text_color_light",
+          "label": "Badge text color (Light Mode)",
+          "default": "#001a2e"
+        },
+        {
+          "type": "header",
+          "content": "Helper text (Taxes included, Shipping, etc.)"
+        },
+        {
+          "type": "color",
+          "id": "helper_text_color",
+          "label": "Helper text color (Dark Mode)",
+          "info": "Colors \"Taxes included\" / \"calculated at checkout\" text. Defaults to muted theme color.",
+          "default": "#336870"
+        },
+        {
+          "type": "color",
+          "id": "helper_text_color_light",
+          "label": "Helper text color (Light Mode)",
+          "info": "Defaults to muted theme color.",
+          "default": "#5b7a82"
+        },
+        {
+          "type": "text",
+          "id": "shipping_label",
+          "label": "Shipping link text",
+          "default": "Free Shipping"
         }
       ]
     },
@@ -4014,6 +4844,27 @@ document.addEventListener('DOMContentLoaded', function () {
       ]
     },
     {
+      "name": "Promo Badges",
+      "type": "promo-badges",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Best Seller shows when custom.best_seller is ON. Reviews badge shows once a product has real reviews — it first checks the legacy reviews.rating / reviews.rating_count metafields, then falls back to reading Judge.me's own judgeme.badge metafield directly if those are empty. No manual setup needed either way."
+        },
+        {
+          "type": "text",
+          "id": "badge_label",
+          "label": "Best Seller badge text",
+          "default": "Best Seller"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_icon",
+          "label": "Best Seller badge icon (optional — overrides default heart icon)"
+        }
+      ]
+    },
+    {
       "name": "Extra Photos",
       "type": "extra-photos",
       "settings": [
@@ -4073,7 +4924,8 @@ document.addEventListener('DOMContentLoaded', function () {
             { "value": "below",     "label": "Full-width below the product grid" },
             { "value": "paginated", "label": "Paginated below the product grid" },
             { "value": "tabbed",    "label": "Tabbed below the product grid" },
-            { "value": "story",     "label": "Visual Canvas (parallax image panel)" }
+            { "value": "story",     "label": "Visual Canvas (parallax image panel)" },
+            { "value": "accordion", "label": "Accordion (Desc/Specs/Returns/FAQs/Notes)" }
           ],
           "default": "column",
           "info": "Tabbed mode shows a two-column Description tab plus a second tab. The second tab uses your custom content below (if set), otherwise auto-fills from metafields or product type/brand/tags."
@@ -4090,6 +4942,130 @@ document.addEventListener('DOMContentLoaded', function () {
           "id": "tab2_content",
           "label": "Second Tab — Content",
           "info": "Optional. Add custom content here (warranty, care instructions, specs, etc.). If left blank, the tab auto-populates from product metafields (custom.material, custom.weight, etc.) or falls back to product type, brand, and tags."
+        },
+        {
+          "type": "header",
+          "content": "Shared Tabs (all products)"
+        },
+        {
+          "type": "paragraph",
+          "content": "Description and Product Specifications are 100% automatic — Description comes from each product's own description (use \"Heading 2\" in the description editor to break it into multiple tabs), and Specifications comes from that product's metafields/options/stock. Use the 3 shared tabs below only for content that's identical on every product, e.g. store policies — leave a title blank to skip it."
+        },
+        {
+          "type": "checkbox",
+          "id": "accordion_show_specs",
+          "label": "Show the auto-generated \"Product Specifications\" row",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "accordion_show_addl_info",
+          "label": "Show the auto-generated \"Additional Info\" row",
+          "default": true,
+          "info": "SKU, stock, barcode, brand, product type and tags — pulled automatically, nothing to fill in."
+        },
+        {
+          "type": "header",
+          "content": "Shared Tab 1"
+        },
+        {
+          "type": "text",
+          "id": "custom_tab1_title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "custom_tab1_content",
+          "label": "Content"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_tab1_image",
+          "label": "Small side image (optional)"
+        },
+        {
+          "type": "select",
+          "id": "custom_tab1_image_position",
+          "label": "Image position",
+          "options": [
+            { "value": "left",  "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "header",
+          "content": "Shared Tab 2"
+        },
+        {
+          "type": "text",
+          "id": "custom_tab2_title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "custom_tab2_content",
+          "label": "Content"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_tab2_image",
+          "label": "Small side image (optional)"
+        },
+        {
+          "type": "select",
+          "id": "custom_tab2_image_position",
+          "label": "Image position",
+          "options": [
+            { "value": "left",  "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "header",
+          "content": "Shared Tab 3"
+        },
+        {
+          "type": "text",
+          "id": "custom_tab3_title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "custom_tab3_content",
+          "label": "Content"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_tab3_image",
+          "label": "Small side image (optional)"
+        },
+        {
+          "type": "select",
+          "id": "custom_tab3_image_position",
+          "label": "Image position",
+          "options": [
+            { "value": "left",  "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "header",
+          "content": "Accordion mode — Return & Refund row"
+        },
+        {
+          "type": "text",
+          "id": "accordion_care_email",
+          "label": "Customer care email",
+          "info": "Shown in the Return & Refund accordion row. Leave blank to hide the email line."
+        },
+        {
+          "type": "text",
+          "id": "accordion_care_phone",
+          "label": "Customer care phone number",
+          "info": "Shown in the Return & Refund accordion row. Leave blank to hide the phone line."
         }
       ]
     },
@@ -4115,26 +5091,7 @@ document.addEventListener('DOMContentLoaded', function () {
       "name": "Variant picker",
       "type": "variant-picker",
       "limit": 1,
-      "settings": [
-        {
-          "type": "select",
-          "id": "options_type",
-          "label": "Options type",
-          "options": [
-            { "value": "dropdown", "label": "Dropdown" },
-            { "value": "button",   "label": "Button" },
-            { "value": "mixed",    "label": "Mixed" }
-          ],
-          "default": "button"
-        },
-        {
-          "type": "color",
-          "id": "option_label_color",
-          "label": "Option label color",
-          "info": "Color of the selected option label (e.g. \"Size: 12 kgs\"). Defaults to white.",
-          "default": "#eaf4f5"
-        }
-      ]
+      "settings": []
     },
     {
       "name": "Quantity selector",
@@ -4169,6 +5126,29 @@ document.addEventListener('DOMContentLoaded', function () {
           "id": "show_dynamic_button",
           "label": "Show dynamic checkout button",
           "default": true
+        },
+        {
+          "type": "select",
+          "id": "dynamic_button_style",
+          "label": "Dynamic checkout button (\"Buy it now\") style",
+          "options": [
+            { "value": "solid",   "label": "Solid fill" },
+            { "value": "outline", "label": "Outline" },
+            { "value": "ghost",   "label": "Ghost (text only, underlined)" }
+          ],
+          "default": "solid"
+        },
+        {
+          "type": "color",
+          "id": "dynamic_button_color",
+          "label": "Dynamic checkout button (\"Buy it now\") background/border/text color",
+          "default": "#336870"
+        },
+        {
+          "type": "color",
+          "id": "dynamic_button_text_color",
+          "label": "Dynamic checkout button text color (solid style only)",
+          "default": "#eaf4f5"
         },
         {
           "type": "checkbox",

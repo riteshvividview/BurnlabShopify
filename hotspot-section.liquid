@@ -4,11 +4,56 @@
 .hotspot_row.htp_show_column_gd_color {
     background: linear-gradient(180deg, {{ section.settings.first_content_color }} 0%, {{ section.settings.second_content_color }} 100%);
 }
+  /* ── Theme toggle ──
+     hotspot-section.css paints its dark box using Shopify's native
+     colour-scheme variables (--color-background, --color-secondary-bg,
+     --color-secondary-text, --color-secondary-heading), which the
+     "color_scheme" swatch sets once and does NOT react to the site's
+     light/dark toggle. Shadowing those same variables locally, only
+     for this section and only in light mode, makes every element that
+     reads them (hotspot row, image container, product cards, titles)
+     flip automatically — dark mode is untouched, so it keeps its
+     current look exactly as-is. */
+  [data-theme="light"] #shopify-section-{{ section.id }} {
+    --color-background: {{ section.settings.card_bg_light | default: '#ffffff' }};
+    --color-secondary-bg: {{ section.settings.section_bg_light | default: '#eaf4f5' }};
+    --color-secondary-text: {{ section.settings.text_color_light | default: '#001a2e' }};
+    --color-secondary-heading: {{ section.settings.text_color_light | default: '#001a2e' }};
+  }
+  /* Belt-and-suspenders: also force the outer colour-scheme wrapper's own
+     background/text directly, in case the scheme swatch sets those
+     properties itself rather than through the variables above. */
+  [data-theme="light"] #shopify-section-{{ section.id }} .color_scheme {
+    background-color: {{ section.settings.section_bg_light | default: '#eaf4f5' }} !important;
+    color: {{ section.settings.text_color_light | default: '#001a2e' }} !important;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
      #shopify-section-{{ section.id }} .section_padding {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
     position: relative;
     z-index: 1;
+  }
+
+  /* ── Title font size — desktop/mobile, smoothly scaled in between ── */
+  #shopify-section-{{ section.id }} .section_heading {
+    font-size: clamp(
+      {{ section.settings.title_font_size_mobile | default: 26 }}px,
+      6vw,
+      {{ section.settings.title_font_size | default: 40 }}px
+    ) !important;
+  }
+
+  /* ── Heading colour + font — set directly (not inherited), so it
+     always tracks the toggle regardless of any colour the scheme
+     swatch or global heading styles try to set. ── */
+  #shopify-section-{{ section.id }} .section_heading {
+    font-family: 'DM Sans', sans-serif !important;
+    color: #ffffff !important;
+    transition: color 0.35s ease;
+  }
+  [data-theme="light"] #shopify-section-{{ section.id }} .section_heading {
+    color: #000000 !important;
   }
 
     @media screen and (max-width: 640px) {
@@ -25,7 +70,7 @@
 <style>
 /* ── BurnLab Hotspot custom styles ── */
 .htp_product_info    { padding: 0; }
-.hotspot_coll_inner  { background: #001a2e; }
+.hotspot_coll_inner  { transition: background-color 0.35s ease, color 0.35s ease; }
 .htp_product_price   { padding-top: 10px; line-height: 22px; color: #07d16e; }
 .htp_product_title   { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 400; padding-top: 10px; }
 .lg-hotspot__button  { background: #07d16e; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; box-shadow: none !important; color: #001a2e; font-weight: 700; }
@@ -405,7 +450,30 @@
       "label": "Second grediant color",
       "default": "#000000",
       "visible_if": "{{ section.settings.show_column_gd_color == true }}"
-    }, 
+    },
+    {
+      "type": "header",
+      "content": "Colors — Light Mode",
+      "info": "This section's dark look comes from the theme's color scheme below and is left as-is. These colors swap in automatically only when a visitor toggles the site to light mode."
+    },
+    {
+      "type": "color",
+      "id": "section_bg_light",
+      "label": "Section Background",
+      "default": "#eaf4f5"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Image / Product Card Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text & Heading Color",
+      "default": "#001a2e"
+    },
     {
       "type": "text",
       "id": "head",
@@ -459,6 +527,27 @@
         }
       ],
       "default": "h2"
+    },
+    {
+      "type": "range",
+      "id": "title_font_size",
+      "label": "Title font size (desktop)",
+      "min": 20,
+      "max": 80,
+      "step": 1,
+      "unit": "px",
+      "default": 40,
+      "info": "Overrides the Font size preset above. Scales smoothly down to the mobile size below on smaller screens."
+    },
+    {
+      "type": "range",
+      "id": "title_font_size_mobile",
+      "label": "Title font size (mobile)",
+      "min": 16,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 26
     },
     {
       "type": "richtext",
@@ -658,7 +747,7 @@
       "default": "auto",
       "options": [
         { "value": "auto", "label": "Auto" },
-        { "value": "1", "label": "Square" },
+        { "value": "1", "label": "Square" }
       ]
     },
     {
