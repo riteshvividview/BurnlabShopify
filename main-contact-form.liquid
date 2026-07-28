@@ -54,10 +54,6 @@
   }
 
   #{{ section_id }}{
-    --bl-section-bg: {{ bg_color }};
-    --bl-section-text: {{ text_color }};
-    --bl-section-accent: {{ accent_color }};
-    --bl-card-bg: {{ card_bg }};
     --bl-form-radius: {{ form_radius }}px;
 
     position:relative;
@@ -70,13 +66,85 @@
     padding-bottom:{{ section.settings.padding_bottom }}px;
   }
 
+  /* ── THEME SUPPORT — mirrors header.liquid's data-theme pattern.
+     Dark mode keeps the section's schema-driven colors exactly as
+     before. Light mode uses fixed BurnLab palette values (not exposed
+     as schema settings, per the same approach used on other pages) —
+     both the section colors AND every decorative translucent white
+     overlay/border/muted-text tone that assumed a dark backdrop
+     (cards, inputs, borders, placeholders, noise texture) now route
+     through theme-scoped variables so nothing gets left behind. ── */
+  [data-theme="dark"] #{{ section_id }}{
+    --bl-section-bg: {{ bg_color }};
+    --bl-section-text: {{ text_color }};
+    --bl-section-accent: {{ accent_color }};
+    --bl-card-bg: {{ card_bg }};
+
+    --bl-muted-opacity-1: .72;
+    --bl-muted-opacity-2: .82;
+    --bl-placeholder-opacity: .42;
+
+    --bl-card-overlay-1: rgba(255,255,255,.04);
+    --bl-card-overlay-2: rgba(255,255,255,.015);
+    --bl-card-border: rgba(255,255,255,.08);
+    --bl-card-hover-overlay: rgba(255,255,255,.02);
+
+    --bl-form-overlay-1: rgba(255,255,255,.06);
+    --bl-form-overlay-2: rgba(255,255,255,.02);
+    --bl-form-shadow: 0 30px 80px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.03);
+
+    --bl-input-bg: rgba(255,255,255,.04);
+    --bl-input-border: rgba(255,255,255,.08);
+
+    --bl-line-color: rgba(255,255,255,.12);
+
+    --bl-error-text: #ffb2b2;
+  }
+
+  [data-theme="light"] #{{ section_id }}{
+    --bl-section-bg: #f5f7fa;
+    --bl-section-text: #081c2d;
+    --bl-section-accent: #04914f;
+    --bl-card-bg: #ffffff;
+
+    --bl-muted-opacity-1: .68;
+    --bl-muted-opacity-2: .75;
+    --bl-placeholder-opacity: .45;
+
+    --bl-card-overlay-1: rgba(8,28,45,.035);
+    --bl-card-overlay-2: rgba(8,28,45,.012);
+    --bl-card-border: rgba(8,28,45,.10);
+    --bl-card-hover-overlay: rgba(8,28,45,.02);
+
+    --bl-form-overlay-1: rgba(8,28,45,.03);
+    --bl-form-overlay-2: rgba(8,28,45,.01);
+    --bl-form-shadow: 0 20px 60px rgba(8,28,45,.12), 0 0 0 1px rgba(8,28,45,.05);
+
+    --bl-input-bg: rgba(8,28,45,.035);
+    --bl-input-border: rgba(8,28,45,.12);
+
+    --bl-line-color: rgba(8,28,45,.10);
+
+    --bl-error-text: #b3261e;
+  }
+
   #{{ section_id }} .bl-contact-noise{
     position:absolute;
     inset:0;
     z-index:2;
     pointer-events:none;
     opacity:.06;
+  }
+
+  /* A CSS var can't be interpolated into a literal data-URI string, so
+     the dot color needs two full separate rules rather than a shared
+     one driven by a variable. */
+  [data-theme="dark"] #{{ section_id }} .bl-contact-noise{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='40' cy='20' r='1'/%3E%3Ccircle cx='120' cy='90' r='1'/%3E%3Ccircle cx='90' cy='40' r='1'/%3E%3Ccircle cx='70' cy='130' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  [data-theme="light"] #{{ section_id }} .bl-contact-noise{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23081c2d'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='40' cy='20' r='1'/%3E%3Ccircle cx='120' cy='90' r='1'/%3E%3Ccircle cx='90' cy='40' r='1'/%3E%3Ccircle cx='70' cy='130' r='1'/%3E%3C/g%3E%3C/svg%3E");
   }
 
   #{{ section_id }} .bl-contact-glow{
@@ -111,8 +179,8 @@
     pointer-events:none;
     opacity:.07;
     background:
-      linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px);
+      linear-gradient(var(--bl-line-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bl-line-color) 1px, transparent 1px);
     background-size:60px 60px;
     mask-image:radial-gradient(circle at center, black 30%, transparent 90%);
   }
@@ -171,6 +239,7 @@
     line-height:1.02;
     letter-spacing:-0.03em;
     max-width:12ch;
+    color:var(--bl-section-text);
 
     overflow-wrap:break-word;
     word-break:break-word;
@@ -180,7 +249,8 @@
     font-family:var(--bl-font-secondary);
     font-size:clamp(1.3rem,1.5vw,{{ body_size }}px);
     line-height:1.75;
-    color:rgba(234,244,245,.72);
+    color:var(--bl-section-text);
+    opacity:var(--bl-muted-opacity-1);
     max-width:60ch;
 
     overflow-wrap:break-word;
@@ -198,8 +268,8 @@
     position:relative;
     overflow:hidden;
 
-    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
-    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, var(--bl-card-overlay-1), var(--bl-card-overlay-2));
+    border:1px solid var(--bl-card-border);
     border-radius:24px;
     backdrop-filter:blur(18px);
 
@@ -216,7 +286,7 @@
   #{{ section_id }} .bl-contact-info-card:hover{
     transform:translateY(-6px);
     border-color:rgba(7,209,110,.28);
-    background:linear-gradient(180deg, rgba(7,209,110,.08), rgba(255,255,255,.02));
+    background:linear-gradient(180deg, rgba(7,209,110,.08), var(--bl-card-hover-overlay));
   }
 
   #{{ section_id }} .bl-contact-info-card::after{
@@ -244,7 +314,8 @@
     font-family:var(--bl-font-secondary);
     font-size:clamp(1.1rem,1.4vw,1.4rem);
     line-height:1.7;
-    color:rgba(234,244,245,.82);
+    color:var(--bl-section-text);
+    opacity:var(--bl-muted-opacity-2);
 
     overflow-wrap:break-word;
     word-break:break-word;
@@ -260,17 +331,15 @@
     overflow:hidden;
 
     background:
-      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+      linear-gradient(180deg, var(--bl-form-overlay-1), var(--bl-form-overlay-2)),
       var(--bl-card-bg);
 
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--bl-card-border);
     border-radius:var(--bl-form-radius);
 
     padding:clamp(1.8rem,3vw,3rem);
 
-    box-shadow:
-      0 30px 80px rgba(0,0,0,.35),
-      0 0 0 1px rgba(255,255,255,.03);
+    box-shadow:var(--bl-form-shadow);
 
     backdrop-filter:blur(18px);
   }
@@ -296,6 +365,7 @@
     font-size:clamp(1.8rem,3vw,3rem);
     line-height:1.05;
     letter-spacing:-0.02em;
+    color:var(--bl-section-text);
 
     overflow-wrap:break-word;
     word-break:break-word;
@@ -328,9 +398,9 @@
     outline:none;
 
     border-radius:18px;
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--bl-input-border);
 
-    background:rgba(255,255,255,.04);
+    background:var(--bl-input-bg);
     color:var(--bl-section-text);
 
     padding:1.15rem 1.2rem;
@@ -365,7 +435,8 @@
 
   #{{ section_id }} .bl-contact-input::placeholder,
   #{{ section_id }} .bl-contact-textarea::placeholder{
-    color:rgba(234,244,245,.42);
+    color:var(--bl-section-text);
+    opacity:var(--bl-placeholder-opacity);
   }
 
   #{{ section_id }} .bl-contact-submit{
@@ -444,7 +515,7 @@
   #{{ section_id }} .bl-contact-errors{
     background:rgba(255,77,77,.08);
     border:1px solid rgba(255,77,77,.18);
-    color:#ffb2b2;
+    color:var(--bl-error-text);
   }
 
   #{{ section_id }} .bl-reveal{

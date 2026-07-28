@@ -26,7 +26,9 @@
 
   assign aspect_ratio       = section.settings.image_aspect_ratio | default: '4/3'
   assign card_radius        = section.settings.card_radius | default: 14
-  assign title_fs           = section.settings.title_font_size | default: 18
+  assign title_fs_d         = section.settings.title_font_size_desktop | default: 18
+  assign title_fs_t         = section.settings.title_font_size_tablet  | default: 16
+  assign title_fs_m         = section.settings.title_font_size_mobile  | default: 14
 
   assign bg_dark      = section.settings.bg_dark      | default: '#001a2e'
   assign text_dark     = section.settings.text_dark     | default: '#eaf4f5'
@@ -63,7 +65,9 @@
     --cic-cols-m:    {{ cols_mobile }};
     --cic-gap:       {{ card_gap }}px;
     --cic-radius:    {{ card_radius }}px;
-    --cic-title-fs:  {{ title_fs }}px;
+    --cic-title-fs:  {{ title_fs_m }}px;
+    --cic-title-hover: color-mix(in srgb, {{ accent_dark }} 65%, white);
+    --cic-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
 
     position: relative;
     isolation: isolate;
@@ -82,6 +86,8 @@
     --cic-muted:   color-mix(in srgb, {{ text_light }} 62%, transparent);
     --cic-card-bg: {{ card_bg_light }};
     --cic-accent:  {{ accent_light }};
+    --cic-title-hover: color-mix(in srgb, {{ accent_light }} 55%, black);
+    --cic-card-shadow: none;
   }
 
   @media (max-width: 768px) {
@@ -89,6 +95,13 @@
       padding-top: {{ padding_top_m }}px !important;
       padding-bottom: {{ padding_bottom_m }}px !important;
     }
+  }
+
+  @media (min-width: 590px) {
+    #{{ section_id }} { --cic-title-fs: {{ title_fs_t }}px; }
+  }
+  @media (min-width: 990px) {
+    #{{ section_id }} { --cic-title-fs: {{ title_fs_d }}px; }
   }
 
   /* ── Container ── */
@@ -182,7 +195,7 @@
   }
   #{{ section_id }} .cic-card:hover .cic-card-img-wrap {
     transform: translateY(-4px);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--cic-card-shadow);
   }
   #{{ section_id }} .cic-card-img {
     position: absolute;
@@ -220,7 +233,7 @@
     transition: color 0.35s ease;
     overflow-wrap: break-word;
   }
-  #{{ section_id }} .cic-card:hover .cic-card-title { color: var(--cic-accent); }
+  #{{ section_id }} .cic-card:hover .cic-card-title { color: var(--cic-title-hover); }
 
   /* ── Reveal animation ── */
   {%- if enable_anims -%}
@@ -311,13 +324,17 @@
     bg:     '{{ bg_dark }}',
     text:   '{{ text_dark }}',
     card:   '{{ card_bg_dark }}',
-    accent: '{{ accent_dark }}'
+    accent: '{{ accent_dark }}',
+    titleHover: 'color-mix(in srgb, {{ accent_dark }} 65%, white)',
+    cardShadow: '0 14px 34px rgba(0, 0, 0, 0.16)'
   };
   var CIC_LIGHT = {
     bg:     '{{ bg_light }}',
     text:   '{{ text_light }}',
     card:   '{{ card_bg_light }}',
-    accent: '{{ accent_light }}'
+    accent: '{{ accent_light }}',
+    titleHover: 'color-mix(in srgb, {{ accent_light }} 55%, black)',
+    cardShadow: 'none'
   };
 
   function applyCicTheme() {
@@ -327,6 +344,8 @@
     SECTION.style.setProperty('--cic-text', c.text);
     SECTION.style.setProperty('--cic-card-bg', c.card);
     SECTION.style.setProperty('--cic-accent', c.accent);
+    SECTION.style.setProperty('--cic-title-hover', c.titleHover);
+    SECTION.style.setProperty('--cic-card-shadow', c.cardShadow);
     SECTION.style.backgroundColor = c.bg;
     SECTION.style.color = c.text;
   }
@@ -485,13 +504,36 @@
     },
     {
       "type": "range",
-      "id": "title_font_size",
-      "label": "Title font size",
+      "id": "title_font_size_desktop",
+      "label": "Title font size — Desktop",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "default": 18,
+      "info": "Screens 990px and wider."
+    },
+    {
+      "type": "range",
+      "id": "title_font_size_tablet",
+      "label": "Title font size — Tablet",
       "min": 12,
       "max": 28,
       "step": 1,
       "unit": "px",
-      "default": 18
+      "default": 16,
+      "info": "Screens 590px to 989px."
+    },
+    {
+      "type": "range",
+      "id": "title_font_size_mobile",
+      "label": "Title font size — Mobile",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14,
+      "info": "Screens narrower than 590px."
     },
     {
       "type": "header",

@@ -32,7 +32,8 @@
   assign drawer_bg_light = section.settings.drawer_bg_light  | default: '#f0f5f8'
   assign drawer_txt_dark = section.settings.drawer_text_dark | default: '#eaf4f5'
   assign drawer_txt_light = section.settings.drawer_text_light | default: '#001a2e'
-  assign drawer_accent    = section.settings.drawer_accent    | default: '#07d16e'
+  assign drawer_accent       = section.settings.drawer_accent       | default: '#07d16e'
+  assign drawer_accent_light = section.settings.drawer_accent_light | default: '#04914f'
   assign drawer_logo_size        = section.settings.drawer_logo_size        | default: 40
   assign drawer_account_label    = section.settings.drawer_account_label    | default: 'My Account'
   assign drawer_account_position = section.settings.drawer_account_position | default: 'end'
@@ -53,6 +54,7 @@
   assign ann_height      = section.settings.announcement_height     | default: 38
   assign ann_icon_size   = section.settings.announcement_icon_size  | default: 14
   assign ann_position    = section.settings.announcement_position   | default: 'fixed'
+  assign ann_mode        = section.settings.announcement_mode        | default: 'scrolling'
 
   assign ann_visible = false
   if ann_enabled and ann_text != blank
@@ -117,7 +119,7 @@
   --bl-mode-accent:      {{ accent }};
   --bl-drawer-bg:        {{ drawer_bg_light }};
   --bl-drawer-text:      {{ drawer_txt_light }};
-  --bl-drawer-accent:    {{ drawer_accent }};
+  --bl-drawer-accent:    {{ drawer_accent_light }};
   --bl-drawer-border:    rgba(0, 26, 46, 0.12);
   --bl-ann-bg:           {{ ann_bg_light }};
   --bl-ann-text:         {{ ann_text_color_light }};
@@ -164,14 +166,23 @@ body {
   display: flex;
   align-items: center;
   white-space: nowrap;
-  animation: bl-hdr-ann-marquee {{ ann_speed }}s linear infinite;
-  will-change: transform;
+  {% if ann_mode == 'scrolling' %}
+    animation: bl-hdr-ann-marquee {{ ann_speed }}s linear infinite;
+    will-change: transform;
+  {% else %}
+    animation: none;
+    justify-content: center;
+    width: 100%;
+  {% endif %}
 }
 #{{ section_id }} .bl-hdr-ann-copy {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
+  {% if ann_mode == 'static' %}
+    justify-content: center;
+  {% endif %}
 }
 #{{ section_id }} .bl-hdr-ann-item {
   font-family: 'DM Sans', sans-serif;
@@ -197,6 +208,17 @@ body {
   height: {{ ann_icon_size }}px;
   display: block;
   fill: currentColor;
+}
+/* Static mode star separators */
+#{{ section_id }} .bl-hdr-ann-star {
+  display: inline-flex;
+  align-items: center;
+  color: var(--bl-ann-text);
+  opacity: 0.85;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 14px;
+  transition: color 0.35s ease;
 }
 @keyframes bl-hdr-ann-marquee {
   from { transform: translateX(0); }
@@ -545,6 +567,142 @@ body {
 .bl-drawer-acct-link:hover .bl-drawer-acct-chevron {
   transform: translateX(3px) !important;
   opacity: 1 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE "ALL CATEGORIES" ACCORDION — expands in place inside the
+   hamburger drawer. Categories come from the same section.blocks
+   source the desktop mega menu uses (see cat_blocks below).
+   ═══════════════════════════════════════════════════════════════ */
+
+#mobile_menu_drawer .mob_categories_toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.8rem;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  font: inherit;
+  text-align: left;
+}
+
+/* Hover no longer shifts the label — only a click does */
+#mobile_menu_drawer .mob_categories_toggle:hover {
+  padding-left: inherit !important;
+}
+
+#mobile_menu_drawer .mob_categories_label {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mobile_menu_drawer .mob_categories_toggle--open .mob_categories_label {
+  transform: translateX(-6px);
+}
+
+#mobile_menu_drawer .mob_categories_chevron {
+  font-size: 1.3rem !important;
+  color: var(--bl-drawer-text) !important;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s ease !important;
+  flex-shrink: 0;
+}
+
+#mobile_menu_drawer .mob_categories_toggle--open .mob_categories_chevron {
+  transform: rotate(180deg);
+  color: var(--bl-drawer-accent) !important;
+}
+
+#mobile_menu_drawer .mob_categories_panel {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+#mobile_menu_drawer .mob_categories_list {
+  list-style: none !important;
+  padding: 0.4rem 0 0.8rem !important;
+  margin: 0 !important;
+}
+
+#mobile_menu_drawer .mob_categories_item {
+  border: none !important;
+}
+
+#mobile_menu_drawer .mob_categories_link {
+  display: block !important;
+  padding: 0.9rem 1.2rem !important;
+  font-size: 1.4rem !important;
+  font-weight: 500 !important;
+  color: var(--bl-drawer-text) !important;
+  border-left: 2px solid rgba(7, 209, 110, 0.25) !important;
+  transition: color 0.22s ease, border-color 0.22s ease, padding-left 0.22s ease !important;
+}
+
+#mobile_menu_drawer .mob_categories_link:hover {
+  color: var(--bl-drawer-accent) !important;
+  border-left-color: var(--bl-drawer-accent) !important;
+  padding-left: 1.8rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DRAWER SCROLLING — the whole drawer scrolls as one unit so
+   content pushed below the fold by the open accordion stays
+   reachable. No nested scroll containers.
+   ═══════════════════════════════════════════════════════════════ */
+
+#mobile_menu_drawer .mobile_drawer_inner {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.35) transparent;
+}
+
+#mobile_menu_drawer .mobile_drawer_inner::-webkit-scrollbar {
+  width: 5px;
+}
+
+#mobile_menu_drawer .mobile_drawer_inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#mobile_menu_drawer .mobile_drawer_inner::-webkit-scrollbar-thumb {
+  background-color: rgba(150, 150, 150, 0.35);
+  border-radius: 10px;
+}
+
+#mobile_menu_drawer .mobile_menu_drawer_main_content,
+#mobile_menu_drawer .mobile_menu_drawer_inner_content {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* ── Close (X) button — no border, background, or shadow ──────── */
+#mobile_menu_drawer .drawer-wrapper__close,
+#mobile_menu_drawer .mobile_drawer_close,
+#mobile_menu_drawer .drawer_close_btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#mobile_menu_drawer .drawer-wrapper__close:focus-visible,
+#mobile_menu_drawer .drawer_close_btn:focus-visible {
+  outline: 2px solid var(--bl-drawer-accent) !important;
+  outline-offset: 2px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1269,26 +1427,46 @@ header-element {
 }());
 </script>
 
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css"
+  integrity="sha512-ApSLB1Pd3/bZN8fWB/RG9YhN/7bd9Hkf3AGaE2mPfebjrxagjuBtx2GcgdqIlJkUzwylBo61r9Xa9NmgBI0swA=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+>
+
 <header-element class="color_scheme color-{{ section.settings.color_scheme }}">
   <div id="{{ section_id }}">
 
     {%- if ann_visible -%}
-      <div class="bl-hdr-announcement-bar" role="marquee" aria-label="Announcement">
-        <div class="bl-hdr-ann-track">
-          <div class="bl-hdr-ann-copy">
-            {%- for i in (1..10) -%}
+      {%- if ann_mode == 'static' -%}
+        <div class="bl-hdr-announcement-bar" role="region" aria-label="Announcement">
+          <div class="bl-hdr-ann-track">
+            <div class="bl-hdr-ann-copy">
+              <span class="bl-hdr-ann-star" aria-hidden="true">★</span>
               <span class="bl-hdr-ann-item">{{ ann_text }}</span>
-              <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
-            {%- endfor -%}
-          </div>
-          <div class="bl-hdr-ann-copy" aria-hidden="true">
-            {%- for i in (1..10) -%}
-              <span class="bl-hdr-ann-item">{{ ann_text }}</span>
-              <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
-            {%- endfor -%}
+              <span class="bl-hdr-ann-star" aria-hidden="true">★</span>
+            </div>
           </div>
         </div>
-      </div>
+      {%- else -%}
+        <div class="bl-hdr-announcement-bar" role="marquee" aria-label="Announcement">
+          <div class="bl-hdr-ann-track">
+            <div class="bl-hdr-ann-copy">
+              {%- for i in (1..10) -%}
+                <span class="bl-hdr-ann-item">{{ ann_text }}</span>
+                <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+              {%- endfor -%}
+            </div>
+            <div class="bl-hdr-ann-copy" aria-hidden="true">
+              {%- for i in (1..10) -%}
+                <span class="bl-hdr-ann-item">{{ ann_text }}</span>
+                <span class="bl-hdr-ann-sep" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C11 5.5 8.5 8.5 0 12C8.5 15.5 11 18.5 12 24C13 18.5 15.5 15.5 24 12C15.5 8.5 13 5.5 12 0Z"/></svg></span>
+              {%- endfor -%}
+            </div>
+          </div>
+        </div>
+      {%- endif -%}
     {%- endif -%}
 
     {%- if show_spacer -%}
@@ -1349,12 +1527,18 @@ header-element {
           {%- if menu_handle != blank -%}
             {%- assign categories_trigger = section.settings.categories_nav_label | downcase | strip -%}
             {%- assign cat_blocks = section.blocks | where: 'type', 'category_item' -%}
+            {%- assign resources_trigger = section.settings.resources_nav_label | downcase | strip -%}
+            {%- assign resources_menu_handle = section.settings.resources_menu -%}
             <nav class="bl-nav" role="navigation" aria-label="Main navigation">
               {%- for link in linklists[menu_handle].links -%}
                 {%- assign link_lower = link.title | downcase | strip -%}
                 {%- assign is_mega = false -%}
                 {%- if link_lower == categories_trigger and cat_blocks.size > 0 -%}
                   {%- assign is_mega = true -%}
+                {%- endif -%}
+                {%- assign is_resources = false -%}
+                {%- if link_lower == resources_trigger and resources_menu_handle != blank -%}
+                  {%- assign is_resources = true -%}
                 {%- endif -%}
                 <div class="bl-nav-item{% if is_mega %} bl-nav-item--mega{% endif %}">
                   {%- if is_mega -%}
@@ -1388,6 +1572,29 @@ header-element {
                         {%- endfor -%}
                       </div>
                     </div>
+                  {%- elsif is_resources -%}
+                    <a
+                      href="{{ link.url }}"
+                      class="bl-nav-link"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                    >
+                      {{- link.title | escape -}}
+                      <svg class="bl-nav-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1.5,3 5,7 8.5,3"/>
+                      </svg>
+                    </a>
+                    <ul class="bl-nav-dropdown" role="list">
+                      {%- for child in linklists[resources_menu_handle].links -%}
+                        <li>
+                          <a
+                            href="{{ child.url }}"
+                            class="bl-nav-dropdown-link{% if child.active %} is-active{% endif %}"
+                            {% if child.active %}aria-current="page"{% endif %}
+                          >{{- child.title | escape -}}</a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
                   {%- elsif link.links != blank -%}
                     <a
                       href="{{ link.url }}"
@@ -1542,7 +1749,21 @@ document.addEventListener('DOMContentLoaded', function () {
   var DRAWER_BG_LIGHT  = '{{ drawer_bg_light }}';
   var DRAWER_TXT_DARK  = '{{ drawer_txt_dark }}';
   var DRAWER_TXT_LIGHT = '{{ drawer_txt_light }}';
-  var DRAWER_ACCENT    = '{{ drawer_accent }}';
+  var DRAWER_ACCENT_DARK  = '{{ drawer_accent }}';
+  var DRAWER_ACCENT_LIGHT = '{{ drawer_accent_light }}';
+
+  {%- if logo != blank -%}
+  var DRAWER_LOGO_DARK = {{ logo | image_url: width: 400 | json }};
+  {%- else -%}
+  var DRAWER_LOGO_DARK = null;
+  {%- endif -%}
+  {%- if logo_light != blank -%}
+  var DRAWER_LOGO_LIGHT = {{ logo_light | image_url: width: 400 | json }};
+  {%- elsif logo != blank -%}
+  var DRAWER_LOGO_LIGHT = {{ logo | image_url: width: 400 | json }};
+  {%- else -%}
+  var DRAWER_LOGO_LIGHT = null;
+  {%- endif -%}
 
   var BL_DRAWER_SEL = '#mobile_menu_drawer, .menu-drawer, [id*="MenuDrawer"]';
 
@@ -1550,6 +1771,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var isDark  = document.documentElement.getAttribute('data-theme') !== 'light';
     var bg      = isDark ? DRAWER_BG_DARK  : DRAWER_BG_LIGHT;
     var txt     = isDark ? DRAWER_TXT_DARK : DRAWER_TXT_LIGHT;
+    var accent  = isDark ? DRAWER_ACCENT_DARK : DRAWER_ACCENT_LIGHT;
     var border  = isDark ? 'rgba(51,104,112,0.22)' : 'rgba(0,26,46,0.1)';
 
     document.querySelectorAll(BL_DRAWER_SEL).forEach(function(drawer) {
@@ -1603,8 +1825,8 @@ document.addEventListener('DOMContentLoaded', function () {
         '.menu-drawer__close-button svg, .menu-drawer__close-button svg path,' +
         '.menu-drawer__close-button svg line'
       ).forEach(function(el) {
-        el.style.setProperty('color',  DRAWER_ACCENT, 'important');
-        el.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+        el.style.setProperty('color',  accent, 'important');
+        el.style.setProperty('stroke', accent, 'important');
         el.style.setProperty('fill',   'none', 'important');
       });
 
@@ -1618,6 +1840,20 @@ document.addEventListener('DOMContentLoaded', function () {
         el.style.setProperty('color',  txt, 'important');
         el.style.setProperty('fill',   'currentColor', 'important');
       });
+
+      /* Logo — swap to this section's actual dark/light logo asset
+         (the native drawer only knows the theme's single logo setting). */
+      var drawerLogoSrc = isDark ? DRAWER_LOGO_DARK : DRAWER_LOGO_LIGHT;
+      if (drawerLogoSrc) {
+        drawer.querySelectorAll(
+          'img, .header_name-logo-wrapper img, .menu-drawer__logo img'
+        ).forEach(function(el) {
+          if (el.getAttribute('src') !== drawerLogoSrc) {
+            el.setAttribute('src', drawerLogoSrc);
+          }
+          el.removeAttribute('srcset');
+        });
+      }
     });
   }
 
@@ -1633,9 +1869,37 @@ document.addEventListener('DOMContentLoaded', function () {
     var drawer = document.querySelector('#mobile_menu_drawer, .menu-drawer, [id*="MenuDrawer"]');
     if (!drawer) return;
 
-    /* Remove old injection so it can be re-applied cleanly */
-    var old = drawer.querySelector('.bl-drawer-acct-wrap');
-    if (old) old.remove();
+    var isDarkNow  = document.documentElement.getAttribute('data-theme') !== 'light';
+    var acctColor  = isDarkNow ? DRAWER_ACCENT_DARK : DRAWER_ACCENT_LIGHT;
+
+    /* Update the existing button in place instead of removing/recreating it.
+       This function re-runs on every drawer interaction (open, theme change,
+       DOM mutation) — destroying and rebuilding the node each time caused a
+       visible flicker. Updating in place keeps it perfectly stable. */
+    var existing = drawer.querySelector('.bl-drawer-acct-wrap');
+    if (existing) {
+      var existingLink = existing.querySelector('.bl-drawer-acct-link');
+      if (existingLink) {
+        existingLink.setAttribute('href', BL_ACCT_URL);
+        existingLink.style.setProperty('color', acctColor, 'important');
+        existingLink.style.setProperty('background', 'rgba(7,209,110,0.05)', 'important');
+      }
+      var existingLabel = existing.querySelector('.bl-drawer-acct-label');
+      if (existingLabel) {
+        existingLabel.textContent = BL_ACCT_LABEL;
+        existingLabel.style.setProperty('color', acctColor, 'important');
+      }
+      existing.querySelectorAll('svg').forEach(function (svg) {
+        svg.style.setProperty('color', acctColor, 'important');
+        svg.style.setProperty('stroke', acctColor, 'important');
+      });
+      existing.querySelectorAll('svg path, svg circle, svg polyline, svg line').forEach(function (el) {
+        el.style.setProperty('stroke', acctColor, 'important');
+      });
+      var existingIcon = existing.querySelector('.bl-drawer-acct-icon');
+      if (existingIcon) existingIcon.style.setProperty('background', 'rgba(7,209,110,0.12)', 'important');
+      return;
+    }
 
     /* Find the nav list — try most-specific selectors first.
        .menu-drawer__navigation-items IS the ul (not a parent of one). */
@@ -1687,21 +1951,21 @@ document.addEventListener('DOMContentLoaded', function () {
       navList.appendChild(wrap);
     }
 
-    /* Force green colours inline — prevents applyDrawerTheme from overriding */
+    /* Force accent colours inline — prevents applyDrawerTheme from overriding */
     var acctLink = wrap.querySelector('.bl-drawer-acct-link');
     if (acctLink) {
-      acctLink.style.setProperty('color',      DRAWER_ACCENT, 'important');
+      acctLink.style.setProperty('color',      acctColor, 'important');
       acctLink.style.setProperty('background', 'rgba(7,209,110,0.05)', 'important');
     }
     wrap.querySelectorAll('svg').forEach(function(svg) {
-      svg.style.setProperty('color',  DRAWER_ACCENT, 'important');
-      svg.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+      svg.style.setProperty('color',  acctColor, 'important');
+      svg.style.setProperty('stroke', acctColor, 'important');
     });
     wrap.querySelectorAll('svg path, svg circle, svg polyline, svg line').forEach(function(el) {
-      el.style.setProperty('stroke', DRAWER_ACCENT, 'important');
+      el.style.setProperty('stroke', acctColor, 'important');
     });
     var label = wrap.querySelector('.bl-drawer-acct-label');
-    if (label) label.style.setProperty('color', DRAWER_ACCENT, 'important');
+    if (label) label.style.setProperty('color', acctColor, 'important');
     var icon = wrap.querySelector('.bl-drawer-acct-icon');
     if (icon) icon.style.setProperty('background', 'rgba(7,209,110,0.12)', 'important');
   }
@@ -1883,15 +2147,26 @@ document.addEventListener('DOMContentLoaded', function () {
       "default": "#ffffff"
     },
     {
+      "type": "select",
+      "id": "announcement_mode",
+      "label": "Announcement bar style",
+      "options": [
+        { "value": "scrolling", "label": "Scrolling — continuous marquee" },
+        { "value": "static",   "label": "Static — centered text with stars" }
+      ],
+      "default": "scrolling",
+      "info": "Choose whether the text scrolls across the bar or sits centered with a ★ on each side."
+    },
+    {
       "type": "range",
       "id": "announcement_speed",
-      "label": "Scroll speed",
+      "label": "Scroll speed (scrolling mode only)",
       "min": 5,
       "max": 60,
       "step": 5,
       "unit": "s",
       "default": 20,
-      "info": "Seconds per full scroll cycle. Lower = faster."
+      "info": "Seconds per full scroll cycle. Lower = faster. Only applies when style is set to Scrolling."
     },
     {
       "type": "range",
@@ -1990,6 +2265,19 @@ document.addEventListener('DOMContentLoaded', function () {
       "label": "\"All Categories\" nav item trigger",
       "default": "All Categories",
       "info": "Exact label of the nav item that shows the categories mega menu (case-insensitive). Must match your menu item name in Shopify Admin."
+    },
+    {
+      "type": "text",
+      "id": "resources_nav_label",
+      "label": "\"Resources\" nav item trigger",
+      "default": "Resources",
+      "info": "Exact label of the nav item that shows the Resources dropdown (case-insensitive). Must match your menu item name in Shopify Admin."
+    },
+    {
+      "type": "link_list",
+      "id": "resources_menu",
+      "label": "Resources dropdown menu",
+      "info": "Menu whose items populate the Resources dropdown on desktop and the Resources accordion in the mobile hamburger menu."
     },
     {
       "type": "header",
@@ -2161,8 +2449,15 @@ document.addEventListener('DOMContentLoaded', function () {
     {
       "type": "color",
       "id": "drawer_accent",
-      "label": "Drawer accent color",
+      "label": "Drawer accent color (dark mode)",
       "default": "#07d16e"
+    },
+    {
+      "type": "color",
+      "id": "drawer_accent_light",
+      "label": "Drawer accent color (light mode)",
+      "default": "#04914f",
+      "info": "Used for the close (X) icon, active chevrons, and the My Account button. A darker green reads better on the light drawer background."
     },
     {
       "type": "range",

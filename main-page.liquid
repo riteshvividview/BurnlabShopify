@@ -59,7 +59,6 @@
 <style>
   /* ── CSS VARIABLES ──────────────────────────────────────── */
   #{{ section_id }} {
-    --bl-green:          {{ accent_color }};
     --bl-navy:           #001a2e;
     --bl-pale:           #eaf4f5;
     --bl-teal:           #336870;
@@ -67,15 +66,45 @@
     --font-secondary:    'DM Sans', sans-serif;
     --ease-expo:         cubic-bezier(0.16, 1, 0.3, 1);
     --ease-back:         cubic-bezier(0.34, 1.56, 0.64, 1);
-    --section-bg:        {{ bg_color }};
-    --section-text:      {{ text_color }};
-    --section-accent:    {{ accent_color }};
     --hero-h:            {{ hero_height }}px;
     --hero-h-mob:        {{ hero_height_mobile }}px;
     --content-max-w:     {{ content_max_width }}px;
     --overlay-opacity:   {{ overlay_dec }};
     --body-size:         {{ body_size }}px;
     --parallax-speed:    {{ parallax_speed }}px;
+  }
+
+  /* ── THEME SUPPORT — mirrors header.liquid's data-theme pattern.
+     Dark mode keeps the section's original schema-driven colors. Light
+     mode uses fixed BurnLab palette values (not exposed as schema
+     settings — kept simple/automatic, matching the merchant's other
+     light-mode surfaces sitewide). Several decorative elements
+     (content card panel, outline button border, table borders,
+     watermark text stroke) assumed a dark background via hardcoded
+     pale/white translucent colors — those now route through
+     theme-scoped variables too so they stay visible in light mode. ── */
+  [data-theme="dark"] #{{ section_id }} {
+    --bl-green:                {{ accent_color }};
+    --section-bg:              {{ bg_color }};
+    --section-text:            {{ text_color }};
+    --section-accent:          {{ accent_color }};
+    --section-card-bg:         rgba(255, 255, 255, 0.03);
+    --section-card-border:     rgba(255, 255, 255, 0.07);
+    --section-outline-border:  rgba(234, 244, 245, 0.28);
+    --section-table-border:    rgba(234, 244, 245, 0.07);
+    --section-bgtext-stroke:   rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="light"] #{{ section_id }} {
+    --bl-green:                #04914f;
+    --section-bg:              #f5f7fa;
+    --section-text:            #081c2d;
+    --section-accent:          #04914f;
+    --section-card-bg:         rgba(8, 28, 45, 0.035);
+    --section-card-border:     rgba(8, 28, 45, 0.09);
+    --section-outline-border:  rgba(8, 28, 45, 0.22);
+    --section-table-border:    rgba(8, 28, 45, 0.09);
+    --section-bgtext-stroke:   rgba(8, 28, 45, 0.05);
   }
 
   /* ── RESET ──────────────────────────────────────────────── */
@@ -164,7 +193,7 @@
     font-size: clamp(6rem, 18vw, 20rem);
     letter-spacing: -0.06em;
     color: transparent;
-    -webkit-text-stroke: 1px rgba(255,255,255,0.025);
+    -webkit-text-stroke: 1px var(--section-bgtext-stroke);
     white-space: nowrap;
     pointer-events: none;
     user-select: none;
@@ -203,11 +232,16 @@
     position: absolute;
     inset: 0;
     z-index: 1;
+    /* Always fades to a fixed dark navy, never the theme's section
+       background — the hero photo needs to stay dark for the white
+       title/breadcrumb text to read, regardless of light/dark mode.
+       Fading to var(--section-bg) here was bleeding the light theme's
+       pale background straight onto the bottom of the image. */
     background: linear-gradient(
       170deg,
       rgba(0,26,46, calc(var(--overlay-opacity) * 0.35)) 0%,
       rgba(0,26,46, calc(var(--overlay-opacity) * 0.7))  50%,
-      var(--section-bg) 100%
+      var(--bl-navy) 100%
     );
   }
 
@@ -220,6 +254,18 @@
     padding-inline: clamp(1.6rem, 5vw, 8rem);
     padding-top: clamp(4rem, 8vw, 9rem);
     padding-bottom: clamp(3rem, 5vw, 6rem);
+  }
+
+  /* When a hero image is present, its text always sits on the fixed
+     dark navy overlay above (see .pg-hero__overlay), never on the
+     theme's section background — so it stays pale/white regardless of
+     light/dark mode instead of following --section-text. Only applies
+     when the hero image is actually shown; without one, the hero sits
+     directly on --section-bg and should follow the theme normally. */
+  #{{ section_id }} .pg-hero--image .pg-breadcrumb,
+  #{{ section_id }} .pg-hero--image .pg-title,
+  #{{ section_id }} .pg-hero--image .pg-intro {
+    color: var(--bl-pale) !important;
   }
 
   /* ── BREADCRUMB ─────────────────────────────────────────── */
@@ -355,8 +401,8 @@
 
   /* Content card style */
   #{{ section_id }} .pg-content-inner--card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--section-card-bg);
+    border: 1px solid var(--section-card-border);
     border-radius: 20px;
     padding: clamp(2rem, 4vw, 4rem) clamp(2rem, 4vw, 4.5rem);
     backdrop-filter: blur(4px);
@@ -585,7 +631,7 @@
   }
   #{{ section_id }} .pg-content td {
     padding: clamp(10px, 1.3vw, 14px) clamp(12px, 1.5vw, 18px);
-    border-bottom: 1px solid rgba(234,244,245,0.07);
+    border-bottom: 1px solid var(--section-table-border);
     color: var(--section-text);
     opacity: 0.85;
     vertical-align: top;
@@ -625,7 +671,11 @@
     border: none;
     padding: 0;
     font-size: clamp(1.2rem, 1.3vw, 1.4rem);
-    color: var(--section-text);
+    /* The `pre` block itself stays a fixed dark panel in both themes
+       (like a code editor), so its text must stay pale rather than
+       following --section-text — otherwise it'd turn near-invisible
+       dark navy on that dark panel in light mode. */
+    color: var(--bl-pale);
     opacity: 0.85;
   }
 
@@ -661,7 +711,7 @@
   #{{ section_id }} .pg-btn--outline {
     background: transparent;
     color: var(--section-text);
-    border: 1.5px solid rgba(234,244,245,0.28);
+    border: 1.5px solid var(--section-outline-border);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -803,7 +853,7 @@
   {%- endif -%}
 
   <!-- ── HERO ──────────────────────────────────────────────── -->
-  <div class="pg-hero">
+  <div class="pg-hero{% if show_hero_image and hero_image != blank %} pg-hero--image{% endif %}">
 
     {%- if show_hero_image and hero_image != blank -%}
     <div class="pg-hero__img-wrap" aria-hidden="true">

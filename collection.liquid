@@ -134,12 +134,12 @@
 
 #{{ section_id }} .bl-col-breadcrumb {
   display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.1rem;
-  font-size: clamp(1.1rem, 1.2vw, 1.3rem); color: rgba(234, 244, 245, 0.52);
+  font-size: clamp(1.1rem, 1.2vw, 1.3rem); color: var(--bl-mode-text-muted, rgba(234, 244, 245, 0.52));
   flex-wrap: wrap; overflow-wrap: break-word; word-break: break-word;
 }
-#{{ section_id }} .bl-col-breadcrumb a { color: rgba(234, 244, 245, 0.52); text-decoration: none; transition: color 0.2s ease; }
+#{{ section_id }} .bl-col-breadcrumb a { color: var(--bl-mode-text-muted, rgba(234, 244, 245, 0.52)); text-decoration: none; transition: color 0.2s ease; }
 #{{ section_id }} .bl-col-breadcrumb a:hover { color: {{ accent_color }}; }
-#{{ section_id }} .bl-col-breadcrumb-sep { color: rgba(234, 244, 245, 0.28); }
+#{{ section_id }} .bl-col-breadcrumb-sep { color: var(--bl-mode-text-muted, rgba(234, 244, 245, 0.28)); opacity: 0.6; }
 
 #{{ section_id }} .bl-col-eyebrow {
   display: inline-flex; align-items: center; gap: 0.8rem;
@@ -152,7 +152,7 @@
 #{{ section_id }} .bl-col-hero-title {
   font-family: var(--bl-font-primary, 'Archivo Black', sans-serif); font-weight: 400;
   font-size: clamp({{ heading_size_mobile }}px, 5vw, {{ heading_size }}px);
-  line-height: 1.0; letter-spacing: -0.025em; color: #f0f5f8;
+  line-height: 1.0; letter-spacing: -0.025em; color: var(--bl-mode-text, #f0f5f8);
   overflow-wrap: break-word; word-break: break-word;
 }
 
@@ -175,7 +175,7 @@
 
 #{{ section_id }} .bl-col-hero-desc {
   margin-top: 1.4rem; font-size: clamp({{ body_size_sm }}px, 1.4vw, {{ body_size }}px);
-  line-height: 1.72; color: rgba(234, 244, 245, 0.68); max-width: 64rem;
+  line-height: 1.72; color: var(--bl-mode-text-muted, rgba(234, 244, 245, 0.68)); max-width: 64rem;
   overflow-wrap: break-word; word-break: break-word;
 }
 

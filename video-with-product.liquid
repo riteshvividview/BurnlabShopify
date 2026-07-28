@@ -872,10 +872,10 @@
                       <span class="vwp-product-name">{{- prod.title | escape -}}</span>
                       <span class="vwp-price">{{- prod.price | money -}}</span>
                     </a>
-                  {%- else -%}
+                  {% comment %} {%- else -%}
                     <div class="vwp-product-link">
                       <span class="vwp-product-name">Add a product</span>
-                    </div>
+                    </div> {% endcomment %}
                   {%- endif -%}
                 </div>
 

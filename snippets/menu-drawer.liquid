@@ -1,0 +1,267 @@
+<menudrawer-mobile class="color_scheme color-{{ settings.color_scheme_drawer }}">
+  <div
+    class="drawer-wrapper mobile_drawer_wrapper {% if section.settings.border_color != blank %}border-color{% endif %}"
+    inert
+    aria-hidden="true"
+    id="mobile_menu_drawer"
+    style="--border-color: {{ section.settings.border_color }};"
+  >
+    <div class="drawer-wrapper_inner mobile_drawer_inner" tabindex="-1" data-lenis-prevent>
+      <div class="mobile_menu_drawer_main_content">
+        <div class="drawer-wrapper_header">
+          {%- if section.settings.logo != blank -%}
+            <div class="header_name-logo-wrapper">
+              {%- assign logo_alt = section.settings.logo.alt | default: shop.name | escape -%}
+              {%- assign logo_height = section.settings.logo_size | divided_by: settings.logo.aspect_ratio -%}
+              {% capture sizes %}(max-width: {{ section.settings.logo_size | times: 2 }}px) 50vw, {{ settings.logo_size }}px{% endcapture %}
+              {% capture widths %}{{ section.settings.logo_size }}, {{ section.settings.logo_size | times: 2.5 | round }}, {{ section.settings.logo_size | times: 3.5 }}{% endcapture %}
+              {{
+                section.settings.logo
+                | image_url: width: 600
+                | image_tag:
+                  class: 'header_name-logo motion-reduce',
+                  widths: widths,
+                  height: logo_height,
+                  width: settings.logo_size,
+                  alt: logo_alt,
+                  sizes: sizes,
+                  preload: true
+              }}
+            </div>
+          {% else %}
+            <span class="h2">{{ shop.name }}</span>
+          {% endif %}
+          <button
+            id="mobile_drawer_close_btn"
+            aria-label="Mobile drawer close button"
+            class="drawer-wrapper__close mobile_drawer_close drawer_close_btn"
+          >
+            {{ 'icon-close.svg' | inline_asset_content }}
+          </button>
+        </div>
+
+        <div class="mobile_menu_drawer_inner_content">
+          {%- liquid
+            assign categories_trigger = section.settings.categories_nav_label | downcase | strip
+            assign cat_blocks = section.blocks | where: 'type', 'category_item'
+            assign resources_trigger = section.settings.resources_nav_label | downcase | strip
+            assign resources_menu_handle = section.settings.resources_menu
+          -%}
+          <ul class="mob_parent_wrapper">
+            {% for link in menu.links %}
+              {%- assign link_lower = link.title | downcase | strip -%}
+              {% if link_lower == categories_trigger and cat_blocks.size > 0 %}
+                <li class="mob_parent_li mob_categories_li">
+                  <button
+                    type="button"
+                    class="mob_parent_a mob_categories_toggle"
+                    aria-expanded="false"
+                    aria-controls="mob_categories_panel_{{ section.id }}"
+                  >
+                    <span class="mob_categories_label">{{- link.title -}}</span>
+                    <i class="fa-solid fa-chevron-down mob_categories_chevron" aria-hidden="true"></i>
+                  </button>
+                  <div class="mob_categories_panel" id="mob_categories_panel_{{ section.id }}">
+                    <ul class="mob_categories_list">
+                      {% for block in cat_blocks %}
+                        <li class="mob_categories_item">
+                          <a
+                            class="mob_categories_link"
+                            aria-label="{{ block.settings.category_name }}"
+                            href="{{ block.settings.category_link | default: '#' }}"
+                            {{ block.shopify_attributes }}
+                          >
+                            {{- block.settings.category_name -}}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </li>
+              {% elsif link_lower == resources_trigger and resources_menu_handle != blank %}
+                <li class="mob_has_dropdown mob_parent_li">
+                  <details>
+                    <summary>
+                      <a class="mob_parent_a" aria-label="{{ link.title }}" href="{{ link.url }}">{{ link.title }}</a>
+                      <span>{{ 'icon-caret-down.svg' | inline_asset_content }}</span>
+                    </summary>
+
+                    <ul class="mob_child_ul">
+                      {% for childlink in linklists[resources_menu_handle].links %}
+                        <li class="mob_child_li">
+                          <a class="mob_child_a" aria-label="{{ childlink.title }}" href="{{ childlink.url }}">
+                            {{- childlink.title -}}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </details>
+                </li>
+              {% elsif link.links != blank %}
+                <li class="mob_has_dropdown mob_parent_li">
+                  <details>
+                    <summary>
+                      <a class="mob_parent_a" aria-label="{{ link.title }}" href="{{ link.url }}">{{ link.title }}</a>
+                      <span>{{ 'icon-caret-down.svg' | inline_asset_content }}</span>
+                    </summary>
+
+                    <ul class="mob_child_ul">
+                      {% for childlink in link.links %}
+                        {% if childlink.links != blank %}
+                          <li class="mob_child_li mob_has_child_dropdown">
+                            <details>
+                              <summary>
+                                <a class="mob_child_a" aria-label="{{ childlink.title }}" href="{{ childlink.url }}">
+                                  {{- childlink.title -}}
+                                </a>
+                                <span>{{ 'icon-caret-down.svg' | inline_asset_content }}</span>
+                              </summary>
+
+                              <ul class="mob_grandchild_ul">
+                                {% for grandchildlink in childlink.links %}
+                                  <li class="mob_grandchild_li">
+                                    <a
+                                      class="mob_grandchild_a"
+                                      aria-label="{{ grandchildlink.title }}"
+                                      href="{{ grandchildlink.url }}"
+                                    >
+                                      {{- grandchildlink.title -}}
+                                    </a>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            </details>
+                          </li>
+                        {% else %}
+                          <li class="mob_child_li">
+                            <a class="mob_child_a" aria-label="{{ childlink.title }}" href="{{childlink.url }}">
+                              {{- childlink.title -}}
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </details>
+                </li>
+              {% else %}
+                <li class="mob_parent_li">
+                  <a class="mob_parent_a" aria-label="{{ link.title }}" href="{{ link.url }}">{{ link.title }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="mobile_menu_drawer_login_link">
+        <div class="mobile_menu_drawer_login_localization_wrapper">
+          {% comment %} {%- if shop.customer_accounts_enabled -%}
+            <a
+              title="Login"
+              href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}"
+              class="mob_header_account"
+              rel="nofollow"
+              aria-label="Account Icon"
+            >
+              {%- if section.settings.enable_customer_avatar -%}
+                <account-icon>
+                  {%- if customer and customer.has_avatar? -%}
+                    {{ customer | avatar }}
+                  {%- else -%}
+                    <div class="icon_wrapper">
+                      {{ 'icon-account.svg' | inline_asset_content }}
+                    </div>
+                  {%- endif -%}
+                </account-icon>
+              {%- else -%}
+                <div class="icon_wrapper">
+                  {{ 'icon-account.svg' | inline_asset_content }}
+                </div>
+              {%- endif -%}
+              <span class="visually-hidden">
+                {%- liquid
+                  if customer
+                    echo 'customer.account_fallback' | t
+                  else
+                    echo 'customer.log_in' | t
+                  endif
+                -%}
+              </span>
+            </a>
+          {%- endif -%} {% endcomment %}
+          {% if shop.customer_accounts_enabled %}
+            <div class="header_accnt header_account header_account--icon">
+              <shopify-account menu="{{ section.settings.customer_account_menu }}">
+                <div class="icon_wrapper">
+                  {% render 'icon-account' %}
+                </div>
+              </shopify-account>
+            </div>
+          {% endif %}
+          {% if localization.available_countries.size > 1 or localization.available_languages.size > 1 %}
+            <div class="mobile_menu_drawer--localization_wrapper">
+              {% if localization.available_countries.size > 0 %}
+                <button
+                  title="Localization button"
+                  id="mobile_menu_drawer_localization_btn"
+                  class="drawer_open_btn"
+                  aria-label="Localization Icon"
+                  data-drawer="localization_drawer"
+                >
+                  {{ localization.language.endonym_name }}
+                  {{- localization.country.currency.iso_code }} (
+                  {{- localization.country.currency.symbol -}}
+                  )
+                </button>
+              {% endif %}
+
+              {% if localization.available_languages.size > 0 %}
+                <button
+                  title="Localization button"
+                  id="mobile_menu_drawer_localization_btn"
+                  class="drawer_open_btn"
+                  aria-label="Localization Icon"
+                  data-drawer="localization_drawer"
+                >
+                  {{ localization.language.endonym_name }}
+                </button>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="drawer-social-media">
+          {% render 'social-media' %}
+        </div>
+      </div>
+    </div>
+  </div>
+</menudrawer-mobile>
+
+<script>
+(function () {
+  var toggle = document.querySelector('#mobile_menu_drawer .mob_categories_toggle');
+  var panel  = document.querySelector('#mobile_menu_drawer .mob_categories_panel');
+  if (!toggle || !panel) return;
+
+  var open = false;
+
+  toggle.addEventListener('click', function () {
+    open = !open;
+
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.classList.toggle('mob_categories_toggle--open', open);
+
+    if (open) {
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+      panel.style.opacity = '1';
+    } else {
+      /* Start from the current rendered height so the collapse animates
+         smoothly, then collapse to 0 on the next frame. */
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+      void panel.offsetHeight;
+      panel.style.maxHeight = '0px';
+      panel.style.opacity = '0';
+    }
+  });
+})();
+</script>

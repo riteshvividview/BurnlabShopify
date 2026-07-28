@@ -1,19 +1,29 @@
 {% comment %}
   ============================================================
-  BURNLAB — BLOG PRO V2
-  - Proper boxed desktop layout
-  - Better spacing between cards
-  - Full landscape image visibility
-  - Smaller premium cards
-  - Clean hover animations
-  - Theme toggle compatible
-  - Responsive optimized
-  - Schema verified
+  BURNLAB — BLOG PRO V3
+  - True dark/light theme toggle (data-theme on <html>, matches header.liquid)
+  - Redesigned featured + grid layout
+  - Fully responsive: desktop / tablet / mobile / small mobile
+  - Backend logic (article loop, pagination, schema ids) unchanged
   ============================================================
 {% endcomment %}
 
 {%- liquid
   assign section_id = 'burnlab-blog-pro-' | append: section.id
+
+  assign bg_color           = section.settings.bg_color
+  assign card_bg            = section.settings.card_bg
+  assign text_color         = section.settings.text_color
+  assign muted_text         = section.settings.muted_text
+  assign accent_color       = section.settings.accent_color
+  assign border_color       = section.settings.border_color
+
+  assign bg_color_light     = section.settings.bg_color_light
+  assign card_bg_light      = section.settings.card_bg_light
+  assign text_color_light   = section.settings.text_color_light
+  assign muted_text_light   = section.settings.muted_text_light
+  assign accent_color_light = section.settings.accent_color_light
+  assign border_color_light = section.settings.border_color_light
 -%}
 
 <style>
@@ -28,12 +38,6 @@
 ========================================================= */
 
 #{{ section_id }}{
-  --bl-bg: {{ section.settings.bg_color }};
-  --bl-card-bg: {{ section.settings.card_bg }};
-  --bl-text: {{ section.settings.text_color }};
-  --bl-muted: {{ section.settings.muted_text }};
-  --bl-accent: {{ section.settings.accent_color }};
-  --bl-border: {{ section.settings.border_color }};
   --bl-radius: {{ section.settings.card_radius }}px;
 
   position:relative;
@@ -42,40 +46,48 @@
   padding-top:{{ section.settings.top_spacing }}px;
   padding-bottom:{{ section.settings.bottom_spacing }}px;
 
-  background:var(--bl-bg);
+  background:var(--bl-mode-bg);
+  color:var(--bl-mode-text);
 
-  transition:
-    background .35s ease,
-    color .35s ease;
+  font-family:var(--bl-font-secondary, 'DM Sans', sans-serif);
+
+  transition:background .35s ease, color .35s ease;
 }
 
 /* =========================================================
-   THEME SUPPORT
+   THEME SUPPORT — mirrors header.liquid's data-theme pattern
 ========================================================= */
 
 [data-theme="dark"] #{{ section_id }}{
-  --bl-mode-bg:#041523;
-  --bl-mode-card:#08253f;
-  --bl-mode-text:#edf7f7;
-  --bl-mode-muted:#9db2bd;
-  --bl-mode-border:rgba(255,255,255,.08);
+  --bl-mode-bg:      {{ section.settings.bg_color }};
+  --bl-mode-card:    {{ section.settings.card_bg }};
+  --bl-mode-text:    {{ section.settings.text_color }};
+  --bl-mode-muted:   {{ section.settings.muted_text }};
+  --bl-mode-accent:  {{ section.settings.accent_color }};
+  --bl-mode-border:  {{ section.settings.border_color }};
+  --bl-mode-shadow:  0 10px 30px rgba(0,0,0,.28);
+  --bl-mode-shadow-hover: 0 18px 50px rgba(0,0,0,.38);
+  --bl-mode-grid-line: rgba(255,255,255,.025);
+  --bl-mode-media-bg: #0d2032;
+  --bl-mode-overlay: linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,.15), transparent);
 }
 
 [data-theme="light"] #{{ section_id }}{
-  --bl-mode-bg:#f5f7fa;
-  --bl-mode-card:#ffffff;
-  --bl-mode-text:#081c2d;
-  --bl-mode-muted:#5d7183;
-  --bl-mode-border:rgba(0,0,0,.08);
+  --bl-mode-bg:      {{ section.settings.bg_color_light }};
+  --bl-mode-card:    {{ section.settings.card_bg_light }};
+  --bl-mode-text:    {{ section.settings.text_color_light }};
+  --bl-mode-muted:   {{ section.settings.muted_text_light }};
+  --bl-mode-accent:  {{ section.settings.accent_color_light }};
+  --bl-mode-border:  {{ section.settings.border_color_light }};
+  --bl-mode-shadow:  0 6px 24px rgba(8,28,45,.08);
+  --bl-mode-shadow-hover: 0 16px 42px rgba(8,28,45,.14);
+  --bl-mode-grid-line: rgba(8,28,45,.035);
+  --bl-mode-media-bg: #e9eef2;
+  --bl-mode-overlay: linear-gradient(to top, rgba(8,28,45,.32), rgba(8,28,45,.05), transparent);
 }
 
-#{{ section_id }},
 #{{ section_id }} *{
-  color:var(--bl-mode-text);
-  transition:
-    color .35s ease,
-    background .35s ease,
-    border-color .35s ease;
+  transition:color .35s ease, background .35s ease, border-color .35s ease;
 }
 
 /* =========================================================
@@ -88,8 +100,8 @@
   inset:0;
 
   background:
-    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    linear-gradient(var(--bl-mode-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bl-mode-grid-line) 1px, transparent 1px);
 
   background-size:44px 44px;
 
@@ -106,11 +118,11 @@
   z-index:2;
 
   width:100%;
-  max-width:1320px;
+  max-width:1400px;
 
   margin-inline:auto;
 
-  padding-inline:clamp(1rem,3vw,2rem);
+  padding-inline:clamp(1.6rem, 4vw, 4.8rem);
 }
 
 /* =========================================================
@@ -118,7 +130,7 @@
 ========================================================= */
 
 #{{ section_id }} .bl-blog-header{
-  margin-bottom:3.5rem;
+  margin-bottom:clamp(2.4rem, 5vw, 3.8rem);
 }
 
 #{{ section_id }} .bl-blog-heading-wrap{
@@ -137,7 +149,7 @@
   text-transform:uppercase;
   font-weight:700;
 
-  color:var(--bl-accent);
+  color:var(--bl-mode-accent);
 }
 
 #{{ section_id }} .bl-blog-eyebrow::before{
@@ -145,25 +157,26 @@
   width:28px;
   height:2px;
   border-radius:100px;
-  background:var(--bl-accent);
+  background:var(--bl-mode-accent);
 }
 
 #{{ section_id }} .bl-blog-heading{
-  font-size:clamp(2.3rem,5vw,5rem);
-  line-height:1;
-  font-weight:800;
-  letter-spacing:-0.04em;
+  font-family:var(--bl-font-primary, 'Archivo Black', sans-serif);
+  font-weight:400;
+  font-size:clamp(2.2rem, 4.8vw, 4.6rem);
+  line-height:1.02;
+  letter-spacing:-0.02em;
 
   margin:0;
 
-  max-width:11ch;
+  max-width:14ch;
 }
 
 #{{ section_id }} .bl-blog-subtext{
-  margin-top:1.4rem;
+  margin-top:1.3rem;
 
   font-size:1rem;
-  line-height:1.8;
+  line-height:1.75;
 
   color:var(--bl-mode-muted);
 
@@ -180,15 +193,37 @@
   grid-template-columns:
     repeat({{ section.settings.columns }}, minmax(0,1fr));
 
-  gap:2rem;
+  gap:clamp(1.4rem, 2vw, 2rem);
 }
 
 /* =========================================================
-   FEATURED
+   FEATURED CARD — side-by-side on desktop, stacked below
 ========================================================= */
 
 #{{ section_id }} .bl-blog-card.featured{
-  grid-column:span 2;
+  grid-column:1 / -1;
+
+  flex-direction:row;
+}
+
+#{{ section_id }} .bl-blog-card.featured .bl-blog-media{
+  width:52%;
+  aspect-ratio:auto;
+  flex-shrink:0;
+}
+
+#{{ section_id }} .bl-blog-card.featured .bl-blog-content{
+  padding:clamp(1.6rem, 3vw, 3rem);
+  justify-content:center;
+}
+
+#{{ section_id }} .bl-blog-card.featured .bl-blog-title{
+  font-size:clamp(1.4rem, 2.4vw, 2rem);
+}
+
+#{{ section_id }} .bl-blog-card.featured .bl-blog-excerpt{
+  -webkit-line-clamp:4;
+  font-size:1rem;
 }
 
 /* =========================================================
@@ -197,42 +232,31 @@
 
 #{{ section_id }} .bl-blog-card{
   position:relative;
+  display:flex;
+  flex-direction:column;
 
   overflow:hidden;
 
   border-radius:var(--bl-radius);
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.04),
-      rgba(255,255,255,.015)
-    ),
-    var(--bl-mode-card);
-
+  background:var(--bl-mode-card);
   border:1px solid var(--bl-mode-border);
 
-  backdrop-filter:blur(12px);
-
-  display:flex;
-  flex-direction:column;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,.08);
+  box-shadow:var(--bl-mode-shadow);
 
   transition:
     transform .45s cubic-bezier(.16,1,.3,1),
     box-shadow .45s ease,
-    border-color .35s ease;
+    border-color .35s ease,
+    background .35s ease;
 }
 
 #{{ section_id }} .bl-blog-card:hover{
-  transform:translateY(-8px);
+  transform:translateY(-6px);
 
-  border-color:rgba(7,209,110,.25);
+  border-color:var(--bl-mode-accent);
 
-  box-shadow:
-    0 18px 50px rgba(0,0,0,.16);
+  box-shadow:var(--bl-mode-shadow-hover);
 }
 
 /* =========================================================
@@ -246,7 +270,7 @@
 
   aspect-ratio:16/9;
 
-  background:#0d2032;
+  background:var(--bl-mode-media-bg);
 }
 
 #{{ section_id }} .bl-blog-media img{
@@ -258,9 +282,7 @@
   object-fit:cover;
   object-position:center;
 
-  transition:
-    transform 1s cubic-bezier(.16,1,.3,1),
-    filter .5s ease;
+  transition:transform 1s cubic-bezier(.16,1,.3,1);
 }
 
 #{{ section_id }} .bl-blog-card:hover .bl-blog-media img{
@@ -271,13 +293,7 @@
   position:absolute;
   inset:0;
 
-  background:
-    linear-gradient(
-      to top,
-      rgba(0,0,0,.55),
-      rgba(0,0,0,.12),
-      transparent
-    );
+  background:var(--bl-mode-overlay);
 
   pointer-events:none;
 }
@@ -287,7 +303,7 @@
 ========================================================= */
 
 #{{ section_id }} .bl-blog-content{
-  padding:1.2rem 1.2rem 1.4rem;
+  padding:1.4rem 1.4rem 1.6rem;
 
   display:flex;
   flex-direction:column;
@@ -302,16 +318,17 @@
   margin-bottom:.8rem;
 
   font-size:.72rem;
+  font-weight:700;
   text-transform:uppercase;
   letter-spacing:.08em;
 
-  color:var(--bl-accent);
+  color:var(--bl-mode-accent);
 }
 
 #{{ section_id }} .bl-blog-title{
-  margin:0 0 .8rem;
+  margin:0 0 .7rem;
 
-  font-size:1.18rem;
+  font-size:1.16rem;
   line-height:1.4;
   font-weight:700;
 }
@@ -341,18 +358,18 @@
 #{{ section_id }} .bl-blog-btn{
   margin-top:auto;
 
-  padding-top:1rem;
+  padding-top:1.1rem;
 
   display:inline-flex;
   align-items:center;
-  gap:.65rem;
+  gap:.6rem;
 
   text-decoration:none;
 
   font-size:.9rem;
   font-weight:700;
 
-  color:var(--bl-accent);
+  color:var(--bl-mode-accent);
 }
 
 #{{ section_id }} .bl-blog-btn svg{
@@ -369,11 +386,11 @@
 
 #{{ section_id }} .bl-reveal{
   opacity:0;
-  transform:translateY(40px);
+  transform:translateY(32px);
 
   transition:
-    opacity .8s cubic-bezier(.16,1,.3,1),
-    transform .8s cubic-bezier(.16,1,.3,1);
+    opacity .7s cubic-bezier(.16,1,.3,1),
+    transform .7s cubic-bezier(.16,1,.3,1);
 }
 
 #{{ section_id }} .bl-reveal.is-visible{
@@ -386,7 +403,7 @@
 ========================================================= */
 
 #{{ section_id }} .pagination-wrapper{
-  margin-top:4rem;
+  margin-top:clamp(2.4rem, 5vw, 4rem);
 }
 
 /* =========================================================
@@ -397,6 +414,15 @@
 
   #{{ section_id }} .bl-blog-grid{
     grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  #{{ section_id }} .bl-blog-card.featured{
+    flex-direction:column;
+  }
+
+  #{{ section_id }} .bl-blog-card.featured .bl-blog-media{
+    width:100%;
+    aspect-ratio:16/9;
   }
 
 }
@@ -420,7 +446,7 @@
   }
 
   #{{ section_id }} .bl-blog-card.featured{
-    grid-column:auto;
+    grid-column:1 / -1;
   }
 
   #{{ section_id }} .bl-blog-heading{
@@ -428,7 +454,7 @@
   }
 
   #{{ section_id }} .bl-blog-content{
-    padding:1rem;
+    padding:1.1rem 1.1rem 1.3rem;
   }
 
 }
@@ -735,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     {
       "type": "header",
-      "content": "Colors"
+      "content": "Colors — Dark Mode"
     },
 
     {
@@ -778,6 +804,53 @@ document.addEventListener('DOMContentLoaded', function(){
       "id": "border_color",
       "label": "Border",
       "default": "#1a3d57"
+    },
+
+    {
+      "type": "header",
+      "content": "Colors — Light Mode"
+    },
+
+    {
+      "type": "color",
+      "id": "bg_color_light",
+      "label": "Background",
+      "default": "#f5f7fa"
+    },
+
+    {
+      "type": "color",
+      "id": "card_bg_light",
+      "label": "Card Background",
+      "default": "#ffffff"
+    },
+
+    {
+      "type": "color",
+      "id": "text_color_light",
+      "label": "Text Color",
+      "default": "#081c2d"
+    },
+
+    {
+      "type": "color",
+      "id": "muted_text_light",
+      "label": "Muted Text",
+      "default": "#5d7183"
+    },
+
+    {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Accent",
+      "default": "#04914f"
+    },
+
+    {
+      "type": "color",
+      "id": "border_color_light",
+      "label": "Border",
+      "default": "#dde4ea"
     },
 
     {

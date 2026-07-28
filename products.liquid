@@ -92,6 +92,9 @@
     {%- if product.metafields.custom.assembly_required != blank -%}
       <tr><th scope="row">Assembly Required</th><td>{{ product.metafields.custom.assembly_required }}</td></tr>
     {%- endif -%}
+    {%- if product.metafields.custom.set_contains != blank -%}
+      <tr><th scope="row">This Set Contains</th><td>{{ product.metafields.custom.set_contains | metafield_tag }}</td></tr>
+    {%- endif -%}
     {%- comment -%}── Every variant option (Size, Weight, Color, Style, etc.) shown as "X Available" ──{%- endcomment -%}
     {%- for opt in product.options_with_values -%}
       <tr><th scope="row">{{ opt.name }} Available</th><td>{{ opt.values | join: ' / ' }}</td></tr>
@@ -108,26 +111,20 @@
 
 {%- comment -%}
   Additional Info table — externally/administratively-facing catalog data
-  (SKU, stock, barcode, vendor, product type, tags), kept separate from the
-  Product Specifications table above which covers physical product attributes.
+  (stock, barcode, product type), kept separate from the Product
+  Specifications table above which covers physical product attributes.
 {%- endcomment -%}
 {%- assign _ai_variant = product.selected_or_first_available_variant -%}
 {%- assign _has_addl_info = false -%}
-{%- if _ai_variant.sku != blank
-  or _ai_variant.barcode != blank
+{%- if _ai_variant.barcode != blank
   or _ai_variant.inventory_management == 'shopify'
-  or product.vendor != blank
   or product.type != blank
-  or product.tags.size > 0
 -%}
   {%- assign _has_addl_info = true -%}
 {%- endif -%}
 {%- capture _addl_info_table_html -%}
 <table class="bl-pd-specs-table">
   <tbody>
-    {%- if _ai_variant.sku != blank -%}
-      <tr><th scope="row">SKU</th><td>{{ _ai_variant.sku }}</td></tr>
-    {%- endif -%}
     {%- if _ai_variant.barcode != blank -%}
       <tr><th scope="row">Barcode</th><td>{{ _ai_variant.barcode }}</td></tr>
     {%- endif -%}
@@ -145,14 +142,8 @@
         </td>
       </tr>
     {%- endif -%}
-    {%- if product.vendor != blank -%}
-      <tr><th scope="row">Brand</th><td>{{ product.vendor }}</td></tr>
-    {%- endif -%}
     {%- if product.type != blank -%}
       <tr><th scope="row">Product Type</th><td>{{ product.type }}</td></tr>
-    {%- endif -%}
-    {%- if product.tags.size > 0 -%}
-      <tr><th scope="row">Tags</th><td>{{ product.tags | join: ', ' }}</td></tr>
     {%- endif -%}
   </tbody>
 </table>
@@ -253,12 +244,28 @@
   #{{ section_id }} .bl-pd-media-col,
   #{{ section_id }} .bl-pd-info-col { min-width: 0; }
   #{{ section_id }} .bl-pd-info-col { padding-top: 0.8rem; }
-  #{{ section_id }} .bl-pd-main-wrap { min-height: unset !important; max-height: 460px; }
+  #{{ section_id }} .bl-pd-main-wrap {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
+  }
+  #{{ section_id }} .bl-pd-slide {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
   #{{ section_id }} .bl-pd-slide img,
   #{{ section_id }} .bl-pd-slide video {
-    width: 100% !important; max-width: 100% !important;
-    min-height: unset !important; max-height: 460px; height: 460px;
-    object-fit: cover; object-position: center top;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    min-height: unset !important;
+    object-fit: contain !important;
+    object-position: center !important;
   }
 }
 
@@ -310,7 +317,7 @@
 #{{ section_id }} .bl-pd-slide img,
 #{{ section_id }} .bl-pd-slide video {
   width: 100%; {% if aspect_ratio != 'natural' %}height: 100%;{% else %}height: auto; min-height: 420px;{% endif %}
-  object-fit: cover; object-position: center; display: block;
+  object-fit: contain; object-position: center; display: block;
 }
 
 /* ── Zoom button ─── */
@@ -358,12 +365,18 @@
   /* Constrain strip to its container — prevents page-level horizontal overflow */
   width: 100%; min-width: 0; max-width: 100%;
   box-sizing: border-box;
+  cursor: grab;
+}
+#{{ section_id }} .bl-pd-thumbs.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
 }
 #{{ section_id }} .bl-pd-thumbs::-webkit-scrollbar { display: none; }
 #{{ section_id }} .bl-pd-thumb {
   flex-shrink: 0; width: 72px; height: 72px;
   border-radius: calc(var(--bl-pd-radius) * 0.55);
-  overflow: hidden; border: 2px solid transparent;
+  overflow: hidden; border: 1.5px solid transparent;
   background: var(--bl-pd-surface); cursor: pointer;
   scroll-snap-align: start;
   transition: border-color 0.25s ease, transform 0.2s ease;
@@ -1042,13 +1055,7 @@
 /* ── Mobile layout ─── */
 @media (max-width: 768px) {
   #{{ section_id }} { padding-top: {{ pad_top_m }}px !important; padding-bottom: {{ pad_bot_m }}px !important; }
-  /* Constrain image to prevent dominating the screen on mobile */
-  #{{ section_id }} .bl-pd-main-wrap { max-height: 340px; min-height: unset !important; }
-  #{{ section_id }} .bl-pd-slide img,
-  #{{ section_id }} .bl-pd-slide video {
-    max-height: 340px; height: 340px;
-    min-height: unset !important;
-  }
+
   /* Thumb strip */
   #{{ section_id }} .bl-pd-thumb { width: 60px; height: 60px; }
   /* Info column spacing */
@@ -1079,9 +1086,7 @@
   #bl-satc-{{ section.id }} .bl-satc-btn { padding: 0.75rem 1.4rem; font-size: 1.2rem; }
 }
 @media (max-width: 480px) {
-  #{{ section_id }} .bl-pd-main-wrap { max-height: 280px; }
-  #{{ section_id }} .bl-pd-slide img,
-  #{{ section_id }} .bl-pd-slide video { max-height: 280px; height: 280px; }
+
   #{{ section_id }} .bl-pd-thumb { width: 56px; height: 56px; }
   #{{ section_id }} .bl-pd-block + .bl-pd-block { margin-top: 1.2rem; }
   #{{ section_id }} .bl-pd-atc [type="submit"],
@@ -1095,9 +1100,7 @@
   #{{ section_id }} .bl-pd-desc-pager-btn { width: 100%; justify-content: center; }
 }
 @media (max-width: 360px) {
-  #{{ section_id }} .bl-pd-main-wrap { max-height: 240px; }
-  #{{ section_id }} .bl-pd-slide img,
-  #{{ section_id }} .bl-pd-slide video { max-height: 240px; height: 240px; }
+
   #{{ section_id }} .bl-pd-thumb { width: 48px; height: 48px; }
 }
 @media (max-width: 300px) {
@@ -1242,7 +1245,7 @@
 /* ── Thumb hover effect ─── */
 #{{ section_id }} .bl-pd-thumb { transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease; }
 #{{ section_id }} .bl-pd-thumb:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 4px 16px rgba(7,209,110,0.2); }
-#{{ section_id }} .bl-pd-thumb.is-active { box-shadow: 0 0 0 2px var(--bl-pd-accent), 0 4px 16px rgba(7,209,110,0.22); }
+#{{ section_id }} .bl-pd-thumb.is-active { box-shadow: 0 0 0 1px var(--bl-pd-accent), 0 4px 12px rgba(7,209,110,0.18); }
 
 /* Main image: no hover border/shadow — stays visually normal at all times */
 
@@ -2199,20 +2202,18 @@
               <div class="bl-pd-thumbs" id="bl-pd-thumbs-{{ section.id }}" role="list">
 
                 {%- for media in product.media -%}
-                  <button
-                    class="bl-pd-thumb{% if media.id == featured_media.id or forloop.first and featured_media == blank %} is-active{% endif %}"
-                    data-media-id="{{ media.id }}"
-                    type="button"
-                    role="listitem"
-                    aria-label="View image {{ forloop.index }}"
-                  >
-                    <img src="{{ media | image_url: width: 150 }}" alt="" loading="lazy">
-                    {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}
-                      <span class="bl-pd-thumb-play">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
-                      </span>
-                    {%- endif -%}
-                  </button>
+                  {%- comment -%}Thumbnail strip shows images only — videos stay in the main slider but are skipped here{%- endcomment -%}
+                  {%- if media.media_type == 'image' -%}
+                    <button
+                      class="bl-pd-thumb{% if media.id == featured_media.id or forloop.first and featured_media == blank %} is-active{% endif %}"
+                      data-media-id="{{ media.id }}"
+                      type="button"
+                      role="listitem"
+                      aria-label="View image {{ forloop.index }}"
+                    >
+                      <img src="{{ media | image_url: width: 150 }}" alt="" loading="lazy">
+                    </button>
+                  {%- endif -%}
                 {%- endfor -%}
 
                 {%- for block in section.blocks -%}
@@ -2286,7 +2287,7 @@
                   {%- assign _helper_clr_light = block.settings.helper_text_color_light -%}
                   {%- assign _price_gap = block.settings.price_gap | default: 16 -%}
                   {%- assign _hide_zeros = block.settings.hide_trailing_zeros -%}
-                  {%- assign _shipping_label = block.settings.shipping_label | default: 'Free Shipping' -%}
+                  {%- assign _shipping_label = block.settings.shipping_label -%}
                   {%- if block.settings.price_font == 'secondary' -%}
                     {%- assign _price_font_css = "var(--bl-font-secondary, 'DM Sans', sans-serif)" -%}
                     {%- assign _price_weight = 700 -%}
@@ -2995,6 +2996,182 @@
           {%- assign _acc_show_addl_info = block.settings.accordion_show_addl_info -%}
           {%- if block.settings.accordion_show_addl_info == blank -%}{%- assign _acc_show_addl_info = true -%}{%- endif -%}
 
+          {%- comment -%}
+            Position numbers (from schema, "Shared Tabs" section) decide the
+            order these tabs render in relative to each other — Description
+            (this product's own H2-split content) always comes first and
+            isn't part of the ordering, since it's not a fixed slot.
+          {%- endcomment -%}
+          {%- assign _pos_specs = block.settings.specs_position     | default: 1 -%}
+          {%- assign _pos_ship  = block.settings.shipping_position  | default: 2 -%}
+          {%- assign _pos_addl  = block.settings.addl_info_position | default: 3 -%}
+          {%- assign _pos_ct1   = block.settings.custom_tab1_position | default: 4 -%}
+          {%- assign _pos_ct2   = block.settings.custom_tab2_position | default: 5 -%}
+          {%- assign _pos_ct3   = block.settings.custom_tab3_position | default: 6 -%}
+
+          {%- capture _html_specs -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>Product Specifications</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner">
+                  {{ _specs_table_html }}
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- capture _html_shipping -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>Shipping and Returns</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner bl-pd-desc">
+                  <p>If you have any issues with your order, kindly contact us:</p>
+                  {%- if _acc_email != blank -%}
+                    <p>Email: <a href="mailto:{{ _acc_email }}">{{ _acc_email }}</a></p>
+                  {%- endif -%}
+                  {%- if _acc_phone != blank -%}
+                    <p>Phone: <a href="tel:{{ _acc_phone | replace: ' ', '' }}">{{ _acc_phone }}</a></p>
+                  {%- endif -%}
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- capture _html_addlinfo -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>Additional Info</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner">
+                  {{ _addl_info_table_html }}
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- assign _t1_title = block.settings.custom_tab1_title -%}
+          {%- assign _t1_pos   = block.settings.custom_tab1_image_position | default: 'left' -%}
+          {%- capture _html_ct1 -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>{{ _t1_title | escape }}</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner">
+                  <div class="bl-pd-acc-panel-body{% if block.settings.custom_tab1_image != blank %} bl-pd-acc-panel-body--img-{{ _t1_pos }}{% endif %}">
+                    {%- if block.settings.custom_tab1_image != blank -%}
+                      <div class="bl-pd-acc-img">
+                        <img src="{{ block.settings.custom_tab1_image | image_url: width: 260 }}" alt="{{ _t1_title | escape }}" loading="lazy" width="128" height="128">
+                      </div>
+                    {%- endif -%}
+                    <div class="bl-pd-acc-text bl-pd-desc rte">{{ block.settings.custom_tab1_content }}</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- assign _t2_title = block.settings.custom_tab2_title -%}
+          {%- assign _t2_pos   = block.settings.custom_tab2_image_position | default: 'left' -%}
+          {%- capture _html_ct2 -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>{{ _t2_title | escape }}</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner">
+                  <div class="bl-pd-acc-panel-body{% if block.settings.custom_tab2_image != blank %} bl-pd-acc-panel-body--img-{{ _t2_pos }}{% endif %}">
+                    {%- if block.settings.custom_tab2_image != blank -%}
+                      <div class="bl-pd-acc-img">
+                        <img src="{{ block.settings.custom_tab2_image | image_url: width: 260 }}" alt="{{ _t2_title | escape }}" loading="lazy" width="128" height="128">
+                      </div>
+                    {%- endif -%}
+                    <div class="bl-pd-acc-text bl-pd-desc rte">{{ block.settings.custom_tab2_content }}</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- assign _t3_title = block.settings.custom_tab3_title -%}
+          {%- assign _t3_pos   = block.settings.custom_tab3_image_position | default: 'left' -%}
+          {%- capture _html_ct3 -%}
+            <details class="bl-pd-acc-item">
+              <summary class="bl-pd-acc-summary">
+                <span>{{ _t3_title | escape }}</span>
+                <span class="bl-pd-acc-chevron" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="bl-pd-acc-panel">
+                <div class="bl-pd-acc-panel-inner">
+                  <div class="bl-pd-acc-panel-body{% if block.settings.custom_tab3_image != blank %} bl-pd-acc-panel-body--img-{{ _t3_pos }}{% endif %}">
+                    {%- if block.settings.custom_tab3_image != blank -%}
+                      <div class="bl-pd-acc-img">
+                        <img src="{{ block.settings.custom_tab3_image | image_url: width: 260 }}" alt="{{ _t3_title | escape }}" loading="lazy" width="128" height="128">
+                      </div>
+                    {%- endif -%}
+                    <div class="bl-pd-acc-text bl-pd-desc rte">{{ block.settings.custom_tab3_content }}</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          {%- endcapture -%}
+
+          {%- comment -%}
+            Build a "NN-T|id" sort key per active tab (NN = zero-padded
+            position, T = a stable tiebreaker so same-position tabs keep a
+            deterministic order), sort the keys as plain strings — which
+            sorts correctly by position since it's zero-padded — then read
+            off the id suffix to know which captured HTML to output.
+          {%- endcomment -%}
+          {%- assign _acc_keys = '' -%}
+          {%- if _acc_show_specs -%}
+            {%- assign _k = _pos_specs | prepend: '00' | slice: -2, 2 | append: '-1|specs' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- if _acc_email != blank or _acc_phone != blank -%}
+            {%- assign _k = _pos_ship | prepend: '00' | slice: -2, 2 | append: '-2|shipping' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- if _acc_show_addl_info and _has_addl_info -%}
+            {%- assign _k = _pos_addl | prepend: '00' | slice: -2, 2 | append: '-3|addlinfo' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- if _t1_title != blank -%}
+            {%- assign _k = _pos_ct1 | prepend: '00' | slice: -2, 2 | append: '-4|ct1' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- if _t2_title != blank -%}
+            {%- assign _k = _pos_ct2 | prepend: '00' | slice: -2, 2 | append: '-5|ct2' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- if _t3_title != blank -%}
+            {%- assign _k = _pos_ct3 | prepend: '00' | slice: -2, 2 | append: '-6|ct3' -%}
+            {%- assign _acc_keys = _acc_keys | append: _k | append: ',' -%}
+          {%- endif -%}
+          {%- assign _acc_sorted_keys = _acc_keys | split: ',' | sort -%}
+
           <div class="bl-pd-acc-wrap" id="bl-pd-acc-{{ section.id }}">
 
             {%- if _acc_intro_text != blank -%}
@@ -3034,93 +3211,17 @@
               {%- endif -%}
             {%- endfor -%}
 
-            {%- comment -%}── Shared tabs — same title + content on every product using this section (e.g. store-wide policies) ──{%- endcomment -%}
-            {%- for i in (1..3) -%}
-              {%- assign _t_title_key = 'custom_tab' | append: i | append: '_title' -%}
-              {%- assign _t_content_key = 'custom_tab' | append: i | append: '_content' -%}
-              {%- assign _t_image_key = 'custom_tab' | append: i | append: '_image' -%}
-              {%- assign _t_pos_key = 'custom_tab' | append: i | append: '_image_position' -%}
-              {%- assign _t_title = block.settings[_t_title_key] -%}
-              {%- assign _t_content = block.settings[_t_content_key] -%}
-              {%- assign _t_image = block.settings[_t_image_key] -%}
-              {%- assign _t_pos = block.settings[_t_pos_key] | default: 'left' -%}
-              {%- if _t_title != blank -%}
-                <details class="bl-pd-acc-item">
-                  <summary class="bl-pd-acc-summary">
-                    <span>{{ _t_title | escape }}</span>
-                    <span class="bl-pd-acc-chevron" aria-hidden="true">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    </span>
-                  </summary>
-                  <div class="bl-pd-acc-panel">
-                    <div class="bl-pd-acc-panel-inner">
-                      <div class="bl-pd-acc-panel-body{% if _t_image != blank %} bl-pd-acc-panel-body--img-{{ _t_pos }}{% endif %}">
-                        {%- if _t_image != blank -%}
-                          <div class="bl-pd-acc-img">
-                            <img src="{{ _t_image | image_url: width: 260 }}" alt="{{ _t_title | escape }}" loading="lazy" width="128" height="128">
-                          </div>
-                        {%- endif -%}
-                        <div class="bl-pd-acc-text bl-pd-desc rte">{{ _t_content }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              {%- endif -%}
+            {%- for _key in _acc_sorted_keys -%}
+              {%- assign _item_id = _key | split: '|' | last -%}
+              {%- case _item_id -%}
+                {%- when 'specs'    -%}{{ _html_specs }}
+                {%- when 'shipping' -%}{{ _html_shipping }}
+                {%- when 'addlinfo' -%}{{ _html_addlinfo }}
+                {%- when 'ct1'      -%}{{ _html_ct1 }}
+                {%- when 'ct2'      -%}{{ _html_ct2 }}
+                {%- when 'ct3'      -%}{{ _html_ct3 }}
+              {%- endcase -%}
             {%- endfor -%}
-
-            {%- if _acc_show_specs -%}
-              <details class="bl-pd-acc-item">
-                <summary class="bl-pd-acc-summary">
-                  <span>Product Specifications</span>
-                  <span class="bl-pd-acc-chevron" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="bl-pd-acc-panel">
-                  <div class="bl-pd-acc-panel-inner">
-                    {{ _specs_table_html }}
-                  </div>
-                </div>
-              </details>
-            {%- endif -%}
-
-            {%- if _acc_show_addl_info and _has_addl_info -%}
-              <details class="bl-pd-acc-item">
-                <summary class="bl-pd-acc-summary">
-                  <span>Additional Info</span>
-                  <span class="bl-pd-acc-chevron" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="bl-pd-acc-panel">
-                  <div class="bl-pd-acc-panel-inner">
-                    {{ _addl_info_table_html }}
-                  </div>
-                </div>
-              </details>
-            {%- endif -%}
-
-            {%- if _acc_email != blank or _acc_phone != blank -%}
-              <details class="bl-pd-acc-item">
-                <summary class="bl-pd-acc-summary">
-                  <span>Return & Refund</span>
-                  <span class="bl-pd-acc-chevron" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="bl-pd-acc-panel">
-                  <div class="bl-pd-acc-panel-inner bl-pd-desc">
-                    <p>If you have any issues with your order, kindly contact us:</p>
-                    {%- if _acc_email != blank -%}
-                      <p>Email: <a href="mailto:{{ _acc_email }}">{{ _acc_email }}</a></p>
-                    {%- endif -%}
-                    {%- if _acc_phone != blank -%}
-                      <p>Phone: <a href="tel:{{ _acc_phone | replace: ' ', '' }}">{{ _acc_phone }}</a></p>
-                    {%- endif -%}
-                  </div>
-                </div>
-              </details>
-            {%- endif -%}
 
           </div>
         {%- endif -%}
@@ -3310,33 +3411,97 @@ document.addEventListener('DOMContentLoaded', function () {
     if (s.dataset.mediaId == featuredId) cur = i;
   });
 
-  function goTo(idx) {
-    if (idx === cur && slides[idx].classList.contains('is-active')) return;
-    slides[cur].classList.remove('is-active');
-    thumbs[cur] && thumbs[cur].classList.remove('is-active');
-    cur = (idx + slides.length) % slides.length;
-    slides[cur].classList.add('is-active');
-    if (thumbs[cur]) {
-      thumbs[cur].classList.add('is-active');
-      thumbs[cur].scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
-    }
-    {% if enable_zoom %}updateLbSrc();{% endif %}
+  // Thumbs are a filtered subset of slides (videos have no thumb), so the
+  // two arrays don't share index positions — always resolve the matching
+  // thumb by data-media-id rather than by the slide's index.
+  function findThumbForSlide(slide) {
+    if (!slide) return null;
+    var mediaId = slide.dataset.mediaId;
+    return thumbs.find(function (t) { return t.dataset.mediaId === mediaId; }) || null;
   }
 
-  thumbs.forEach(function (t, i) { t.addEventListener('click', function () { goTo(i); }); });
+  function goTo(idx) {
+    var newIdx = (idx + slides.length) % slides.length;
+    if (slides[cur]) slides[cur].classList.remove('is-active');
+    var prevThumb = findThumbForSlide(slides[cur]);
+    if (prevThumb) prevThumb.classList.remove('is-active');
+    cur = newIdx;
+    if (slides[cur]) slides[cur].classList.add('is-active');
+    var nextThumb = findThumbForSlide(slides[cur]);
+    if (nextThumb) {
+      nextThumb.classList.add('is-active');
+      nextThumb.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+    }
+    {% if enable_zoom %}if (typeof updateLbSrc === 'function') updateLbSrc();{% endif %}
+  }
+
+  thumbs.forEach(function (t, i) { t.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (thumbsDragged) { thumbsDragged = false; return; }
+    var mediaId = t.dataset.mediaId;
+    var targetIdx = -1;
+    if (mediaId) {
+      targetIdx = slides.findIndex(function (s) { return s.dataset.mediaId === mediaId; });
+    }
+    if (targetIdx === -1) targetIdx = i;
+    goTo(targetIdx);
+  }); });
+
+  // ── Thumbnail strip — click-and-drag to scroll (desktop mouse users) ──
+  var thumbsWrap    = sec.querySelector('.bl-pd-thumbs');
+  var thumbsDragging = false;
+  var thumbsDragged  = false;
+  var thumbsStartX   = 0;
+  var thumbsStartScroll = 0;
+
+  if (thumbsWrap) {
+    thumbsWrap.addEventListener('mousedown', function (e) {
+      thumbsDragging = true;
+      thumbsDragged  = false;
+      thumbsWrap.classList.add('is-dragging');
+      thumbsStartX = e.pageX - thumbsWrap.offsetLeft;
+      thumbsStartScroll = thumbsWrap.scrollLeft;
+    });
+    ['mouseleave', 'mouseup'].forEach(function (evt) {
+      thumbsWrap.addEventListener(evt, function () {
+        thumbsDragging = false;
+        thumbsWrap.classList.remove('is-dragging');
+      });
+    });
+    thumbsWrap.addEventListener('mousemove', function (e) {
+      if (!thumbsDragging) return;
+      e.preventDefault();
+      var x = e.pageX - thumbsWrap.offsetLeft;
+      var walk = x - thumbsStartX;
+      if (Math.abs(walk) > 5) thumbsDragged = true;
+      thumbsWrap.scrollLeft = thumbsStartScroll - walk;
+    });
+  }
 
   var arrP = sec.querySelector('.bl-pd-arr--p');
   var arrN = sec.querySelector('.bl-pd-arr--n');
-  if (arrP) arrP.addEventListener('click', function () { goTo(cur - 1); });
-  if (arrN) arrN.addEventListener('click', function () { goTo(cur + 1); });
+  if (arrP) arrP.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); goTo(cur - 1); });
+  if (arrN) arrN.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); goTo(cur + 1); });
 
   // touch swipe
-  var tx = 0;
+  var tx = 0, ty = 0, touchMoved = false;
   if (wrap) {
-    wrap.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+    wrap.addEventListener('touchstart', function (e) {
+      tx = e.touches[0].clientX;
+      ty = e.touches[0].clientY;
+      touchMoved = false;
+    }, { passive: true });
+    wrap.addEventListener('touchmove', function (e) {
+      var dx = Math.abs(tx - e.touches[0].clientX);
+      var dy = Math.abs(ty - e.touches[0].clientY);
+      if (dx > 10 || dy > 10) touchMoved = true;
+    }, { passive: true });
     wrap.addEventListener('touchend', function (e) {
-      var d = tx - e.changedTouches[0].clientX;
-      if (Math.abs(d) > 48) goTo(d > 0 ? cur + 1 : cur - 1);
+      var dx = tx - e.changedTouches[0].clientX;
+      var dy = ty - e.changedTouches[0].clientY;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        goTo(dx > 0 ? cur + 1 : cur - 1);
+      }
     });
   }
 
@@ -3511,21 +3676,26 @@ document.addEventListener('DOMContentLoaded', function () {
   var lbCount  = document.getElementById('bl-lb-count-{{ section.id }}');
 
   function updateLbSrc() {
-    if (!lb || !lb.classList.contains('is-open')) return;
-    var img = slides[cur].querySelector('img');
-    if (img) {
-      lbImg.src = img.src.replace(/width=\d+/, 'width=2000');
-      lbImg.alt = img.alt;
+    if (!lb) return;
+    var activeSlide = slides[cur];
+    if (!activeSlide) return;
+    var img = activeSlide.querySelector('img');
+    if (img && lbImg) {
+      var src = img.currentSrc || img.src || img.getAttribute('src');
+      if (src) {
+        lbImg.src = src.replace(/width=\d+/, 'width=2000').replace(/&\d+x\d+/, '');
+        lbImg.alt = img.alt || '';
+      }
     }
     if (lbCount) lbCount.textContent = (cur + 1) + ' / ' + slides.length;
   }
 
   function openLb() {
     if (!lb) return;
-    updateLbSrc();
     lb.classList.add('is-open');
     lb.removeAttribute('hidden');
     document.body.style.overflow = 'hidden';
+    updateLbSrc();
   }
   function closeLb() {
     if (!lb) return;
@@ -3534,24 +3704,28 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (wrap) wrap.addEventListener('click', function (e) {
-    // Only open lightbox if current slide is an image (not video)
+    if (e.target.closest('.bl-pd-arr') || e.target.closest('.bl-pd-zoom')) return;
+    if (touchMoved) { touchMoved = false; return; }
     var active = wrap.querySelector('.bl-pd-slide.is-active');
     if (active && active.querySelector('img') && !active.querySelector('video')) openLb();
   });
   var zBtn = sec.querySelector('#bl-pd-zoom-{{ section.id }}');
-  if (zBtn) { zBtn.addEventListener('click', function (e) { e.stopPropagation(); openLb(); }); }
+  if (zBtn) { zBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openLb(); }); }
 
   if (lb) {
-    lb.querySelector('.bl-lb-close').addEventListener('click', closeLb);
+    var lbClose = lb.querySelector('.bl-lb-close');
+    var lbPrev  = lb.querySelector('.bl-lb-prev');
+    var lbNext  = lb.querySelector('.bl-lb-next');
+    if (lbClose) lbClose.addEventListener('click', function (e) { e.stopPropagation(); closeLb(); });
     lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
-    lb.querySelector('.bl-lb-prev').addEventListener('click', function () { goTo(cur - 1); updateLbSrc(); });
-    lb.querySelector('.bl-lb-next').addEventListener('click', function () { goTo(cur + 1); updateLbSrc(); });
+    if (lbPrev)  lbPrev.addEventListener('click', function (e) { e.stopPropagation(); goTo(cur - 1); });
+    if (lbNext)  lbNext.addEventListener('click', function (e) { e.stopPropagation(); goTo(cur + 1); });
   }
   document.addEventListener('keydown', function (e) {
     if (!lb || !lb.classList.contains('is-open')) return;
     if (e.key === 'Escape') closeLb();
-    if (e.key === 'ArrowLeft')  { goTo(cur - 1); updateLbSrc(); }
-    if (e.key === 'ArrowRight') { goTo(cur + 1); updateLbSrc(); }
+    if (e.key === 'ArrowLeft')  { goTo(cur - 1); }
+    if (e.key === 'ArrowRight') { goTo(cur + 1); }
   });
   {% endif %}
 
@@ -4949,7 +5123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         {
           "type": "paragraph",
-          "content": "Description and Product Specifications are 100% automatic — Description comes from each product's own description (use \"Heading 2\" in the description editor to break it into multiple tabs), and Specifications comes from that product's metafields/options/stock. Use the 3 shared tabs below only for content that's identical on every product, e.g. store policies — leave a title blank to skip it."
+          "content": "Description and Product Specifications are automatic. Use the 3 shared tabs below for content that's the same on every product — leave a title blank to skip it. Description always comes first; each other row's \"Position\" number sets the order the rest render in."
         },
         {
           "type": "checkbox",
@@ -4958,11 +5132,25 @@ document.addEventListener('DOMContentLoaded', function () {
           "default": true
         },
         {
+          "type": "range",
+          "id": "specs_position",
+          "label": "Product Specifications — Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 1
+        },
+        {
           "type": "checkbox",
           "id": "accordion_show_addl_info",
           "label": "Show the auto-generated \"Additional Info\" row",
           "default": true,
-          "info": "SKU, stock, barcode, brand, product type and tags — pulled automatically, nothing to fill in."
+          "info": "Stock, barcode and product type — pulled automatically, nothing to fill in."
+        },
+        {
+          "type": "range",
+          "id": "addl_info_position",
+          "label": "Additional Info — Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 3
         },
         {
           "type": "header",
@@ -4972,6 +5160,13 @@ document.addEventListener('DOMContentLoaded', function () {
           "type": "text",
           "id": "custom_tab1_title",
           "label": "Title"
+        },
+        {
+          "type": "range",
+          "id": "custom_tab1_position",
+          "label": "Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 4
         },
         {
           "type": "richtext",
@@ -5003,6 +5198,13 @@ document.addEventListener('DOMContentLoaded', function () {
           "label": "Title"
         },
         {
+          "type": "range",
+          "id": "custom_tab2_position",
+          "label": "Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 5
+        },
+        {
           "type": "richtext",
           "id": "custom_tab2_content",
           "label": "Content"
@@ -5032,6 +5234,13 @@ document.addEventListener('DOMContentLoaded', function () {
           "label": "Title"
         },
         {
+          "type": "range",
+          "id": "custom_tab3_position",
+          "label": "Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 6
+        },
+        {
           "type": "richtext",
           "id": "custom_tab3_content",
           "label": "Content"
@@ -5053,19 +5262,26 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         {
           "type": "header",
-          "content": "Accordion mode — Return & Refund row"
+          "content": "Accordion mode — Shipping and Returns row"
         },
         {
           "type": "text",
           "id": "accordion_care_email",
           "label": "Customer care email",
-          "info": "Shown in the Return & Refund accordion row. Leave blank to hide the email line."
+          "info": "Shown in the Shipping and Returns accordion row. Leave blank to hide the email line."
         },
         {
           "type": "text",
           "id": "accordion_care_phone",
           "label": "Customer care phone number",
-          "info": "Shown in the Return & Refund accordion row. Leave blank to hide the phone line."
+          "info": "Shown in the Shipping and Returns accordion row. Leave blank to hide the phone line."
+        },
+        {
+          "type": "range",
+          "id": "shipping_position",
+          "label": "Shipping and Returns — Position",
+          "min": 1, "max": 20, "step": 1,
+          "default": 2
         }
       ]
     },

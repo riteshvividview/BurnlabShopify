@@ -11,13 +11,11 @@
 {% endcomment %}
 
 {%- liquid
-  assign section_id = 'burnlab-hero-' | append: section.id
-  assign section_height        = section.settings.section_height        | default: 700
-  assign section_height_mobile = section.settings.section_height_mobile | default: 500
-  assign show_arrows           = section.settings.show_carousel_arrows
-  assign enable_carousel       = section.settings.enable_carousel
-  assign autoplay_duration     = section.settings.carousel_autoplay_duration | default: 4
-  assign carousel_effect       = section.settings.carousel_effect | default: 'fade'
+  assign section_id      = 'burnlab-hero-' | append: section.id
+  assign show_arrows     = section.settings.show_carousel_arrows
+  assign enable_carousel = section.settings.enable_carousel
+  assign autoplay_duration = section.settings.carousel_autoplay_duration | default: 4
+  assign carousel_effect   = section.settings.carousel_effect | default: 'fade'
 -%}
 
 <style>
@@ -26,17 +24,31 @@
   }
 
   /* ── SECTION SHELL ──────────────────────────────────────── */
+  /* Full-viewport hero: 100vw × 100vh.
+     JS below measures the header spacer and applies a negative margin-top
+     on the .burnlab-hero-section wrapper so the hero starts at the very
+     top of the page with the fixed header floating on top of it.
+     NOTE: No !important here — the JS uses setProperty('important') which
+     would otherwise be silently blocked by !important in a CSS rule. */
   #{{ section_id }} {
     position: relative;
-    width: 100%;
-    height: {{ section_height }}px;
+    width: 100vw;
+    height: 100vh;
+    min-height: 680px;
+    margin-top: 0;
     overflow: hidden;
-    background: #001a2e;
+    background: var(--bl-hero-bg, #001a2e);
     isolation: isolate;
   }
+  /* Section background (visible as letterboxing around "contain"-fit
+     images/videos) must follow the site theme instead of always being
+     dark navy — otherwise light mode shows a dark bar/edges. */
+  [data-theme="dark"] #{{ section_id }} { --bl-hero-bg: #001a2e; }
+  [data-theme="light"] #{{ section_id }} { --bl-hero-bg: #ffffff; }
   @media (max-width: 768px) {
     #{{ section_id }} {
-      height: {{ section_height_mobile }}px;
+      height: 100vh;
+      min-height: 680px;
     }
   }
 
@@ -97,13 +109,15 @@
 
   /* ── TAB PANELS (image slides) ──────────────────────────── */
   #{{ section_id }} .bl-tab-panels {
-    position: relative;
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
   }
   #{{ section_id }} .bl-tab-panel {
     position: absolute;
-    inset: 0;
+    top: 0; left: 0; right: 0;
+    height: 100%;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
@@ -144,26 +158,32 @@
 
   #{{ section_id }} .bl-tab-media {
     position: absolute;
-    inset: 0;
+    top: 0; left: 0; right: 0;
     width: 100%;
     height: 100%;
   }
-  #{{ section_id }} .bl-tab-media img {
+  #{{ section_id }} .bl-tab-media img,
+  #{{ section_id }} .bl-tab-media video {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: var(--bl-tab-fit-desktop, contain);
+    /* Letterbox fill for "contain"-fit media — same theme-aware
+       background as the section shell itself, not always black. */
+    background: var(--bl-hero-bg, #000);
   }
   /* Tablet: 769px–1024px */
   @media (max-width: 1024px) {
-    #{{ section_id }} .bl-tab-media img {
+    #{{ section_id }} .bl-tab-media img,
+    #{{ section_id }} .bl-tab-media video {
       object-fit: var(--bl-tab-fit-tablet, contain);
     }
   }
   /* Mobile: ≤768px — wins over the tablet rule above via source order */
   @media (max-width: 768px) {
-    #{{ section_id }} .bl-tab-media img {
-      object-fit: var(--bl-tab-fit-mobile, contain);
+    #{{ section_id }} .bl-tab-media img,
+    #{{ section_id }} .bl-tab-media video {
+      object-fit: var(--bl-tab-fit-mobile, cover);
     }
   }
 
@@ -231,6 +251,15 @@
   #{{ section_id }} .bl-carousel-arrow:active {
     transform: translateY(0) scale(0.96);
   }
+  [data-theme="light"] #{{ section_id }} .bl-carousel-arrow {
+    border-color: rgba(0, 26, 46, 0.3);
+    background: rgba(0, 26, 46, 0.06);
+    color: #001a2e;
+  }
+  [data-theme="light"] #{{ section_id }} .bl-carousel-arrow:hover {
+    border-color: #07d16e;
+    color: #07d16e;
+  }
   @media (max-width: 768px) {
     #{{ section_id }} .bl-carousel-arrows { padding: 0 10px; }
   }
@@ -241,6 +270,112 @@
   @media (prefers-reduced-motion: reduce) {
     #{{ section_id }} .bl-tab-panel,
     #{{ section_id }} .bl-tab-panels { transition: none !important; }
+  }
+
+  /* ── VIDEO TAB — left-center content overlay (heading / desc / CTA) ── */
+  #{{ section_id }} .bl-tab-content {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 100%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 6vw, 5.5rem);
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 50%, transparent 80%);
+  }
+  #{{ section_id }} .bl-tab-content-inner {
+    max-width: min(560px, 90%);
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(0.75rem, 1.8vw, 1.25rem);
+    margin-left: var(--bl-tab-margin-left-d, 80px);
+  }
+  #{{ section_id }} .bl-tab-heading {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 800;
+    font-size: clamp(28px, 4.2vw, 48px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.4);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bl-tab-desc {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(14px, 1.5vw, 18px);
+    line-height: 1.55;
+    color: #eaf4f5;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.4);
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bl-tab-desc p { margin: 0; }
+  #{{ section_id }} .bl-tab-desc p + p { margin-top: 0.5em; }
+  #{{ section_id }} .bl-tab-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9em 2.1em;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: clamp(14px, 1.2vw, 16px);
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease,
+                background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    background: #07d16e;
+    color: #001a2e;
+    border: 2px solid transparent;
+  }
+  #{{ section_id }} .bl-tab-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+  }
+  #{{ section_id }} .bl-tab-cta:active { transform: translateY(0); }
+  @media (max-width: 768px) {
+    #{{ section_id }} .bl-tab-content {
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: var(--bl-tab-pt-m, 110px);
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+      padding-bottom: 1rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 55%, transparent 85%);
+    }
+    #{{ section_id }} .bl-tab-content-inner {
+      max-width: 100%;
+      align-items: center;
+      text-align: center;
+      gap: var(--bl-tab-gap-m, 12px);
+      margin-left: 0;
+    }
+    #{{ section_id }} .bl-tab-heading,
+    #{{ section_id }} .bl-tab-desc {
+      text-align: center;
+    }
+    #{{ section_id }} .bl-tab-cta {
+      font-size: var(--bl-tab-cta-size-m, 15px);
+      padding: var(--bl-tab-cta-pad-v-m, 12px) var(--bl-tab-cta-pad-h-m, 24px);
+    }
+  }
+  @media (max-width: 400px) {
+    #{{ section_id }} .bl-tab-content {
+      /* padding-top intentionally not overridden here — it stays
+         driven by --bl-tab-pt-m from the 768px breakpoint above so
+         the schema slider controls it consistently at every width. */
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-bottom: 0.8rem;
+    }
   }
 </style>
 
@@ -273,8 +408,11 @@
   <div class="bl-tab-panels" id="bl-tab-panels-{{ section.id }}">
     {%- assign block_count = 0 -%}
     {%- for block in section.blocks -%}
-      {%- if block.type == 'tab' -%}
+      {%- if block.type == 'tab' or block.type == 'video_tab' -%}
         {%- assign block_count = block_count | plus: 1 -%}
+      {%- endif -%}
+
+      {%- if block.type == 'tab' -%}
         {%- assign desktop_dark  = block.settings.desktop_image -%}
         {%- assign mobile_dark   = block.settings.mobile_image | default: desktop_dark -%}
         {%- assign desktop_light = block.settings.desktop_image_light | default: desktop_dark -%}
@@ -359,6 +497,98 @@
 
           {%- if tab_link != blank -%}</a>{%- endif -%}
         </div>
+      {%- elsif block.type == 'video_tab' -%}
+        {%- assign v_desktop_dark  = block.settings.desktop_video_dark -%}
+        {%- assign v_mobile_dark   = block.settings.mobile_video_dark   | default: v_desktop_dark -%}
+        {%- assign v_desktop_light = block.settings.desktop_video_light | default: v_desktop_dark -%}
+        {%- assign v_mobile_light  = block.settings.mobile_video_light  | default: v_desktop_light -%}
+        {%- if v_mobile_light == blank -%}{%- assign v_mobile_light = v_mobile_dark -%}{%- endif -%}
+
+        {%- assign v_fit_desktop = block.settings.video_fit_desktop | default: 'cover' -%}
+        {%- assign v_fit_tablet  = block.settings.video_fit_tablet  | default: 'contain' -%}
+        {%- assign v_fit_mobile  = block.settings.video_fit_mobile  | default: 'cover' -%}
+
+        {%- assign v_heading     = block.settings.video_heading -%}
+        {%- assign v_desc        = block.settings.video_description -%}
+        {%- assign v_cta_text    = block.settings.video_cta_text -%}
+        {%- assign v_cta_link    = block.settings.video_cta_link -%}
+
+        {%- assign v_margin_left_d = block.settings.video_content_margin_left_desktop | default: 80 -%}
+        {%- assign v_pt_m          = block.settings.video_content_padding_top_mobile  | default: 36 -%}
+        {%- assign v_gap_m         = block.settings.video_content_gap_mobile          | default: 12 -%}
+        {%- assign v_cta_size_m    = block.settings.video_cta_font_size_mobile        | default: 15 -%}
+        {%- assign v_cta_pad_v_m   = block.settings.video_cta_padding_v_mobile        | default: 12 -%}
+        {%- assign v_cta_pad_h_m   = block.settings.video_cta_padding_h_mobile        | default: 24 -%}
+
+        {%- assign v_show_content = false -%}
+        {%- if v_heading != blank or v_desc != blank or v_cta_text != blank -%}
+          {%- assign v_show_content = true -%}
+        {%- endif -%}
+
+        <div
+          class="bl-tab-panel{% if forloop.first %} is-active{% endif %}"
+          data-tab-index="{{ forloop.index0 }}"
+          style="
+            --bl-tab-fit-desktop: {{ v_fit_desktop }};
+            --bl-tab-fit-tablet: {{ v_fit_tablet }};
+            --bl-tab-fit-mobile: {{ v_fit_mobile }};
+            --bl-tab-margin-left-d: {{ v_margin_left_d }}px;
+            --bl-tab-pt-m: {{ v_pt_m }}px;
+            --bl-tab-gap-m: {{ v_gap_m }}px;
+            --bl-tab-cta-size-m: {{ v_cta_size_m }}px;
+            --bl-tab-cta-pad-v-m: {{ v_cta_pad_v_m }}px;
+            --bl-tab-cta-pad-h-m: {{ v_cta_pad_h_m }}px;
+          "
+          {{ block.shopify_attributes }}
+        >
+          {%- if v_desktop_dark != blank -%}
+            <div class="bl-tab-media bl-tab-media--desktop bl-tab-media--dark">
+              <video muted loop playsinline preload="{% if forloop.first %}auto{% else %}metadata{% endif %}" aria-hidden="true">
+                <source src="{{ v_desktop_dark }}" type="video/mp4">
+              </video>
+            </div>
+          {%- endif -%}
+
+          {%- if v_desktop_light != blank -%}
+            <div class="bl-tab-media bl-tab-media--desktop bl-tab-media--light">
+              <video muted loop playsinline preload="{% if forloop.first %}auto{% else %}metadata{% endif %}" aria-hidden="true">
+                <source src="{{ v_desktop_light }}" type="video/mp4">
+              </video>
+            </div>
+          {%- endif -%}
+
+          {%- if v_mobile_dark != blank -%}
+            <div class="bl-tab-media bl-tab-media--mobile bl-tab-media--dark">
+              <video muted loop playsinline preload="{% if forloop.first %}auto{% else %}metadata{% endif %}" aria-hidden="true">
+                <source src="{{ v_mobile_dark }}" type="video/mp4">
+              </video>
+            </div>
+          {%- endif -%}
+
+          {%- if v_mobile_light != blank -%}
+            <div class="bl-tab-media bl-tab-media--mobile bl-tab-media--light">
+              <video muted loop playsinline preload="{% if forloop.first %}auto{% else %}metadata{% endif %}" aria-hidden="true">
+                <source src="{{ v_mobile_light }}" type="video/mp4">
+              </video>
+            </div>
+          {%- endif -%}
+
+          {%- if v_show_content -%}
+            <div class="bl-tab-content">
+              <div class="bl-tab-content-inner">
+                {%- if v_heading != blank -%}
+                  <h2 class="bl-tab-heading">{{ v_heading | escape }}</h2>
+                {%- endif -%}
+                {%- if v_desc != blank -%}
+                  <div class="bl-tab-desc">{{ v_desc }}</div>
+                {%- endif -%}
+                {%- if v_cta_text != blank -%}
+                  <a href="{{ v_cta_link | default: '#' }}" class="bl-tab-cta">{{ v_cta_text | escape }}</a>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
       {%- endif -%}
     {%- endfor -%}
   </div>
@@ -384,6 +614,28 @@
 (function () {
   'use strict';
 
+  // ── Pull the hero section flush to the top of the page ────────────────────
+  // The header section injects a spacer (.bl-hdr-spacer) whose height
+  // equals the fixed announcement bar + nav combined. This spacer pushes
+  // every subsequent section down. For the hero we *want* it to start
+  // at the very top (fixed header floating above it), so we apply a
+  // negative margin-top to the Shopify section wrapper equal to the
+  // spacer's height. We use setProperty with 'important' so it beats
+  // any !important rules in the theme's own stylesheets.
+  function applyHeroOffset() {
+    var spacer   = document.querySelector('.bl-hdr-spacer');
+    var heroWrap = document.querySelector('.burnlab-hero-section');
+    if (!heroWrap) return;
+    var h = (spacer && spacer.offsetHeight > 0) ? spacer.offsetHeight : 0;
+    heroWrap.style.setProperty('margin-top', '-' + h + 'px', 'important');
+  }
+  // Run immediately (styles already applied at this point in the script),
+  // after DOMContentLoaded, after window load, and on every resize.
+  applyHeroOffset();
+  document.addEventListener('DOMContentLoaded', applyHeroOffset);
+  window.addEventListener('load', applyHeroOffset);
+  window.addEventListener('resize', applyHeroOffset);
+
   var root = document.getElementById('{{ section_id }}');
   if (!root) return;
 
@@ -393,6 +645,36 @@
   var nextBtn    = root.querySelector('[data-carousel-next]');
   var total      = panels.length;
   var current    = 0;
+
+  // ── Video tab playback ──
+  // Each panel can carry up to 4 <video> variants (desktop/mobile ×
+  // dark/light) — only one is ever visible at a time via CSS. Only play
+  // the one that's actually shown (offsetParent is null for the
+  // display:none ones), and pause everything when its panel isn't active,
+  // so hidden variants never burn bandwidth/CPU in the background.
+  function setPanelVideosPlaying(panel, playing) {
+    if (!panel) return;
+    var vids = panel.querySelectorAll('video');
+    for (var i = 0; i < vids.length; i++) {
+      var v = vids[i];
+      if (playing) {
+        if (v.offsetParent !== null) {
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+      } else {
+        v.pause();
+      }
+    }
+  }
+
+  setPanelVideosPlaying(panels[current], true);
+
+  // Site-wide dark/light toggle swaps which video variant is visible via
+  // CSS — re-run playback so the newly-shown variant actually starts.
+  new MutationObserver(function () {
+    setPanelVideosPlaying(panels[current], true);
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   if (total < 2) return; /* nothing to switch between */
 
@@ -404,6 +686,7 @@
 
   function switchTo(n) {
     if (n === current) return;
+    var prevPanel = panels[current];
     current = n;
 
     if (EFFECT === 'slide' && panelsWrap) {
@@ -413,6 +696,9 @@
     panels.forEach(function (p, i) {
       p.classList.toggle('is-active', i === current);
     });
+
+    setPanelVideosPlaying(prevPanel, false);
+    setPanelVideosPlaying(panels[current], true);
   }
 
   function getNext(n) { return (n + 1) % total; }
@@ -523,24 +809,6 @@
       "unit": "px",
       "default": 14,
       "info": "Size of the sparkle icon between each announcement text."
-    },
-    {
-      "type": "header",
-      "content": "Section Size"
-    },
-    {
-      "type": "number",
-      "id": "section_height",
-      "label": "Section height — Desktop (px)",
-      "default": 700,
-      "info": "Applies to every tab equally."
-    },
-    {
-      "type": "number",
-      "id": "section_height_mobile",
-      "label": "Section height — Mobile (px)",
-      "default": 500,
-      "info": "Applies to every tab equally, on screens 768px and narrower."
     },
     {
       "type": "header",
@@ -663,6 +931,178 @@
           "id": "link",
           "label": "Link",
           "info": "Where this tab goes when clicked — used for every image variant above. Leave blank for no link."
+        }
+      ]
+    },
+    {
+      "type": "video_tab",
+      "name": "Video Tab",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Dark mode videos"
+        },
+        {
+          "type": "text",
+          "id": "desktop_video_dark",
+          "label": "Desktop video (dark mode)",
+          "info": "Paste a direct video file link (e.g. an .mp4 URL). Landscape video, shown on screens wider than 768px."
+        },
+        {
+          "type": "text",
+          "id": "mobile_video_dark",
+          "label": "Mobile video (dark mode)",
+          "info": "Paste a direct video file link (e.g. an .mp4 URL). Portrait video, shown on screens 768px and narrower. Falls back to the desktop video if left blank."
+        },
+        {
+          "type": "header",
+          "content": "Light mode videos"
+        },
+        {
+          "type": "text",
+          "id": "desktop_video_light",
+          "label": "Desktop video (light mode)",
+          "info": "Paste a direct video file link (e.g. an .mp4 URL). Shown instead of the dark-mode desktop video when a visitor switches the site to light mode. Falls back to the dark-mode desktop video if left blank."
+        },
+        {
+          "type": "text",
+          "id": "mobile_video_light",
+          "label": "Mobile video (light mode)",
+          "info": "Paste a direct video file link (e.g. an .mp4 URL). Shown instead of the dark-mode mobile video when a visitor switches the site to light mode. Falls back to the light-mode desktop video (or dark-mode mobile video) if left blank."
+        },
+        {
+          "type": "header",
+          "content": "Video Fit"
+        },
+        {
+          "type": "select",
+          "id": "video_fit_desktop",
+          "label": "Video fit — Desktop",
+          "options": [
+            { "value": "cover",   "label": "Cover (fill, crop to edges)" },
+            { "value": "contain", "label": "Contain (fit fully, no cropping)" }
+          ],
+          "default": "cover",
+          "info": "Screens wider than 1024px."
+        },
+        {
+          "type": "select",
+          "id": "video_fit_tablet",
+          "label": "Video fit — Tablet",
+          "options": [
+            { "value": "cover",   "label": "Cover (fill, crop to edges)" },
+            { "value": "contain", "label": "Contain (fit fully, no cropping)" }
+          ],
+          "default": "contain",
+          "info": "Screens from 769px to 1024px."
+        },
+        {
+          "type": "select",
+          "id": "video_fit_mobile",
+          "label": "Video fit — Mobile",
+          "options": [
+            { "value": "cover",   "label": "Cover (fill, crop to edges)" },
+            { "value": "contain", "label": "Contain (fit fully, no cropping)" }
+          ],
+          "default": "cover",
+          "info": "Screens 768px and narrower."
+        },
+        {
+          "type": "header",
+          "content": "Content Overlay"
+        },
+        {
+          "type": "paragraph",
+          "content": "Centered vertically on the left side over the video. Leave a field blank to hide it."
+        },
+        {
+          "type": "text",
+          "id": "video_heading",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "video_description",
+          "label": "Description"
+        },
+        {
+          "type": "text",
+          "id": "video_cta_text",
+          "label": "Button text"
+        },
+        {
+          "type": "url",
+          "id": "video_cta_link",
+          "label": "Button link"
+        },
+        {
+          "type": "header",
+          "content": "Desktop Settings"
+        },
+        {
+          "type": "range",
+          "id": "video_content_margin_left_desktop",
+          "label": "Content margin left — Desktop",
+          "min": 0,
+          "max": 200,
+          "step": 4,
+          "unit": "px",
+          "default": 80,
+          "info": "Moves content right to clear the left navigation arrow."
+        },
+        {
+          "type": "header",
+          "content": "Mobile Settings"
+        },
+        {
+          "type": "range",
+          "id": "video_content_padding_top_mobile",
+          "label": "Top spacing / padding — Mobile",
+          "min": 0,
+          "max": 300,
+          "step": 4,
+          "unit": "px",
+          "default": 36
+        },
+        {
+          "type": "range",
+          "id": "video_content_gap_mobile",
+          "label": "Content element gap — Mobile",
+          "min": 4,
+          "max": 40,
+          "step": 2,
+          "unit": "px",
+          "default": 12
+        },
+        {
+          "type": "range",
+          "id": "video_cta_font_size_mobile",
+          "label": "Button font size — Mobile",
+          "min": 10,
+          "max": 26,
+          "step": 1,
+          "unit": "px",
+          "default": 15
+        },
+        {
+          "type": "range",
+          "id": "video_cta_padding_v_mobile",
+          "label": "Button vertical padding — Mobile",
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "unit": "px",
+          "default": 12
+        },
+        {
+          "type": "range",
+          "id": "video_cta_padding_h_mobile",
+          "label": "Button horizontal padding — Mobile",
+          "min": 10,
+          "max": 60,
+          "step": 2,
+          "unit": "px",
+          "default": 24
         }
       ]
     }
