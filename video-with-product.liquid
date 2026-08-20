@@ -74,6 +74,12 @@
   --vwp-glow:         rgba(7, 209, 110, 0.09);
   --vwp-shadow:       0 16px 56px rgba(0, 0, 0, 0.35);
   --vwp-card-shadow:  0 8px 32px rgba(0, 0, 0, 0.28);
+  /* Green glow shadows — a little in dark mode, none in light mode.
+     Kept as always-valid shadow layers (alpha 0 rather than removed)
+     so they can sit in the same comma-separated box-shadow list as
+     --vwp-card-shadow without "none" breaking that syntax. */
+  --vwp-card-glow-shadow: 0 10px 36px rgba(7, 209, 110, 0.12), 0 0 0 1px rgba(7, 209, 110, 0.10);
+  --vwp-btn-glow-shadow:  0 4px 16px rgba(7, 209, 110, 0.28);
   --vwp-gap:          {{ card_gap }}px;
   --vwp-radius:       {{ card_radius }}px;
   --vwp-cols:         {{ columns }};
@@ -90,6 +96,8 @@
   --vwp-glow:         rgba(7, 209, 110, 0.06);
   --vwp-shadow:       0 16px 56px rgba(0, 26, 46, 0.12);
   --vwp-card-shadow:  0 8px 32px rgba(0, 26, 46, 0.10);
+  --vwp-card-glow-shadow: 0 10px 36px rgba(7, 209, 110, 0), 0 0 0 1px rgba(7, 209, 110, 0);
+  --vwp-btn-glow-shadow:  0 4px 16px rgba(7, 209, 110, 0);
 }
 
 /* ── Section root ── */
@@ -211,14 +219,13 @@
   overflow-y: hidden; /* prevent horizontal scrollbar from adding page height */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px; /* minimal room for thin scrollbar thumb */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(7, 209, 110, 0.35) transparent;
+  /* Scroll/drag still works — just hides the visible scrollbar UI,
+     which was showing up as a persistent green bar under the row
+     whenever there were more cards than fit on screen. */
+  scrollbar-width: none;
 }
 
-#{{ section_id }} .vwp-track::-webkit-scrollbar { height: 3px; }
-#{{ section_id }} .vwp-track::-webkit-scrollbar-track { background: transparent; }
-#{{ section_id }} .vwp-track::-webkit-scrollbar-thumb { background: rgba(7, 209, 110, 0.35); border-radius: 4px; }
+#{{ section_id }} .vwp-track::-webkit-scrollbar { display: none; height: 0; }
 
 /* ── Grid mode ── */
 #{{ section_id }}.vwp--grid .vwp-track {
@@ -267,9 +274,7 @@
 
 #{{ section_id }} .vwp-card:hover {
   border-color: rgba(7, 209, 110, 0.45);
-  box-shadow: 0 12px 52px rgba(7, 209, 110, 0.14),
-              0 0 0 1px rgba(7, 209, 110, 0.12),
-              var(--vwp-card-shadow);
+  box-shadow: var(--vwp-card-glow-shadow), var(--vwp-card-shadow);
   transform: translateY(-4px) scale(1.015);
 }
 
@@ -285,9 +290,16 @@
     flex: 0 0 min(78vw, 300px);
     max-width: none; min-width: 0;
   }
-  /* Videos: cap height so they don't dominate on small screens */
+  /* Videos: shorten the aspect ratio so they don't dominate on small
+     screens. This overrides (not fights) the base aspect-ratio — an
+     earlier version paired the 9:16 base ratio with a `max-height`
+     cap here, which are two competing constraints on the same box;
+     browsers (iOS Safari especially) resolved that by shrinking the
+     box's WIDTH instead of its height, leaving it narrower than the
+     card with blank space beside it. A single aspect-ratio value
+     keeps width/height proportional with no conflict. */
   #{{ section_id }} .vwp-media {
-    max-height: 52vw;
+    aspect-ratio: 3 / 4;
   }
 }
 
@@ -304,13 +316,13 @@
     max-width: none; min-width: 0;
   }
   #{{ section_id }} .vwp-media {
-    max-height: 55vw;
+    aspect-ratio: 4 / 5;
   }
 }
 
 @media (max-width: 400px) {
   #{{ section_id }} .vwp-card { flex: 0 0 88vw; }
-  #{{ section_id }} .vwp-media { max-height: 60vw; }
+  #{{ section_id }} .vwp-media { aspect-ratio: 1 / 1; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -602,7 +614,7 @@
 }
 
 #{{ section_id }} .vwp-shop-btn:hover {
-  box-shadow: 0 4px 20px rgba(7, 209, 110, 0.45);
+  box-shadow: var(--vwp-btn-glow-shadow);
   transform: translateY(-2px) !important;
 }
 

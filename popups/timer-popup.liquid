@@ -178,32 +178,31 @@
   z-index: 0;
 }
 
-/* ══ Close button ══ */
+/* ══ Close button — bare icon, no circular bg/border ══ */
 #{{ section_id }} .bl-popup__close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 2.2rem;
-  height: 2.2rem;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 3.2rem;
+  height: 3.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--pop-text) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--pop-text) 14%, transparent);
-  border-radius: 50%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   cursor: pointer;
-  color: color-mix(in srgb, var(--pop-text) 55%, transparent);
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  color: color-mix(in srgb, var(--pop-text) 65%, transparent);
+  transition: color 0.2s ease, transform 0.2s ease;
   padding: 0;
   z-index: 20;
   flex-shrink: 0;
 }
 #{{ section_id }} .bl-popup__close:hover {
-  background: color-mix(in srgb, var(--pop-text) 16%, transparent);
   color: var(--pop-text);
   transform: rotate(90deg);
 }
-#{{ section_id }} .bl-popup__close svg { width: 1rem; height: 1rem; }
+#{{ section_id }} .bl-popup__close svg { width: 2.1rem; height: 2.1rem; }
 
 /* ══ Split layout — image panel on the right, stays visible on every step ══ */
 #{{ section_id }}[data-layout="split"] .bl-popup__card {
@@ -310,18 +309,17 @@
 }
 #{{ section_id }}[data-layout="sheet"] .bl-popup__body { padding-top: 2.4rem; }
 
-/* ══ Displays — stacked, cross-fade between steps ══ */
+/* ══ Displays — stacked, cross-fade between steps ══
+   Only the active display is position:relative (in flow) — the other
+   two steps are position:absolute and don't contribute to height — so
+   this wrapper's height already comes from whichever step is showing.
+   The large fixed min-heights previously here forced extra blank space
+   below shorter steps (especially on mobile); removed so the popup
+   hugs its actual content instead. */
 #{{ section_id }} .bl-popup__displays {
   position: relative;
   width: 100%;
-  min-height: 460px;
   display: flex;
-}
-@media (max-width: 640px) {
-  #{{ section_id }} .bl-popup__displays { min-height: 480px; }
-}
-@media (max-width: 420px) {
-  #{{ section_id }} .bl-popup__displays { min-height: 560px; }
 }
 #{{ section_id }} .bl-popup__display {
   position: absolute;

@@ -1,0 +1,56 @@
+{% assign variant = product.selected_or_first_available_variant %}
+{% assign product_form = product_form-- | append: section.id %}
+
+<product-form>
+  {% if product != blank %}
+    {% form 'product', product, id: product_form %}
+      <input
+        type="hidden"
+        name="id"
+        value="{{ variant.id }}"
+        data-title="{{ product.title }}"
+        data-variant-title="{{ product.selected_or_first_available_variant.title }}"
+      >
+      <input type="hidden" name="quantity" value="1">
+
+      {% if gift_card_feature %}
+        {% render 'giftcard_recipient_form', product: product, section: section %}
+      {% endif %}
+
+      <span class="product_add_error hidden"></span>
+
+      <div class="product_form_btns_wrapper">
+        <button
+          type="submit"
+          class="product_form_submit_button btn"
+          data-available="{{ variant.available }}"
+          {% unless variant and variant.available %}
+            disabled
+          {% endunless %}
+        >
+          {% if variant and variant.available %}
+            <span class="btn_text">{{ 'products.product.add_to_cart' | t }}</span>
+          {% else %}
+            <span class="btn_text">Out of Stock</span>
+          {% endif %}
+
+          <span class="loader hidden">.</span>
+        </button>
+
+        {% if show_dynamic_button %}
+          {{ form | payment_button }}
+        {% endif %}
+      </div>
+    {% endform %}
+  {% else %}
+    <div class="product_form_btns_wrapper">
+      <button
+        type="submit"
+        class="product_form_submit_button btn btn-disabled"
+        disabled
+      >
+        <span class="btn_text">{{ 'Sold Out' }}</span>
+      </button>
+    </div>
+  {% endif %} 
+</product-form>

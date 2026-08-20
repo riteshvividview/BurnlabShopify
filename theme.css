@@ -16,7 +16,8 @@
  * with section-scoped overrides (e.g. hero section uses #id .class).
  */
 
-body, label, input, textarea, select, button {
+body, p, li, span, label,
+input, textarea, select, button {
   font-family: var(--bl-font-secondary);
 }
 
@@ -777,7 +778,8 @@ h1 em, h2 em, h3 em, h4 em, h5 em, h6 em,
 scroll-to-top {
   background: var(--bl-navy) !important;
   border: 1px solid var(--bl-teal);
-  box-shadow: var(--bl-shadow-navy);
+  position: fixed !important;
+  z-index: 10 !important;
 }
 
 scroll-to-top:hover {
@@ -848,4 +850,33 @@ scroll-to-top button svg path {
 @media screen and (max-width: 340px) {
   .bl-section-title { font-size: 2rem; }
   .bl-btn-pill      { width: 100%; justify-content: center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DYNAMIC POLICY PAGE COLORS (Plays nice with BurnLab Toggle)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Use the theme's native text variable so it adapts automatically */
+.shopify-policy__container, 
+.shopify-policy__body, 
+.shopify-policy__title h1, 
+.shopify-policy__container p,
+.shopify-policy__container div,
+.shopify-policy__container li,
+.shopify-policy__container span {
+    color: var(--bl-mode-text) !important;
+    transition: color 0.35s ease; /* Matches your header's toggle speed */
+}
+
+/* 2. Safety Fallbacks if the variable gets isolated outside the wrapper */
+[data-theme="dark"] .shopify-policy__container,
+[data-theme="dark"] .shopify-policy__body,
+[data-theme="dark"] .shopify-policy__container * {
+    color: #eaf4f5 !important; /* Your theme's default light text */
+}
+
+[data-theme="light"] .shopify-policy__container,
+[data-theme="light"] .shopify-policy__body,
+[data-theme="light"] .shopify-policy__container * {
+    color: #001a2e !important; /* Your theme's default dark text */
 }

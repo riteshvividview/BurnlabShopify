@@ -1,4 +1,44 @@
+{%- liquid
+  assign fs = section.settings.font_size | default: 'XXXL'
+  if fs == 'XXXL'
+    assign title_max = 3.6
+  elsif fs == 'h1'
+    assign title_max = 2.9
+  else
+    assign title_max = 2.3
+  endif
+  assign is_body_style = false
+  if section.settings.font_style == 'body'
+    assign is_body_style = true
+  endif
+-%}
+
 {% style %}
+  /* ══ Theme-aware surface tokens — dark set matches the section's
+     previous look 1:1; light set is new. The old flat
+     rgba(255,255,255,.04) card backgrounds were nearly invisible on a
+     light/pale page (a white-tinted overlay on an already-white
+     background barely shows), which was a big part of why this
+     section read as "not optimized". ══ */
+  [data-theme="dark"] #shopify-section-{{ section.id }} .bl-article-section {
+    --bl-art-surface:        rgba(255,255,255,.04);
+    --bl-art-surface-2:      rgba(255,255,255,.06);
+    --bl-art-border:         rgba(255,255,255,.08);
+    --bl-art-border-strong:  rgba(255,255,255,.18);
+    --bl-art-heading-glow:   rgba(7,209,110,.16);
+    --bl-art-hero-border:    rgba(255,255,255,.08);
+    --bl-art-heading-color:  var(--bl-mode-accent, #07d16e);
+  }
+  [data-theme="light"] #shopify-section-{{ section.id }} .bl-article-section {
+    --bl-art-surface:        rgba(0,26,46,.035);
+    --bl-art-surface-2:      rgba(0,26,46,.055);
+    --bl-art-border:         rgba(0,26,46,.09);
+    --bl-art-border-strong:  rgba(0,26,46,.18);
+    --bl-art-heading-glow:   rgba(7,209,110,.10);
+    --bl-art-hero-border:    rgba(0,26,46,.10);
+    --bl-art-heading-color:  var(--bl-teal, #0a5c6e);
+  }
+
   #shopify-section-{{ section.id }} .bl-article-section {
     position: relative;
     overflow: hidden;
@@ -11,7 +51,7 @@
   #shopify-section-{{ section.id }} .bl-article-container {
     max-width: {{ section.settings.container_width }}px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 clamp(16px, 4vw, 24px);
     position: relative;
     z-index: 2;
   }
@@ -30,16 +70,20 @@
     animation: blArticleFloat 8s ease-in-out infinite alternate;
   }
 
+  /* ── HERO — image only, no text/overlay on top of it anymore.
+     The title now lives in its own block right below (see
+     .bl-article-header), so the image stays clean and the title gets
+     real, theme-matched text instead of white-on-photo. ── */
   #shopify-section-{{ section.id }} .bl-article-hero {
     position: relative;
     border-radius: {{ section.settings.image_radius }}px;
     overflow: hidden;
-    margin-bottom: 50px;
-    transform: translateY(40px);
+    margin-bottom: clamp(20px, 3vw, 32px);
+    transform: translateY(30px);
     opacity: 0;
     animation: blArticleReveal .8s cubic-bezier(.16,1,.3,1) forwards;
-    background: rgba(255,255,255,.03);
-    border: 1px solid rgba(255,255,255,.08);
+    background: var(--bl-art-surface);
+    border: 1px solid var(--bl-art-hero-border);
   }
 
   #shopify-section-{{ section.id }} .bl-article-hero img {
@@ -50,92 +94,111 @@
   }
 
   #shopify-section-{{ section.id }} .bl-article-hero:hover img {
-    transform: scale(1.05);
+    transform: scale(1.04);
   }
 
-  #shopify-section-{{ section.id }} .bl-article-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to top,
-      rgba(0,0,0,.72) 0%,
-      rgba(0,0,0,.2) 45%,
-      rgba(0,0,0,0) 100%
-    );
-    z-index: 1;
-  }
-
-  #shopify-section-{{ section.id }} .bl-article-meta {
-    position: absolute;
-    left: 40px;
-    bottom: 40px;
-    z-index: 3;
-    max-width: 850px;
+  /* ── HEADER — meta chips + title, below the image, in flow ── */
+  #shopify-section-{{ section.id }} .bl-article-header {
+    max-width: 76ch;
+    margin: 0 auto clamp(28px, 4vw, 44px);
+    transform: translateY(20px);
+    opacity: 0;
+    animation: blArticleReveal .8s cubic-bezier(.16,1,.3,1) .1s forwards;
   }
 
   #shopify-section-{{ section.id }} .bl-article-author-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 16px;
+    margin-bottom: clamp(14px, 2vw, 20px);
   }
 
   #shopify-section-{{ section.id }} .bl-article-chip {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 999px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.1);
-    backdrop-filter: blur(14px);
-    color: #fff;
-    font-size: 14px;
-    letter-spacing: .03em;
+    background: var(--bl-art-surface);
+    border: 1px solid var(--bl-art-border);
+    color: var(--bl-mode-text);
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(12px, 1.1vw, 13px);
+    font-weight: 600;
+    letter-spacing: .02em;
     transition: all .3s ease;
   }
 
   #shopify-section-{{ section.id }} .bl-article-chip:hover {
     transform: translateY(-2px);
-    background: rgba(255,255,255,.14);
+    background: var(--bl-art-surface-2);
+  }
+
+  /* Small accent dash above the title — a bit of the "highlight"
+     styling the section was missing entirely before. */
+  #shopify-section-{{ section.id }} .bl-article-title-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(11px, 1vw, 13px);
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--bl-art-heading-color);
+  }
+  #shopify-section-{{ section.id }} .bl-article-title-eyebrow::before {
+    content: '';
+    width: 26px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--bl-art-heading-color);
+    flex-shrink: 0;
   }
 
   #shopify-section-{{ section.id }} .bl-article-title h1 {
     margin: 0;
-    color: #fff;
-    line-height: 1;
-    letter-spacing: -.04em;
-    text-shadow: 0 10px 35px rgba(0,0,0,.4);
+    color: var(--bl-mode-text);
+    font-family: {% if is_body_style %}var(--font-secondary, 'DM Sans', sans-serif){% else %}var(--font-primary, 'Archivo Black', sans-serif){% endif %} !important;
+    font-weight: {% if is_body_style %}800{% else %}400{% endif %} !important;
+    font-size: clamp(1.9rem, 4.4vw, {{ title_max }}rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.02em !important;
+    text-shadow: none !important;
+    overflow-wrap: break-word;
   }
 
+  /* Sidebar sits ABOVE the content now, full width, instead of beside
+     it — the side-by-side layout was squeezing the content column
+     narrow enough that embedded videos/iframes (fixed-width by their
+     own markup) overflowed past the edge of that column. */
   #shopify-section-{{ section.id }} .bl-article-body-wrap {
-    display: grid;
-    grid-template-columns: {% if section.settings.enable_sidebar %}1fr 320px{% else %}1fr{% endif %};
-    gap: 40px;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 3vw, 28px);
   }
 
   #shopify-section-{{ section.id }} .bl-article-content {
     position: relative;
-    padding: 50px;
-    border-radius: {{ section.settings.content_radius }}px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    backdrop-filter: blur(18px);
-    overflow: hidden;
   }
 
-  #shopify-section-{{ section.id }} .bl-article-content::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(
-        135deg,
-        rgba(255,255,255,.05),
-        transparent 40%
-      );
-    pointer-events: none;
+  /* ── RTE — the actual article body ──
+     Capped to a comfortable reading width, clamp()-driven font sizes
+     instead of a flat px value, and tighter vertical rhythm (the old
+     28px/42px margins were the bulk of the "unnecessary spacing"). ── */
+  #shopify-section-{{ section.id }} .bl-article-content .rte {
+    position: relative;
+    max-width: 74ch;
+    margin-inline: auto;
+    overflow-x: hidden;
+  }
+
+  /* Catch-all for RTE embeds that ship their own fixed inline width
+     (image/video wrapper divs, figures, tables) — cap everything to
+     the column width instead of letting it push past the edge. */
+  #shopify-section-{{ section.id }} .bl-article-content .rte > * {
+    max-width: 100% !important;
   }
 
   #shopify-section-{{ section.id }} .bl-article-content .rte,
@@ -145,24 +208,107 @@
   }
 
   #shopify-section-{{ section.id }} .bl-article-content .rte p {
-    font-size: {{ section.settings.content_size }}px;
-    line-height: 1.9;
-    margin-bottom: 28px;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(1.45rem, .5vw + 1.3rem, {{ section.settings.content_size }}px);
+    line-height: 1.8;
+    margin-bottom: clamp(16px, 2vw, 22px);
   }
 
+  #shopify-section-{{ section.id }} .bl-article-content .rte p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Headings — the theme's green accent, with a left rule on h2 so
+     section breaks are unmistakable at a glance, exactly the
+     "highlight" treatment that was missing before. */
   #shopify-section-{{ section.id }} .bl-article-content .rte h2,
   #shopify-section-{{ section.id }} .bl-article-content .rte h3,
   #shopify-section-{{ section.id }} .bl-article-content .rte h4 {
+    font-family: var(--font-secondary, 'DM Sans', sans-serif) !important;
+    line-height: 1.25 !important;
+    letter-spacing: -.01em;
+    margin-top: clamp(28px, 3.4vw, 40px);
+    margin-bottom: clamp(12px, 1.6vw, 16px);
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte h2 {
+    color: var(--bl-art-heading-color) !important;
+    font-size: clamp(1.5rem, 1vw + 1.2rem, 1.95rem) !important;
+    font-weight: 800 !important;
+    padding-left: 16px;
+    border-left: 4px solid var(--bl-art-heading-color);
+    text-shadow: 0 0 24px var(--bl-art-heading-glow);
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte h3 {
+    color: var(--bl-art-heading-color) !important;
+    font-size: clamp(1.3rem, .8vw + 1.05rem, 1.6rem) !important;
+    font-weight: 700 !important;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte h4 {
     color: var(--bl-mode-text) !important;
-    margin-top: 42px;
-    margin-bottom: 18px;
-    line-height: 1.2;
+    font-size: clamp(1.15rem, .6vw + 1rem, 1.3rem) !important;
+    font-weight: 700 !important;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte h2:first-child,
+  #shopify-section-{{ section.id }} .bl-article-content .rte h3:first-child {
+    margin-top: 0;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte strong,
+  #shopify-section-{{ section.id }} .bl-article-content .rte b {
+    color: var(--bl-mode-text) !important;
+    font-weight: 700 !important;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte em,
+  #shopify-section-{{ section.id }} .bl-article-content .rte i {
+    color: var(--bl-mode-accent, #07d16e) !important;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte a {
+    color: var(--bl-mode-accent, #07d16e) !important;
+    text-decoration-color: color-mix(in srgb, var(--bl-mode-accent, #07d16e) 45%, transparent) !important;
+    text-underline-offset: 2px;
+    transition: text-decoration-color .2s ease, opacity .2s ease;
+  }
+  #shopify-section-{{ section.id }} .bl-article-content .rte a:hover {
+    text-decoration-color: var(--bl-mode-accent, #07d16e) !important;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte ul,
+  #shopify-section-{{ section.id }} .bl-article-content .rte ol {
+    font-size: clamp(1.45rem, .5vw + 1.3rem, {{ section.settings.content_size }}px);
+    line-height: 1.75;
+    margin-bottom: clamp(16px, 2vw, 22px);
+    padding-left: 1.3em;
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte li::marker {
+    color: var(--bl-mode-accent, #07d16e);
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-content .rte blockquote {
+    margin: clamp(20px, 3vw, 32px) 0;
+    padding: clamp(16px, 2.4vw, 24px) clamp(18px, 2.6vw, 28px);
+    border-left: 3px solid var(--bl-mode-accent, #07d16e);
+    background: var(--bl-art-surface);
+    border-radius: 0 14px 14px 0;
+    font-size: clamp(1.4rem, .6vw + 1.2rem, 1.6rem);
+    font-style: italic;
   }
 
   #shopify-section-{{ section.id }} .bl-article-content .rte img {
-    border-radius: 22px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 18px;
     overflow: hidden;
-    margin: 40px 0;
+    margin: clamp(20px, 3vw, 32px) 0;
     transform: scale(1);
     transition: transform .5s ease;
   }
@@ -171,53 +317,88 @@
     transform: scale(1.02);
   }
 
+  /* Embedded videos (YouTube/Vimeo iframes, native <video>) come out of
+     the RTE with fixed width/height attributes (e.g. width="560"
+     height="315"), which is wider than the reading column on mobile
+     and just gets clipped by the section's overflow:hidden instead of
+     shrinking. Force them to the column width with a locked 16:9
+     aspect ratio so they scale down instead of spilling off-screen. */
+  #shopify-section-{{ section.id }} .bl-article-content .rte iframe,
+  #shopify-section-{{ section.id }} .bl-article-content .rte video,
+  #shopify-section-{{ section.id }} .bl-article-content .rte embed,
+  #shopify-section-{{ section.id }} .bl-article-content .rte object {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+    border: none;
+    border-radius: 18px;
+    margin: clamp(20px, 3vw, 32px) 0;
+  }
+
+  /* Some RTE embeds wrap the iframe in their own fixed-width div
+     (e.g. class="fluid-width-video-wrapper" or a bare <div> with an
+     inline width style) — strip that width constraint too. */
+  #shopify-section-{{ section.id }} .bl-article-content .rte iframe[width],
+  #shopify-section-{{ section.id }} .bl-article-content .rte video[width] {
+    width: 100% !important;
+  }
+
+  /* No longer sticky/side-mounted — it's a row of cards sitting above
+     the content, so it just flows normally with the rest of the page. */
   #shopify-section-{{ section.id }} .bl-article-sidebar {
-    position: sticky;
-    top: 120px;
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    order: -1;
+  }
+
+  #shopify-section-{{ section.id }} .bl-article-sidebar .bl-sidebar-card {
+    flex: 1 1 220px;
   }
 
   #shopify-section-{{ section.id }} .bl-sidebar-card {
-    padding: 28px;
-    border-radius: 24px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    backdrop-filter: blur(18px);
-    transition: all .4s ease;
-  }
-
-  #shopify-section-{{ section.id }} .bl-sidebar-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(255,255,255,.16);
+    padding: 0 0 clamp(14px, 2vw, 18px);
+    border-bottom: 1px solid var(--bl-art-border);
   }
 
   #shopify-section-{{ section.id }} .bl-sidebar-card h4 {
-    margin-top: 0;
-    margin-bottom: 18px;
+    margin: 0 0 10px;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(1rem, .3vw + .9rem, 1.1rem);
+    font-weight: 800;
+    color: var(--bl-art-heading-color);
+  }
+
+  #shopify-section-{{ section.id }} .bl-sidebar-card p {
+    margin: 0;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.95rem, .2vw + .88rem, 1rem);
     color: var(--bl-mode-text);
   }
 
   #shopify-section-{{ section.id }} .bl-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   #shopify-section-{{ section.id }} .bl-tags span {
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 999px;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.08);
+    background: var(--bl-art-surface-2);
+    border: 1px solid var(--bl-art-border);
     color: var(--bl-mode-text);
-    font-size: 13px;
-    transition: all .3s ease;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.78rem, .15vw + .74rem, .82rem);
+    transition: all .25s ease;
   }
 
   #shopify-section-{{ section.id }} .bl-tags span:hover {
     transform: translateY(-2px);
-    background: rgba(255,255,255,.1);
+    background: var(--bl-art-border-strong);
   }
 
   #shopify-section-{{ section.id }} .bl-progress {
@@ -226,54 +407,57 @@
     left: 0;
     width: 0%;
     height: {{ section.settings.progress_height }}px;
-    background: linear-gradient(
-      90deg,
-      {{ section.settings.progress_color_1 }},
-      {{ section.settings.progress_color_2 }}
-    );
+    background: linear-gradient(90deg, {{ section.settings.progress_color_1 }}, {{ section.settings.progress_color_2 }});
     z-index: 999;
     transition: width .1s linear;
   }
 
   #shopify-section-{{ section.id }} .bl-comments {
-    margin-top: 70px;
+    margin-top: clamp(44px, 6vw, 60px);
   }
 
   #shopify-section-{{ section.id }} .bl-comments-grid {
     display: grid;
-    gap: 24px;
+    gap: 16px;
   }
 
   #shopify-section-{{ section.id }} .bl-comment {
-    padding: 28px;
-    border-radius: 22px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    transition: all .35s ease;
+    padding: clamp(16px, 2.2vw, 22px) 0;
+    border-bottom: 1px solid var(--bl-art-border);
   }
 
-  #shopify-section-{{ section.id }} .bl-comment:hover {
-    transform: translateY(-3px);
+  #shopify-section-{{ section.id }} .bl-comments-grid .bl-comment:last-child {
+    border-bottom: none;
   }
 
   #shopify-section-{{ section.id }} .bl-comment * {
     color: var(--bl-mode-text);
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.95rem, .2vw + .88rem, 1rem);
   }
 
   #shopify-section-{{ section.id }} .bl-comment-meta {
     display: flex;
-    gap: 14px;
-    margin-top: 18px;
-    opacity: .7;
-    font-size: 14px;
+    gap: 12px;
+    margin-top: 14px;
+    opacity: .65;
+    font-size: clamp(.8rem, .15vw + .76rem, .85rem) !important;
   }
 
   #shopify-section-{{ section.id }} .bl-comment-form {
-    margin-top: 60px;
-    padding: 40px;
-    border-radius: 28px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
+    margin-top: clamp(28px, 4vw, 40px);
+    padding: clamp(22px, 3.4vw, 32px);
+    border-radius: 24px;
+    background: var(--bl-art-surface);
+    border: 1px solid var(--bl-art-border);
+  }
+
+  #shopify-section-{{ section.id }} .bl-comment-form h3 {
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(1.2rem, .8vw + 1rem, 1.5rem);
+    font-weight: 800;
+    color: var(--bl-mode-text);
+    margin: 0 0 20px;
   }
 
   #shopify-section-{{ section.id }} .bl-comment-form * {
@@ -282,8 +466,8 @@
 
   #shopify-section-{{ section.id }} .bl-form-grid {
     display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 18px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 
   #shopify-section-{{ section.id }} .bl-input-group {
@@ -297,113 +481,109 @@
   #shopify-section-{{ section.id }} .bl-input-group input,
   #shopify-section-{{ section.id }} .bl-input-group textarea {
     width: 100%;
-    padding: 20px;
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,.08);
-    background: rgba(255,255,255,.03);
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--bl-art-border);
+    background: var(--bl-art-surface-2);
     color: var(--bl-mode-text);
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.95rem, .2vw + .88rem, 1rem);
     outline: none;
-    transition: all .35s ease;
+    transition: all .3s ease;
+  }
+
+  #shopify-section-{{ section.id }} .bl-input-group input::placeholder,
+  #shopify-section-{{ section.id }} .bl-input-group textarea::placeholder {
+    color: var(--bl-mode-text);
+    opacity: .45;
   }
 
   #shopify-section-{{ section.id }} .bl-input-group input:focus,
   #shopify-section-{{ section.id }} .bl-input-group textarea:focus {
     border-color: {{ section.settings.accent_color }};
-    box-shadow: 0 0 0 4px rgba(0,255,170,.08);
+    box-shadow: 0 0 0 3px color-mix(in srgb, {{ section.settings.accent_color }} 18%, transparent);
   }
 
   #shopify-section-{{ section.id }} .bl-submit-btn {
-    margin-top: 22px;
+    margin-top: 18px;
     border: none;
     cursor: pointer;
-    padding: 18px 30px;
+    padding: 14px 26px;
     border-radius: 999px;
-    background: linear-gradient(
-      135deg,
-      {{ section.settings.button_color_1 }},
-      {{ section.settings.button_color_2 }}
-    );
-    color: #fff;
-    font-weight: 600;
-    transition: all .35s ease;
+    background: linear-gradient(135deg, {{ section.settings.button_color_1 }}, {{ section.settings.button_color_2 }});
+    color: #001a2e;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.95rem, .2vw + .88rem, 1rem);
+    font-weight: 700;
+    transition: all .3s ease;
   }
 
   #shopify-section-{{ section.id }} .bl-submit-btn:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 32px rgba(0,0,0,.2);
+  }
+
+  #shopify-section-{{ section.id }} .moderated_comment_text {
+    margin-top: 14px;
+    font-family: var(--font-secondary, 'DM Sans', sans-serif);
+    font-size: clamp(.8rem, .15vw + .76rem, .85rem);
+    color: var(--bl-mode-text);
+    opacity: .65;
   }
 
   @keyframes blArticleReveal {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes blArticleFloat {
-    from {
-      transform: translateY(0px);
+    from { transform: translateY(0px); }
+    to   { transform: translateY(40px); }
+  }
+
+  /* ── DESKTOP LAYOUT ADJUSTMENT ──
+     Header (chips + title) stays reading-width and left-aligned, but
+     on wide screens with the sidebar enabled we let the hero image run
+     the full container width while the header/content column narrows
+     slightly to keep line-length comfortable next to the sidebar. */
+  @media screen and (min-width: 991px) {
+    #shopify-section-{{ section.id }} .bl-article-header {
+      max-width: none;
+      margin-inline: 0;
     }
-    to {
-      transform: translateY(40px);
+    #shopify-section-{{ section.id }} .bl-article-title h1 {
+      max-width: 80%;
     }
   }
 
-  @media screen and (max-width: 990px) {
-    #shopify-section-{{ section.id }} .bl-article-body-wrap {
-      grid-template-columns: 1fr;
-    }
-
-    #shopify-section-{{ section.id }} .bl-article-sidebar {
-      position: relative;
-      top: auto;
-    }
-  }
 
   @media screen and (max-width: 768px) {
     #shopify-section-{{ section.id }} .bl-article-section {
       padding-top: {{ section.settings.mob_top_spacing }}px;
       padding-bottom: {{ section.settings.mob_bottom_spacing }}px;
     }
-
-    #shopify-section-{{ section.id }} .bl-article-meta {
-      left: 24px;
-      right: 24px;
-      bottom: 24px;
-    }
-
-    #shopify-section-{{ section.id }} .bl-article-content {
-      padding: 28px;
-    }
-
     #shopify-section-{{ section.id }} .bl-form-grid {
       grid-template-columns: 1fr;
     }
-
     #shopify-section-{{ section.id }} .bl-input-group.full {
       grid-column: span 1;
     }
-
     #shopify-section-{{ section.id }} .bl-comment-form {
-      padding: 24px;
+      padding: clamp(18px, 5vw, 24px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #shopify-section-{{ section.id }} .bl-article-hero,
+    #shopify-section-{{ section.id }} .bl-article-header {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 
   /* THEME TOGGLE SUPPORT */
-
   #shopify-section-{{ section.id }} * {
-    transition:
-      background .35s ease,
-      color .35s ease,
-      border-color .35s ease;
-  }
-
-  [data-theme="dark"] #shopify-section-{{ section.id }} .bl-article-section * {
-    color: #eaf4f5;
-  }
-
-  [data-theme="light"] #shopify-section-{{ section.id }} .bl-article-section * {
-    color: #001a2e;
+    transition: background .35s ease, color .35s ease, border-color .35s ease;
   }
 {% endstyle %}
 
@@ -417,36 +597,30 @@
     {% if article.image != blank %}
       <div class="bl-article-hero article_img--{{ section.settings.img_height }}">
         {{ article.image | image_url: width: 2200 | image_tag }}
-
-        <div class="bl-article-overlay"></div>
-
-        <div class="bl-article-meta">
-
-          <div class="bl-article-author-row">
-
-            {% if section.settings.show_author %}
-              <div class="bl-article-chip">
-                {{ article.author }}
-              </div>
-            {% endif %}
-
-            {% if section.settings.show_date %}
-              <div class="bl-article-chip">
-                {{ article.published_at | date: '%B %d, %Y' }}
-              </div>
-            {% endif %}
-
-          </div>
-
-          <div class="bl-article-title">
-            <h1 class="{{ section.settings.font_size }}{% if section.settings.font_style == 'body' %} body_style{% endif %}">
-              {{ article.title }}
-            </h1>
-          </div>
-
-        </div>
       </div>
     {% endif %}
+
+    <div class="bl-article-header">
+
+      <div class="bl-article-author-row">
+        {% if section.settings.show_author %}
+          <div class="bl-article-chip">{{ article.author }}</div>
+        {% endif %}
+
+        {% if section.settings.show_date %}
+          <div class="bl-article-chip">{{ article.published_at | date: '%B %d, %Y' }}</div>
+        {% endif %}
+      </div>
+
+      <div class="bl-article-title-eyebrow">{{ blog.title | default: 'Burnlab Journal' }}</div>
+
+      <div class="bl-article-title">
+        <h1 class="{{ section.settings.font_size }}{% if is_body_style %} body_style{% endif %}">
+          {{ article.title }}
+        </h1>
+      </div>
+
+    </div>
 
     <div class="bl-article-body-wrap">
 

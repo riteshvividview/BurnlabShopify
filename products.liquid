@@ -118,7 +118,6 @@
 {%- assign _has_addl_info = false -%}
 {%- if _ai_variant.barcode != blank
   or _ai_variant.inventory_management == 'shopify'
-  or product.type != blank
 -%}
   {%- assign _has_addl_info = true -%}
 {%- endif -%}
@@ -141,9 +140,6 @@
           {%- endif -%}
         </td>
       </tr>
-    {%- endif -%}
-    {%- if product.type != blank -%}
-      <tr><th scope="row">Product Type</th><td>{{ product.type }}</td></tr>
     {%- endif -%}
   </tbody>
 </table>
@@ -229,6 +225,22 @@
 #{{ section_id }} .bl-pd-crumbs a:hover { color: var(--bl-pd-accent) !important; }
 #{{ section_id }} .bl-pd-crumbs span[aria-current] { color: var(--bl-pd-text) !important; opacity: 0.8; }
 #{{ section_id }} .bl-pd-crumbs-sep { color: color-mix(in srgb, var(--bl-pd-accent) 45%, var(--bl-pd-text)) !important; }
+
+{% if enable_sticky and sticky_atc_position == 'top' %}
+/* The sticky ATC bar (position:fixed, pinned just below the header)
+   renders in that same "right under the header" zone the breadcrumb
+   naturally sits in — so once it's visible it was covering the
+   breadcrumb outright. Push the breadcrumb down by roughly the bar's
+   own height so there's always clear room for both. */
+#{{ section_id }} .bl-pd-crumbs {
+  margin-top: 4.6rem;
+}
+@media (max-width: 640px) {
+  #{{ section_id }} .bl-pd-crumbs {
+    margin-top: 5.2rem;
+  }
+}
+{% endif %}
 
 /* ── Main grid ─── */
 #{{ section_id }} .bl-pd-grid {
@@ -327,16 +339,38 @@
   width: 3.8rem; height: 3.8rem; border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(0,24,40,0.6); backdrop-filter: blur(10px);
-  color: var(--bl-pd-text); cursor: pointer;
+  color: #ffffff; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.25s ease, transform 0.2s ease;
   will-change: transform;
 }
+#{{ section_id }} .bl-pd-zoom[hidden] { display: none; }
 #{{ section_id }} .bl-pd-zoom:hover {
   background: rgba(7,209,110,0.22); transform: scale(1.1);
 }
 #{{ section_id }} .bl-pd-zoom svg { width: 1.6rem; height: 1.6rem; pointer-events: none; }
 {% endif %}
+
+/* ── Video mute/unmute button — mirrors the zoom button, top-left ─── */
+#{{ section_id }} .bl-pd-mute {
+  position: absolute; top: 1.2rem; left: 1.2rem; z-index: 5;
+  width: 3.8rem; height: 3.8rem; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,24,40,0.6); backdrop-filter: blur(10px);
+  color: #ffffff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.25s ease, transform 0.2s ease;
+  will-change: transform;
+}
+#{{ section_id }} .bl-pd-mute[hidden] { display: none; }
+#{{ section_id }} .bl-pd-mute:hover {
+  background: rgba(7,209,110,0.22); transform: scale(1.1);
+}
+#{{ section_id }} .bl-pd-mute svg { width: 1.6rem; height: 1.6rem; pointer-events: none; }
+#{{ section_id }} .bl-pd-mute .bl-pd-mute-on  { display: none; }
+#{{ section_id }} .bl-pd-mute .bl-pd-mute-off { display: flex; }
+#{{ section_id }} .bl-pd-mute.is-unmuted .bl-pd-mute-on  { display: flex; }
+#{{ section_id }} .bl-pd-mute.is-unmuted .bl-pd-mute-off { display: none; }
 
 /* ── Prev/next arrows (mobile/touch) ─── */
 #{{ section_id }} .bl-pd-arr {
@@ -947,6 +981,15 @@
   font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
   font-size: clamp(1.1rem, 1.2vw, 1.3rem); font-weight: 700;
   color: var(--bl-pd-text); white-space: nowrap;
+  text-decoration: none !important;
+}
+#{{ section_id }} a.bl-pd-promo-badge {
+  cursor: pointer;
+  transition: border-color 0.22s ease, transform 0.22s ease;
+}
+#{{ section_id }} a.bl-pd-promo-badge:hover {
+  border-color: var(--bl-pd-accent);
+  transform: translateY(-2px);
 }
 #{{ section_id }} .bl-pd-promo-icon { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: #ff3d68; }
 #{{ section_id }} .bl-pd-promo-icon--star { color: #07d16e; }
@@ -1402,7 +1445,6 @@
 }
 #bl-satc-{{ section.id }} .bl-satc-select:hover,
 #bl-satc-{{ section.id }} .bl-satc-select:focus { border-color: #07d16e; outline: none; }
-#bl-satc-{{ section.id }} .bl-satc-select option:disabled { color: rgba(234,244,245,0.4); }
 [data-theme="light"] #bl-satc-{{ section.id }} .bl-satc-select option { color: #001a2e; }
 #bl-satc-{{ section.id }} .bl-satc-btn {
   padding: 0.9rem 2.4rem; background: #07d16e; color: #001a2e;
@@ -1707,13 +1749,18 @@
 #{{ section_id }} .bl-pd-acc-panel p { margin-bottom: 0.7em; }
 #{{ section_id }} .bl-pd-acc-panel p:last-child { margin-bottom: 0; }
 #{{ section_id }} .bl-pd-acc-panel a { color: var(--bl-pd-desc-accent) !important; }
-/* Shrink oversized marketing images inside the description text so they don't dominate the panel */
+/* Description images: keep each image's own natural aspect ratio
+   (portrait stays tall, landscape stays wide) — only the width is
+   normalized via clamp() so they scale consistently across viewports.
+   Left-aligned with breathing room above/below instead of centered
+   and crowding the surrounding text. */
 #{{ section_id }} .bl-pd-acc-panel img {
-  max-width: 480px !important; width: 100% !important; height: auto !important;
-  display: block !important; margin: 1.2rem auto !important;
-}
-@media (max-width: 600px) {
-  #{{ section_id }} .bl-pd-acc-panel img { max-width: 100% !important; }
+  width: clamp(200px, 45vw, 320px) !important;
+  height: auto !important;
+  border-radius: var(--bl-pd-radius, 12px) !important;
+  display: block !important;
+  margin: 2rem 0 !important;
+  box-shadow: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   #{{ section_id }} .bl-pd-acc-chevron svg { transition: none; }
@@ -2177,6 +2224,23 @@
                 </button>
               {%- endif -%}
 
+              <button class="bl-pd-mute" id="bl-pd-mute-{{ section.id }}" aria-label="Unmute video" type="button" hidden>
+                <span class="bl-pd-mute-off" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="4,9 8,9 12,5 12,19 8,15 4,15"/>
+                    <line x1="16" y1="9" x2="21" y2="14"/>
+                    <line x1="21" y1="9" x2="16" y2="14"/>
+                  </svg>
+                </span>
+                <span class="bl-pd-mute-on" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="4,9 8,9 12,5 12,19 8,15 4,15"/>
+                    <path d="M16 8.5a4.5 4.5 0 0 1 0 7"/>
+                    <path d="M18.5 6a8 8 0 0 1 0 12"/>
+                  </svg>
+                </span>
+              </button>
+
               <button class="bl-pd-arr bl-pd-arr--p" aria-label="Previous image" type="button">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15,18 9,12 15,6"/></svg>
               </button>
@@ -2286,7 +2350,6 @@
                   {%- assign _helper_clr_dark  = block.settings.helper_text_color -%}
                   {%- assign _helper_clr_light = block.settings.helper_text_color_light -%}
                   {%- assign _price_gap = block.settings.price_gap | default: 16 -%}
-                  {%- assign _hide_zeros = block.settings.hide_trailing_zeros -%}
                   {%- assign _shipping_label = block.settings.shipping_label -%}
                   {%- if block.settings.price_font == 'secondary' -%}
                     {%- assign _price_font_css = "var(--bl-font-secondary, 'DM Sans', sans-serif)" -%}
@@ -2313,11 +2376,11 @@
                     {{ block.shopify_attributes }}>
                     <div class="bl-pd-price-row">
                       <span class="bl-pd-price-current">
-                        {%- if _hide_zeros -%}{{ current_variant.price | money_without_trailing_zeros }}{%- else -%}{{ current_variant.price | money }}{%- endif -%}
+                        {{ current_variant.price | money_without_trailing_zeros }}
                       </span>
                       {%- if current_variant.compare_at_price > current_variant.price -%}
                         <span class="bl-pd-price-compare">
-                          {%- if _hide_zeros -%}{{ current_variant.compare_at_price | money_without_trailing_zeros }}{%- else -%}{{ current_variant.compare_at_price | money }}{%- endif -%}
+                          {{ current_variant.compare_at_price | money_without_trailing_zeros }}
                         </span>
                         {%- assign _off_pct = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round -%}
                         <span class="bl-pd-price-badge">-{{ _off_pct }}% OFF</span>
@@ -2425,11 +2488,20 @@
                         </div>
                       {%- endif -%}
                       {%- if _rating_ok -%}
-                        <div class="bl-pd-promo-badge bl-pd-promo-badge--reviews">
+                        {%- comment -%}
+                          Judge.me hosts a per-product reviews page at this fixed URL
+                          pattern, keyed off the store domain + product handle — no API
+                          call needed, it's a direct storefront link Judge.me serves for
+                          every synced product.
+                        {%- endcomment -%}
+                        <a class="bl-pd-promo-badge bl-pd-promo-badge--reviews"
+                          href="https://judge.me/reviews/stores/{{ shop.domain }}/products/{{ product.handle }}"
+                          target="_blank" rel="noopener noreferrer"
+                          aria-label="View {{ product.title | escape }} reviews on Judge.me">
                           <svg class="bl-pd-promo-icon bl-pd-promo-icon--star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                           <span class="bl-pd-promo-rating">{{ _rating_display }}</span>
                           <span class="bl-pd-promo-count">({{ _count_display }} Reviews)</span>
-                        </div>
+                        </a>
                       {%- endif -%}
                     </div>
                   {%- endif -%}
@@ -2491,7 +2563,7 @@
                   {%- endif -%}
 
                 {%- when 'variant-picker' -%}
-                  <div class="bl-pd-block bl-pd-vars" id="Variant_picker-{{ section.id }}" data-label-color="#eaf4f5" {{ block.shopify_attributes }}>
+                  <div class="bl-pd-block bl-pd-vars" id="Variant_picker-{{ section.id }}" {{ block.shopify_attributes }}>
                     {%- render 'variant-picker', product: product, picker_type: 'button', swatch_shape: settings.swatch_shape -%}
                   </div>
 
@@ -2529,7 +2601,15 @@
                           assign _inv_clr   = _low_clr
                           assign _inv_bg    = 'rgba(232,160,0,0.08)'
                           assign _inv_bdr   = 'rgba(232,160,0,0.35)'
+                        elsif _cv.inventory_management != blank
+                          assign _inv_label = 'Stock : ' | append: _cv.inventory_quantity | append: ' Units'
+                          assign _inv_state = 'in'
+                          assign _inv_clr   = _in_clr
+                          assign _inv_bg    = 'rgba(7,209,110,0.08)'
+                          assign _inv_bdr   = 'rgba(7,209,110,0.35)'
                         else
+                          # Inventory isn't tracked for this variant, so there's
+                          # no quantity to show — fall back to a plain label.
                           assign _inv_label = 'In Stock'
                           assign _inv_state = 'in'
                           assign _inv_clr   = _in_clr
@@ -3286,20 +3366,19 @@
     {%- endif -%}
     <div class="bl-satc-meta">
       <div class="bl-satc-title">{{ product.title }}</div>
-      <div class="bl-satc-price" data-sticky-price>{{ product.selected_or_first_available_variant.price | money }}</div>
+      <div class="bl-satc-price" data-sticky-price>{{ product.selected_or_first_available_variant.price | money_without_trailing_zeros }}</div>
     </div>
     {%- if product.has_only_default_variant == false -%}
     <select class="bl-satc-select" id="bl-satc-select-{{ section.id }}" aria-label="Select {{ product.title | escape }} option">
       {%- for variant in product.variants -%}
         <option
           value="{{ variant.id }}"
-          data-price="{{ variant.price | money }}"
+          data-price="{{ variant.price | money_without_trailing_zeros }}"
           data-available="{{ variant.available }}"
           data-options="{{ variant.options | join: '|||' }}"
           {% if variant.id == product.selected_or_first_available_variant.id %}selected{% endif %}
-          {% unless variant.available %}disabled{% endunless %}
         >
-          {{ variant.title }}{% unless variant.available %} - {{ 'products.product.sold_out' | t }}{% endunless %}
+          {{ variant.title }}{% unless variant.available %} - Out of Stock{% endunless %}
         </option>
       {%- endfor -%}
     </select>
@@ -3313,7 +3392,7 @@
       {%- if product.selected_or_first_available_variant.available -%}
         {{ 'products.product.add_to_cart' | t }}
       {%- else -%}
-        {{ 'products.product.sold_out' | t }}
+        Out of Stock
       {%- endif -%}
     </button>
   </div>
@@ -3363,20 +3442,21 @@
     }
   }
 
-  var scrollTicking = false;
-  function onScrollThrottled() {
-    if (scrollTicking) return;
-    scrollTicking = true;
-    requestAnimationFrame(function () {
-      setHeaderHeightVar();
-      scrollTicking = false;
-    });
-  }
-
+  /* Deliberately NOT recalculated on scroll. Once a sticky/fixed header
+     is "stuck", its rendered height is constant — scrolling doesn't
+     change it. Recomputing via getBoundingClientRect() on every scroll
+     frame was not just wasted work: on iOS Safari, the address bar
+     collapsing/expanding mid-scroll makes viewport geometry briefly
+     unstable, so this was occasionally writing a transient wrong value
+     to --header-height. Since the sticky ATC bar's `top` reads that var
+     directly with no transition, any bad value showed up as an instant,
+     visible jump/glitch in the bar's position while scrolling on iPhone.
+     resize / load / ResizeObserver already cover every legitimate case
+     the header's height can actually change (viewport resize, orientation
+     change, announcement bar toggling). */
   setHeaderHeightVar();
   window.addEventListener('resize', setHeaderHeightVar, { passive: true });
   window.addEventListener('load', setHeaderHeightVar);
-  window.addEventListener('scroll', onScrollThrottled, { passive: true });
 
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(setHeaderHeightVar);
@@ -3420,18 +3500,64 @@ document.addEventListener('DOMContentLoaded', function () {
     return thumbs.find(function (t) { return t.dataset.mediaId === mediaId; }) || null;
   }
 
+  // ── Video mute/unmute ──
+  // Videos ship muted in the HTML (audio off by default) so the
+  // browser's native autoplay is never blocked. Switching away from a
+  // video re-mutes it, so it never keeps playing audio in the
+  // background once it's no longer on screen — only the manual mute
+  // button ever turns audio on.
+  var muteBtn = sec.querySelector('#bl-pd-mute-{{ section.id }}');
+  var zoomBtn = sec.querySelector('#bl-pd-zoom-{{ section.id }}');
+
+  function updateZoomButton() {
+    if (!zoomBtn) return;
+    var activeSlide = slides[cur];
+    zoomBtn.hidden = !!(activeSlide && activeSlide.querySelector('video'));
+  }
+
+  function updateMuteButton() {
+    if (!muteBtn) return;
+    var activeVideo = slides[cur] && slides[cur].querySelector('video');
+    if (!activeVideo) {
+      muteBtn.hidden = true;
+      return;
+    }
+    muteBtn.hidden = false;
+    muteBtn.classList.toggle('is-unmuted', !activeVideo.muted);
+    muteBtn.setAttribute('aria-label', activeVideo.muted ? 'Unmute video' : 'Mute video');
+  }
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var activeVideo = slides[cur] && slides[cur].querySelector('video');
+      if (!activeVideo) return;
+      activeVideo.muted = !activeVideo.muted;
+      updateMuteButton();
+    });
+  }
+
+  updateMuteButton();
+  updateZoomButton();
+
   function goTo(idx) {
     var newIdx = (idx + slides.length) % slides.length;
+    var outgoingVideo = slides[cur] && slides[cur].querySelector('video');
+    if (outgoingVideo) outgoingVideo.muted = true;
     if (slides[cur]) slides[cur].classList.remove('is-active');
     var prevThumb = findThumbForSlide(slides[cur]);
     if (prevThumb) prevThumb.classList.remove('is-active');
     cur = newIdx;
     if (slides[cur]) slides[cur].classList.add('is-active');
+    var incomingVideo = slides[cur] && slides[cur].querySelector('video');
+    if (incomingVideo) incomingVideo.muted = true;
     var nextThumb = findThumbForSlide(slides[cur]);
     if (nextThumb) {
       nextThumb.classList.add('is-active');
       nextThumb.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
     }
+    updateMuteButton();
+    updateZoomButton();
     {% if enable_zoom %}if (typeof updateLbSrc === 'function') updateLbSrc();{% endif %}
   }
 
@@ -3505,6 +3631,46 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // ── Color swatch fallback ──────────────────────────────────────────
+  // Shopify only renders an actual color for a swatch when the merchant
+  // has configured that specific option value under Settings → Product
+  // options in Admin. Any value without one falls back to a flat gray
+  // circle (variant-picker.liquid marks it with .bl-swatch-fallback +
+  // data-swatch-name). Rather than leave it gray, try to resolve the
+  // option value's own text as real CSS color(s) — the browser's CSS
+  // parser already recognizes ~140 named colors (e.g. "Black", "Navy",
+  // "Maroon"), so a value like "Black Blue" becomes a genuine two-tone
+  // split swatch instead of solid gray, with zero admin config needed.
+  (function () {
+    var fallbackEls = sec.querySelectorAll('.bl-swatch-fallback[data-swatch-name]');
+    if (!fallbackEls.length) return;
+
+    function resolveCssColor(word) {
+      var probe = document.createElement('div');
+      probe.style.color = '';
+      probe.style.color = word;
+      return probe.style.color !== '' ? word : null;
+    }
+
+    fallbackEls.forEach(function (el) {
+      var raw = el.getAttribute('data-swatch-name') || '';
+      var words = raw.trim().split(/\s+/);
+      var colors = [];
+      words.forEach(function (w) {
+        var c = resolveCssColor(w);
+        if (c) colors.push(c);
+      });
+      if (colors.length === 1) {
+        el.style.background = colors[0];
+        el.style.opacity = '';
+      } else if (colors.length >= 2) {
+        el.style.background = 'linear-gradient(135deg, ' + colors[0] + ' 50%, ' + colors[1] + ' 50%)';
+        el.style.opacity = '';
+      }
+      // No recognizable color word at all — leave the neutral gray placeholder.
+    });
+  })();
+
   // ── Variant change — single source of truth ──
   // Nothing in this theme ever actually dispatches a "variant:changed" DOM
   // event (checked — there's no dispatchEvent call for it anywhere), so
@@ -3515,7 +3681,37 @@ document.addEventListener('DOMContentLoaded', function () {
   // sticky bar, hidden id fields) from that one place. The sticky bar's own
   // select reuses the exact same function, so both controls always agree.
 
-  var PRODUCT_VARIANTS_ALL = {{ product.variants | json }};
+  // Built via direct Liquid property access (not `product.variants | json`)
+  // because Shopify's `| json` filter on a variant object silently strips
+  // inventory_quantity/inventory_policy — confirmed on this store's own
+  // data-selected-variant script tag, which has no inventory_quantity key
+  // at all. That's what caused the inventory badge to read "undefined
+  // Units" until something else re-rendered it with real server data.
+  var PRODUCT_VARIANTS_ALL = [
+    {%- for v in product.variants -%}
+    {
+      id: {{ v.id | json }},
+      title: {{ v.title | json }},
+      available: {{ v.available | json }},
+      options: {{ v.options | json }},
+      price: {{ v.price | json }},
+      compare_at_price: {{ v.compare_at_price | json }},
+      inventory_management: {{ v.inventory_management | json }},
+      inventory_quantity: {{ v.inventory_quantity | json }},
+      inventory_policy: {{ v.inventory_policy | json }},
+      featured_media: {% if v.featured_media %}{ id: {{ v.featured_media.id | json }} }{% else %}null{% endif %}
+    }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ];
+
+  // Always renders a comma-grouped whole-number amount (no decimals), to
+  // match the SSR price block below (which uses money_without_trailing_zeros
+  // unconditionally) — avoids the old bug where the client update briefly
+  // showed a raw "11999.00" before a later re-render fixed the formatting.
+  function formatMoneyNoDecimals(cents) {
+    var num = Math.round(cents / 100);
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
 
   function findVariantByOptions(values) {
     return PRODUCT_VARIANTS_ALL.find(function (v) {
@@ -3540,10 +3736,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // widgets, like the dynamic checkout button, watch the attribute via
   // MutationObserver rather than re-reading .value), then dispatches
   // input/change so anything listening for user-driven edits picks it up.
-  function setVariantIdField(field, id) {
+  function setVariantIdField(field, id, available) {
     if (!field) return;
     field.value = id;
     field.setAttribute('value', id);
+    field.disabled = available === false;
     field.dispatchEvent(new Event('input', { bubbles: true }));
     field.dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -3579,6 +3776,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (v.inventory_management && v.inventory_quantity <= thresh) {
           label = 'Only ' + v.inventory_quantity + ' left';
           clr = lowClr; bg = 'rgba(232,160,0,0.08)'; bdr = 'rgba(232,160,0,0.35)'; state = 'low';
+        } else if (v.inventory_management) {
+          label = 'Stock : ' + v.inventory_quantity + ' Units';
+          clr = inClr; bg = 'rgba(7,209,110,0.08)'; bdr = 'rgba(7,209,110,0.35)'; state = 'in';
         } else {
           label = 'In Stock';
           clr = inClr; bg = 'rgba(7,209,110,0.08)'; bdr = 'rgba(7,209,110,0.35)'; state = 'in';
@@ -3595,6 +3795,19 @@ document.addEventListener('DOMContentLoaded', function () {
       if (text) text.textContent = label;
     }
 
+    // Variant picker's own "Size: 24KG (Single)" header text — Shopify's
+    // native variant-picker component re-renders this itself, but only
+    // after a delayed section re-fetch triggered by the main picker (the
+    // 1-2s lag), and it never reacts to the sticky bar's select at all
+    // (that control is outside its own custom element). Set it directly,
+    // instantly, from both change sources instead of relying on that.
+    if (v.options) {
+      var optHeaderSpans = sec.querySelectorAll('.bl-pd-vars .main_product_options_header h4 span');
+      optHeaderSpans.forEach(function (span, i) {
+        if (v.options[i] !== undefined) span.textContent = v.options[i];
+      });
+    }
+
     // Price block — fully custom, not Shopify's native price snippet, so
     // nothing updates it unless we do it here explicitly.
     var priceWrap = document.getElementById('Price-{{ section.id }}');
@@ -3605,15 +3818,15 @@ document.addEventListener('DOMContentLoaded', function () {
       var pRow     = priceWrap.querySelector('.bl-pd-price-row');
 
       if (pCurEl) {
-        pCurEl.textContent = '{{ product.selected_or_first_available_variant.price | money }}'.replace(
-          /[\d,]+(\.\d+)?/, (v.price / 100).toFixed(2)
+        pCurEl.textContent = '{{ product.selected_or_first_available_variant.price | money_without_trailing_zeros }}'.replace(
+          /[\d,]+(\.\d+)?/, formatMoneyNoDecimals(v.price)
         );
       }
 
       var hasCompare = v.compare_at_price && v.compare_at_price > v.price;
       if (hasCompare) {
-        var cmpText = '{{ product.selected_or_first_available_variant.compare_at_price | default: 100 | money }}'.replace(
-          /[\d,]+(\.\d+)?/, (v.compare_at_price / 100).toFixed(2)
+        var cmpText = '{{ product.selected_or_first_available_variant.compare_at_price | default: 100 | money_without_trailing_zeros }}'.replace(
+          /[\d,]+(\.\d+)?/, formatMoneyNoDecimals(v.compare_at_price)
         );
         if (!pCmpEl && pRow) {
           pCmpEl = document.createElement('span');
@@ -3635,15 +3848,29 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
+    // Main Add to Cart button — Shopify's own action-buttons snippet only
+    // renders this once server-side, so it never updates on variant change
+    // unless we drive it from here too.
+    var atcBtn = sec.querySelector('#Action_buttons-{{ section.id }} .product_form_submit_button');
+    if (atcBtn) {
+      atcBtn.disabled = !v.available;
+      atcBtn.setAttribute('data-available', v.available);
+      var atcBtnText = atcBtn.querySelector('.btn_text');
+      if (atcBtnText) atcBtnText.textContent = v.available ? '{{ "products.product.add_to_cart" | t }}' : 'Out of Stock';
+    }
+
     // Sticky ATC bar
     if (satcBar) {
       var satcPriceEl = satcBar.querySelector('.bl-satc-price');
       if (satcPriceEl && v.price !== undefined) {
-        satcPriceEl.textContent = '{{ product.selected_or_first_available_variant.price | money }}'.replace(
-          /[\d,]+(\.\d+)?/, (v.price / 100).toFixed(2)
+        satcPriceEl.textContent = '{{ product.selected_or_first_available_variant.price | money_without_trailing_zeros }}'.replace(
+          /[\d,]+(\.\d+)?/, formatMoneyNoDecimals(v.price)
         );
       }
-      if (satcBtn) satcBtn.disabled = !v.available;
+      if (satcBtn) {
+        satcBtn.disabled = !v.available;
+        satcBtn.textContent = v.available ? '{{ "products.product.add_to_cart" | t }}' : 'Out of Stock';
+      }
       if (satcSelect && v.id != null) satcSelect.value = String(v.id);
     }
 
@@ -3652,7 +3879,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // the Shop Pay installment message ("or 4 payments of...") both refresh
     // for the newly selected variant, not just the visible price block.
     if (v.id != null) {
-      getAllIdFields().forEach(function (field) { setVariantIdField(field, v.id); });
+      getAllIdFields().forEach(function (field) { setVariantIdField(field, v.id, v.available); });
     }
 
     try {
@@ -3704,7 +3931,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (wrap) wrap.addEventListener('click', function (e) {
-    if (e.target.closest('.bl-pd-arr') || e.target.closest('.bl-pd-zoom')) return;
+    if (e.target.closest('.bl-pd-arr') || e.target.closest('.bl-pd-zoom') || e.target.closest('.bl-pd-mute')) return;
     if (touchMoved) { touchMoved = false; return; }
     var active = wrap.querySelector('.bl-pd-slide.is-active');
     if (active && active.querySelector('img') && !active.querySelector('video')) openLb();
@@ -4118,18 +4345,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // ── Accordion description mode: strip images + unwrap stray <details> from every auto-generated panel ──
+  // ── Accordion description mode: unwrap stray <details> from every auto-generated panel ──
+  // (Images are kept — see #{{ section_id }} .bl-pd-acc-wrap .bl-pd-desc img
+  // in the <style> block for their equal, clamp()-sized styling.)
   (function () {
     var accWrap = document.getElementById('bl-pd-acc-{{ section.id }}');
     if (!accWrap) return;
     Array.from(accWrap.querySelectorAll('.bl-pd-desc.rte')).forEach(function (panel) {
-      Array.from(panel.querySelectorAll('img')).forEach(function (img) {
-        var wrapper = img.closest('figure') || img.parentNode;
-        img.remove();
-        if (wrapper && wrapper !== panel && wrapper.textContent.trim() === '' && !wrapper.querySelector('img, video, svg')) {
-          wrapper.remove();
-        }
-      });
       /* Any <details> pasted straight into the product description (common
          in copy-pasted spec sheets) is unwrapped into plain flowing text.
          CSS alone can't reliably hide these — some browsers render a
@@ -4413,48 +4635,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   {% endif %}
 
-  // ── Variant option label colorizer ──────────────────────────────
-  // Uses MutationObserver so color stays white even after Evolve's JS
-  // re-applies its own inline styles on variant selection.
-  (function () {
-    var vpWrap = sec.querySelector('.bl-pd-vars');
-    if (!vpWrap) return;
-    var labelColor = vpWrap.getAttribute('data-label-color') || '#eaf4f5';
-    var busy = false;
-
-    function paint() {
-      if (busy) return;
-      busy = true;
-      obs.disconnect();
-
-      vpWrap.querySelectorAll('*').forEach(function (el) {
-        var tag = el.tagName;
-        var cls = typeof el.className === 'string' ? el.className : '';
-        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT') return;
-        if (cls.indexOf('swatch_label') !== -1 || cls.indexOf('swatch_circle') !== -1 ||
-            cls.indexOf('swatch_image') !== -1 || cls.indexOf('btn--') !== -1) return;
-        if (tag === 'LABEL') {
-          var prev = el.previousElementSibling;
-          if (prev && prev.tagName === 'INPUT') return;
-          var forId = el.getAttribute('for');
-          if (forId) { var inp = document.getElementById(forId); if (inp && inp.type === 'radio') return; }
-        }
-        var directText = '';
-        el.childNodes.forEach(function (n) { if (n.nodeType === 3) directText += n.textContent; });
-        if (tag === 'LEGEND' || tag === 'LABEL' || /\S[^:]*:/.test(directText.trim().slice(0, 40))) {
-          el.style.setProperty('color', labelColor, 'important');
-        }
-      });
-
-      obs.observe(vpWrap, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-      busy = false;
-    }
-
-    var obs = new MutationObserver(paint);
-    paint();
-  })();
-
-  // ── Dark / light theme toggle ────────────────────────────────────
+  // ── Variant option label colorizer + dark/light theme toggle ─────
+  // A single system now, keyed off the current theme's own text colour
+  // (not a fixed light-mode-only hex), so "Size:" etc. stays legible in
+  // both modes. Repaints on variant-picker DOM mutations (Evolve's JS
+  // re-applies its own inline styles on selection) and on theme toggles.
   (function () {
     var BL_PD_DARK = {
       bg:      '{{ bg_color }}',
@@ -4475,6 +4660,44 @@ document.addEventListener('DOMContentLoaded', function () {
       divider: 'rgba(0,26,46,0.12)'
     };
 
+    var vpWrap = sec.querySelector('.bl-pd-vars');
+    var busy = false;
+
+    function currentLabelColor() {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      return isLight ? BL_PD_LIGHT.text : BL_PD_DARK.text;
+    }
+
+    function paintLabels(labelColor) {
+      if (!vpWrap || busy) return;
+      busy = true;
+      labelObs.disconnect();
+
+      vpWrap.querySelectorAll('*').forEach(function (el) {
+        var tag = el.tagName;
+        var cls = typeof el.className === 'string' ? el.className : '';
+        if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT') return;
+        if (cls.indexOf('swatch_label') !== -1 || cls.indexOf('swatch_circle') !== -1 ||
+            cls.indexOf('swatch_image') !== -1 || cls.indexOf('btn--') !== -1) return;
+        if (tag === 'LABEL') {
+          var prev = el.previousElementSibling;
+          if (prev && prev.tagName === 'INPUT') return;
+          var forId = el.getAttribute('for');
+          if (forId) { var inp = document.getElementById(forId); if (inp && inp.type === 'radio') return; }
+        }
+        var directText = '';
+        el.childNodes.forEach(function (n) { if (n.nodeType === 3) directText += n.textContent; });
+        if (tag === 'LEGEND' || tag === 'LABEL' || /\S[^:]*:/.test(directText.trim().slice(0, 40))) {
+          el.style.setProperty('color', labelColor, 'important');
+        }
+      });
+
+      labelObs.observe(vpWrap, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+      busy = false;
+    }
+
+    var labelObs = new MutationObserver(function () { paintLabels(currentLabelColor()); });
+
     function applyPdTheme() {
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
       var c = isLight ? BL_PD_LIGHT : BL_PD_DARK;
@@ -4487,21 +4710,7 @@ document.addEventListener('DOMContentLoaded', function () {
       sec.style.setProperty('--bl-pd-divider', c.divider);
       sec.style.backgroundColor = c.bg;
       sec.style.color           = c.text;
-
-      /* Variant picker option labels — static Liquid colour doesn't
-         auto-respond; re-apply using the current theme text colour */
-      sec.querySelectorAll('.bl-pd-vars').forEach(function(vpWrap) {
-        var labelClr = isLight
-          ? c.text
-          : (vpWrap.getAttribute('data-label-color') || c.text);
-        vpWrap.querySelectorAll(
-          'legend, [class*="option_name"], [class*="option_title"],' +
-          '[class*="variant_label"], [class*="form_label"],' +
-          '[class*="selected_option"], [class*="variant_name"]'
-        ).forEach(function(el) {
-          el.style.setProperty('color', labelClr, 'important');
-        });
-      });
+      paintLabels(c.text);
     }
 
     applyPdTheme();
@@ -4849,12 +5058,6 @@ document.addEventListener('DOMContentLoaded', function () {
             { "value": "secondary", "label": "DM Sans (body font)" }
           ],
           "default": "primary"
-        },
-        {
-          "type": "checkbox",
-          "id": "hide_trailing_zeros",
-          "label": "Hide trailing zeros (e.g. INR. 1,800 instead of INR. 1,800.00)",
-          "default": false
         },
         {
           "type": "range",

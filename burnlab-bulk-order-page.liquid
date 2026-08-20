@@ -1,0 +1,820 @@
+{% comment %}
+  ============================================================
+  BURNLAB — BULK ORDER PAGE
+  Supports: Shopify OS 2.0 | Min Width: 300px
+  Collection-driven order grid: variant select + quantity per
+  row, running summary, single batched /cart/add.js submit.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign section_id        = 'burnlab-bulk-order-page-' | append: section.id
+
+  assign main_title        = section.settings.main_title | default: 'Bulk Order'
+  assign subtitle          = section.settings.subtitle
+  assign show_search       = section.settings.show_search
+
+  assign bulk_collection   = section.settings.collection
+  assign products_per_page = section.settings.products_per_page | default: 24
+  assign has_collection    = false
+  if bulk_collection != blank and bulk_collection.products.size > 0
+    assign has_collection = true
+  endif
+
+  assign accent_color_light = section.settings.accent_color_light | default: '#07d16e'
+  assign accent_color_dark  = section.settings.accent_color_dark  | default: '#07d16e'
+
+  assign enable_anim = section.settings.enable_animations
+-%}
+
+<style>
+  #{{ section_id }} *, #{{ section_id }} *::before, #{{ section_id }} *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
+
+  #{{ section_id }} {
+    --bok-accent: {{ accent_color_light }};
+    position: relative;
+    width: 100%;
+    background: var(--bl-mode-body-bg);
+    color: var(--bl-mode-text);
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  [data-theme="dark"] #{{ section_id }}  { --bok-accent: {{ accent_color_dark }}; }
+  [data-theme="light"] #{{ section_id }} { --bok-accent: {{ accent_color_light }}; }
+
+  #{{ section_id }} .bok-container {
+    position: relative;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: clamp(1.6rem, 5vw, 4rem);
+  }
+
+  /* ── Title ─────────────────────────────────────── */
+  #{{ section_id }} .bok-title-row {
+    margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+  }
+  #{{ section_id }} .bok-main-title {
+    font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+    font-weight: 400;
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--bl-mode-text);
+  }
+  #{{ section_id }} .bok-subtitle {
+    margin-top: 0.8rem;
+    font-size: clamp(1.3rem, 1.4vw, 1.5rem);
+    line-height: 1.6;
+    color: var(--bl-mode-text-muted);
+    max-width: 70ch;
+  }
+
+  /* ── Search ────────────────────────────────────── */
+  #{{ section_id }} .bok-search-row {
+    position: relative;
+    margin: clamp(2rem, 3vw, 2.8rem) 0 clamp(1.6rem, 2.5vw, 2.2rem);
+    max-width: 420px;
+  }
+  #{{ section_id }} .bok-search-input {
+    width: 100%;
+    padding: 1.1rem 4rem 1.1rem 1.6rem;
+    background: var(--bl-mode-bg-solid);
+    color: var(--bl-mode-text);
+    border: 1.5px solid var(--bl-mode-border);
+    border-radius: 50px;
+    font-family: inherit;
+    font-size: 1.4rem;
+    transition: border-color 0.2s ease;
+  }
+  #{{ section_id }} .bok-search-input::placeholder { color: var(--bl-mode-text-muted); }
+  #{{ section_id }} .bok-search-input:focus {
+    outline: none;
+    border-color: var(--bok-accent);
+  }
+  #{{ section_id }} .bok-search-clear {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--bl-mode-icon-bg);
+    color: var(--bl-mode-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    line-height: 1;
+    transition: background 0.2s ease;
+  }
+  #{{ section_id }} .bok-search-clear:hover { background: var(--bl-mode-icon-hover); }
+
+  /* ── Empty state ───────────────────────────────── */
+  #{{ section_id }} .bok-empty {
+    padding: clamp(3rem, 6vw, 5rem) 2rem;
+    text-align: center;
+    color: var(--bl-mode-text-muted);
+    font-size: 1.5rem;
+    border: 1px dashed var(--bl-mode-border);
+    border-radius: 12px;
+  }
+
+  /* ── List head (desktop column labels) ────────────*/
+  #{{ section_id }} .bok-list-head {
+    display: grid;
+    grid-template-columns: 72px minmax(160px, 1fr) 180px 140px 120px;
+    gap: 1.6rem;
+    align-items: center;
+    padding: 0 1.2rem 1rem;
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bl-mode-text-muted);
+    border-bottom: 1px solid var(--bl-mode-border);
+  }
+
+  /* ── List / rows ───────────────────────────────────────────────
+     .bok-row is a 5-column grid on desktop: media / title / variant
+     / qty / total. .bok-row-head-group and .bok-row-qty-total-group
+     use display:contents on desktop so their children (media+title,
+     qty+total) act as direct grid items and land in their own grid
+     columns -- then on mobile those same two wrappers switch to
+     display:flex, turning each into a single stacked row instead,
+     without any duplicated markup between breakpoints. ──────────── */
+  #{{ section_id }} .bok-list {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: clamp(2.4rem, 4vw, 3.6rem);
+  }
+  #{{ section_id }} .bok-row {
+    display: grid;
+    grid-template-columns: 72px minmax(160px, 1fr) 180px 140px 120px;
+    gap: 1.6rem;
+    align-items: center;
+    padding: 1.4rem 1.2rem;
+    border-bottom: 1px solid var(--bl-mode-border);
+    transition: background 0.2s ease;
+  }
+  #{{ section_id }} .bok-row:hover { background: var(--bl-mode-icon-bg); }
+  #{{ section_id }} .bok-row[hidden] { display: none; }
+  #{{ section_id }} .bok-row.is-unavailable { outline: 1.5px solid #ff4444; outline-offset: -1px; border-radius: 8px; }
+
+  #{{ section_id }} .bok-row-head-group,
+  #{{ section_id }} .bok-row-qty-total-group { display: contents; }
+
+  #{{ section_id }} .bok-row-media { width: 72px; height: 72px; flex-shrink: 0; }
+  #{{ section_id }} .bok-row-img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 8px;
+    background: var(--bl-mode-icon-bg);
+    display: block;
+  }
+
+  #{{ section_id }} .bok-row-title-cell { min-width: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  #{{ section_id }} .bok-row-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--bl-mode-text);
+    text-decoration: none;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  #{{ section_id }} .bok-row-title:hover { color: var(--bok-accent); }
+  #{{ section_id }} .bok-row-unavailable-note {
+    font-size: 1.2rem;
+    color: #ff4444;
+    display: none;
+  }
+  #{{ section_id }} .bok-row.is-unavailable .bok-row-unavailable-note { display: block; }
+
+  #{{ section_id }} .bok-row-variant-cell { min-width: 0; }
+  #{{ section_id }} .bok-row-variant-single {
+    font-size: 1.3rem;
+    color: var(--bl-mode-text-muted);
+  }
+  #{{ section_id }} .bok-row-select {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.8rem 2.8rem 0.8rem 1.1rem;
+    background: var(--bl-mode-bg-solid)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2307d16e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+      no-repeat right 0.9rem center / 1rem;
+    color: var(--bl-mode-text);
+    border: 1.5px solid var(--bl-mode-border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1.3rem;
+    appearance: none; -webkit-appearance: none;
+    cursor: pointer;
+  }
+  #{{ section_id }} .bok-row-select:focus { outline: none; border-color: var(--bok-accent); }
+
+  #{{ section_id }} .bok-row-qty {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: var(--bl-mode-bg-solid);
+    border: 1.5px solid var(--bl-mode-border);
+    border-radius: 8px;
+    padding: 0.3rem;
+    width: fit-content;
+  }
+  #{{ section_id }} .bok-qty-btn {
+    width: 3rem; height: 3rem;
+    border: none; border-radius: 6px;
+    background: transparent;
+    color: var(--bok-accent);
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease;
+  }
+  #{{ section_id }} .bok-qty-btn:hover { background: var(--bl-mode-icon-hover); }
+  #{{ section_id }} .bok-qty-input {
+    width: 4.4rem;
+    height: 3rem;
+    border: none;
+    background: transparent;
+    color: var(--bl-mode-text);
+    text-align: center;
+    font-family: inherit;
+    font-size: 1.4rem;
+    -moz-appearance: textfield;
+  }
+  #{{ section_id }} .bok-qty-input::-webkit-outer-spin-button,
+  #{{ section_id }} .bok-qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  #{{ section_id }} .bok-qty-input:focus { outline: none; }
+
+  #{{ section_id }} .bok-row-total {
+    font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+    font-weight: 400;
+    font-size: 1.5rem;
+    color: var(--bok-accent);
+    white-space: nowrap;
+  }
+
+  /* ── Pagination ────────────────────────────────── */
+  #{{ section_id }} .bok-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    font-family: inherit;
+  }
+  #{{ section_id }} .bok-pagination span,
+  #{{ section_id }} .bok-pagination a {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 3.6rem; height: 3.6rem; padding: 0 1rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--bl-mode-border);
+    color: var(--bl-mode-text);
+    text-decoration: none;
+    font-size: 1.3rem;
+  }
+  #{{ section_id }} .bok-pagination a:hover { border-color: var(--bok-accent); color: var(--bok-accent); }
+  #{{ section_id }} .bok-pagination .current {
+    background: var(--bok-accent);
+    border-color: var(--bok-accent);
+    color: #001a2e;
+    font-weight: 700;
+  }
+
+  /* ── Sticky summary bar ────────────────────────── */
+  #{{ section_id }} .bok-summary-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+    padding: 1.4rem clamp(1.6rem, 3vw, 2.4rem);
+    background: var(--bl-mode-dropdown-bg);
+    box-shadow: var(--bl-mode-shadow);
+    border-radius: 12px;
+    border: 1px solid var(--bl-mode-border);
+  }
+  #{{ section_id }} .bok-summary-info {
+    display: flex;
+    align-items: baseline;
+    gap: 1.2rem;
+    flex: 1;
+    min-width: 160px;
+  }
+  #{{ section_id }} .bok-summary-count {
+    font-size: 1.3rem;
+    color: var(--bl-mode-text-muted);
+  }
+  #{{ section_id }} .bok-summary-subtotal {
+    font-family: var(--bl-font-primary, 'Archivo Black', sans-serif);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 2.4vw, 2.2rem);
+    color: var(--bl-mode-text);
+  }
+  #{{ section_id }} .bok-add-all-btn {
+    padding: 1.2rem 2.8rem;
+    background: var(--bok-accent);
+    color: #001a2e;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--bl-font-secondary, 'DM Sans', sans-serif);
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+  }
+  #{{ section_id }} .bok-add-all-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(7,209,110,0.32);
+  }
+  #{{ section_id }} .bok-add-all-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  #{{ section_id }} .bok-summary-message {
+    flex-basis: 100%;
+    font-size: 1.3rem;
+    padding: 0.4rem 0;
+  }
+  #{{ section_id }} .bok-summary-message.is-success { color: var(--bok-accent); }
+  #{{ section_id }} .bok-summary-message.is-error { color: #ff4444; }
+  #{{ section_id }} .bok-summary-message a { color: inherit; text-decoration: underline; }
+
+  /* ── Reveal ────────────────────────────────────── */
+  #{{ section_id }} .bok-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
+  }
+  #{{ section_id }} .bok-reveal.is-visible,
+  .shopify-design-mode #{{ section_id }} .bok-reveal {
+    opacity: 1; transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .bok-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+  /* ── Responsive ────────────────────────────────── */
+  @media (max-width: 1023px) {
+    #{{ section_id }} .bok-list-head,
+    #{{ section_id }} .bok-row {
+      grid-template-columns: 64px minmax(140px, 1fr) 150px 120px 110px;
+    }
+  }
+  @media (max-width: 1024px) {
+    #{{ section_id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px !important;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
+    }
+  }
+  @media (max-width: 767px) {
+    #{{ section_id }} .bok-list-head { display: none; }
+    #{{ section_id }} .bok-row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+    #{{ section_id }} .bok-row-head-group {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    #{{ section_id }} .bok-row-select { max-width: none; }
+    #{{ section_id }} .bok-row-qty-total-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+  }
+  @media (max-width: 480px) {
+    #{{ section_id }} .bok-row-media { width: 48px; height: 48px; }
+    #{{ section_id }} .bok-summary-bar { flex-direction: column; align-items: stretch; }
+    #{{ section_id }} .bok-add-all-btn { width: 100%; }
+  }
+</style>
+
+<section
+  id="{{ section_id }}"
+  data-section-id="{{ section.id }}"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
+  <div class="bok-container">
+
+    <div class="bok-title-row bok-reveal">
+      <h1 class="bok-main-title">{{ main_title }}</h1>
+      {%- if subtitle != blank -%}
+        <p class="bok-subtitle">{{ subtitle }}</p>
+      {%- endif -%}
+    </div>
+
+    {%- if show_search and has_collection -%}
+      <div class="bok-search-row bok-reveal">
+        <input
+          type="text"
+          class="bok-search-input"
+          id="bok-search-{{ section.id }}"
+          placeholder="Search products..."
+          aria-label="Filter products by name"
+          autocomplete="off"
+        >
+        <button type="button" class="bok-search-clear" id="bok-search-clear-{{ section.id }}" hidden aria-label="Clear search">&times;</button>
+      </div>
+    {%- endif -%}
+
+    {%- unless has_collection -%}
+      <div class="bok-empty bok-reveal">
+        <p>{{ section.settings.empty_state_text | default: 'No products available for bulk ordering yet. Please select a collection in the theme editor.' }}</p>
+      </div>
+    {%- else -%}
+      {%- paginate bulk_collection.products by products_per_page -%}
+        <div class="bok-list-head" aria-hidden="true">
+          <span></span>
+          <span>Product</span>
+          <span>Variant</span>
+          <span>Qty</span>
+          <span>Total</span>
+        </div>
+
+        <div class="bok-list" id="bok-list-{{ section.id }}">
+          {%- for product in bulk_collection.products -%}
+            {%- assign default_variant = product.selected_or_first_available_variant -%}
+            <div
+              class="bok-row bok-reveal"
+              data-product-title="{{ product.title | escape }}"
+              data-row-index="{{ forloop.index0 }}"
+              {%- if product.has_only_default_variant -%}
+                data-variant-id="{{ default_variant.id }}"
+                data-single-price="{{ default_variant.price | money_without_trailing_zeros | escape }}"
+                data-single-available="{{ default_variant.available }}"
+              {%- endif -%}
+            >
+              <div class="bok-row-head-group">
+                <div class="bok-row-media">
+                  {%- if product.featured_image -%}
+                    <img
+                      class="bok-row-img"
+                      src="{{ product.featured_image | image_url: width: 160 }}"
+                      alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                      width="72" height="72" loading="lazy"
+                    >
+                  {%- endif -%}
+                </div>
+
+                <div class="bok-row-title-cell">
+                  <a href="{{ product.url }}" class="bok-row-title">{{ product.title }}</a>
+                  <span class="bok-row-unavailable-note">Out of stock — skipped from order</span>
+                </div>
+              </div>
+
+              <div class="bok-row-variant-cell">
+                {%- if product.has_only_default_variant -%}
+                  <span class="bok-row-variant-single">{{ default_variant.title }}</span>
+                {%- else -%}
+                  <select class="bok-row-select" aria-label="Select {{ product.title | escape }} option">
+                    {%- for variant in product.variants -%}
+                      <option
+                        value="{{ variant.id }}"
+                        data-price="{{ variant.price | money_without_trailing_zeros | escape }}"
+                        data-available="{{ variant.available }}"
+                        {% if variant.id == default_variant.id %}selected{% endif %}
+                      >
+                        {{ variant.title }}{% unless variant.available %} - Out of Stock{% endunless %}
+                      </option>
+                    {%- endfor -%}
+                  </select>
+                {%- endif -%}
+              </div>
+
+              <div class="bok-row-qty-total-group">
+                <div class="bok-row-qty">
+                  <button type="button" class="bok-qty-btn bok-qty-minus" aria-label="Decrease quantity">&minus;</button>
+                  <input
+                    type="number"
+                    class="bok-qty-input"
+                    min="0" step="1" value="0" inputmode="numeric"
+                    aria-label="Quantity for {{ product.title | escape }}"
+                  >
+                  <button type="button" class="bok-qty-btn bok-qty-plus" aria-label="Increase quantity">+</button>
+                </div>
+
+                <div class="bok-row-total" data-row-total>{{ 0 | money_without_trailing_zeros }}</div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {%- if paginate.pages > 1 -%}
+          <nav class="bok-pagination bok-reveal">
+            {{ paginate | default_pagination }}
+          </nav>
+        {%- endif -%}
+      {%- endpaginate -%}
+
+      <div class="bok-summary-bar bok-reveal" id="bok-summary-{{ section.id }}" aria-live="polite">
+        <div class="bok-summary-info">
+          <span class="bok-summary-count"><span id="bok-summary-count-{{ section.id }}">0</span> items</span>
+          <span class="bok-summary-subtotal" id="bok-summary-subtotal-{{ section.id }}">{{ 0 | money_without_trailing_zeros }}</span>
+        </div>
+        <button type="button" class="bok-add-all-btn" id="bok-add-all-{{ section.id }}" disabled>
+          Add All to Cart
+        </button>
+        <div class="bok-summary-message" id="bok-summary-message-{{ section.id }}" role="status" hidden></div>
+      </div>
+    {%- endunless -%}
+
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var root = document.getElementById('{{ section_id }}');
+  if (!root) return;
+
+  var list          = document.getElementById('bok-list-{{ section.id }}');
+  var searchInput    = document.getElementById('bok-search-{{ section.id }}');
+  var searchClear    = document.getElementById('bok-search-clear-{{ section.id }}');
+  var summaryCount    = document.getElementById('bok-summary-count-{{ section.id }}');
+  var summarySubtotal = document.getElementById('bok-summary-subtotal-{{ section.id }}');
+  var addAllBtn       = document.getElementById('bok-add-all-{{ section.id }}');
+  var summaryMessage  = document.getElementById('bok-summary-message-{{ section.id }}');
+
+  if (!list || !addAllBtn) return;
+
+  var ZERO_MONEY_TEMPLATE = {{ 0 | money_without_trailing_zeros | json }};
+
+  function formatMoneyNoDecimals(amount) {
+    var num = Math.round(amount);
+    var grouped = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return ZERO_MONEY_TEMPLATE.replace(/[\d,]+(\.\d+)?/, grouped);
+  }
+
+  function getRowData(rowEl) {
+    var select = rowEl.querySelector('.bok-row-select');
+    if (select) {
+      var opt = select.options[select.selectedIndex];
+      return {
+        variantId: select.value,
+        price: parseFloat((opt.getAttribute('data-price') || '0').replace(/[^\d.]/g, '')) || 0,
+        available: opt.getAttribute('data-available') === 'true'
+      };
+    }
+    return {
+      variantId: rowEl.getAttribute('data-variant-id'),
+      price: parseFloat((rowEl.getAttribute('data-single-price') || '0').replace(/[^\d.]/g, '')) || 0,
+      available: rowEl.getAttribute('data-single-available') === 'true'
+    };
+  }
+
+  function updateRowTotal(rowEl) {
+    var qtyInput = rowEl.querySelector('.bok-qty-input');
+    var totalEl  = rowEl.querySelector('[data-row-total]');
+    if (!qtyInput || !totalEl) return;
+    var qty  = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+    var data = getRowData(rowEl);
+    totalEl.textContent = formatMoneyNoDecimals(qty * data.price);
+    rowEl.classList.toggle('is-unavailable', qty > 0 && !data.available);
+  }
+
+  function recalcSummary() {
+    var rows = Array.from(list.querySelectorAll('.bok-row'));
+    var totalQty = 0;
+    var totalAmount = 0;
+    rows.forEach(function (rowEl) {
+      var qtyInput = rowEl.querySelector('.bok-qty-input');
+      var qty = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+      if (qty <= 0) return;
+      var data = getRowData(rowEl);
+      totalQty += qty;
+      totalAmount += qty * data.price;
+    });
+    if (summaryCount) summaryCount.textContent = totalQty;
+    if (summarySubtotal) summarySubtotal.textContent = formatMoneyNoDecimals(totalAmount);
+    addAllBtn.disabled = totalQty === 0;
+  }
+
+  function clampQtyInput(input) {
+    var val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 0) val = 0;
+    input.value = val;
+  }
+
+  list.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('bok-qty-input')) return;
+    clampQtyInput(e.target);
+    var rowEl = e.target.closest('.bok-row');
+    if (rowEl) { updateRowTotal(rowEl); recalcSummary(); }
+  });
+
+  list.addEventListener('change', function (e) {
+    if (e.target.classList.contains('bok-row-select')) {
+      var rowEl = e.target.closest('.bok-row');
+      if (rowEl) { updateRowTotal(rowEl); recalcSummary(); }
+    }
+  });
+
+  list.addEventListener('click', function (e) {
+    var btn = e.target.closest('.bok-qty-btn');
+    if (!btn) return;
+    var rowEl = btn.closest('.bok-row');
+    var input = rowEl && rowEl.querySelector('.bok-qty-input');
+    if (!input) return;
+    var val = Math.max(0, parseInt(input.value, 10) || 0);
+    val = btn.classList.contains('bok-qty-plus') ? val + 1 : Math.max(0, val - 1);
+    input.value = val;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      var q = searchInput.value.trim().toLowerCase();
+      if (searchClear) searchClear.hidden = q === '';
+      Array.from(list.querySelectorAll('.bok-row')).forEach(function (rowEl) {
+        var title = (rowEl.getAttribute('data-product-title') || '').toLowerCase();
+        rowEl.hidden = q !== '' && title.indexOf(q) === -1;
+      });
+    });
+  }
+  if (searchClear) {
+    searchClear.addEventListener('click', function () {
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      searchInput.focus();
+    });
+  }
+
+  function refreshCartBadges() {
+    fetch('/cart.js')
+      .then(function (r) { return r.json(); })
+      .then(function (cart) {
+        document.querySelectorAll('.cc_text').forEach(function (el) { el.textContent = cart.item_count; });
+        document.querySelectorAll('.bl-cart-badge').forEach(function (el) {
+          el.textContent = cart.item_count;
+          el.setAttribute('data-count', cart.item_count);
+        });
+      })
+      .catch(function () {});
+  }
+
+  function showMessage(text, type) {
+    if (!summaryMessage) return;
+    summaryMessage.innerHTML = text;
+    summaryMessage.className = 'bok-summary-message' + (type ? ' is-' + type : '');
+    summaryMessage.hidden = false;
+    if (type === 'success') {
+      clearTimeout(showMessage._t);
+      showMessage._t = setTimeout(function () {
+        summaryMessage.hidden = true;
+      }, 5000);
+    }
+  }
+
+  addAllBtn.addEventListener('click', function () {
+    var rows = Array.from(list.querySelectorAll('.bok-row'));
+    var items = [];
+    var skipped = 0;
+
+    rows.forEach(function (rowEl) {
+      var qtyInput = rowEl.querySelector('.bok-qty-input');
+      var qty = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+      if (qty <= 0) return;
+      var data = getRowData(rowEl);
+      if (!data.variantId || !data.available) {
+        skipped++;
+        rowEl.classList.add('is-unavailable');
+        return;
+      }
+      items.push({ id: data.variantId, quantity: qty });
+    });
+
+    if (items.length === 0) {
+      if (skipped > 0) {
+        showMessage(skipped + ' item' + (skipped > 1 ? 's' : '') + ' skipped — out of stock.', 'error');
+      }
+      return;
+    }
+
+    var originalText = addAllBtn.textContent;
+    addAllBtn.disabled = true;
+    addAllBtn.textContent = 'Adding...';
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items })
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (result) {
+        addAllBtn.textContent = originalText;
+        if (!result.ok) {
+          var msg = (result.data && (result.data.description || result.data.message)) || 'Something went wrong — please try again.';
+          showMessage(msg, 'error');
+          addAllBtn.disabled = false;
+          return;
+        }
+
+        rows.forEach(function (rowEl) {
+          var qtyInput = rowEl.querySelector('.bok-qty-input');
+          qtyInput.value = 0;
+          updateRowTotal(rowEl);
+          rowEl.classList.remove('is-unavailable');
+        });
+        recalcSummary();
+        refreshCartBadges();
+
+        var successMsg = items.length + ' item' + (items.length > 1 ? 's' : '') + ' added to cart.';
+        if (skipped > 0) {
+          successMsg += ' ' + skipped + ' item' + (skipped > 1 ? 's' : '') + ' skipped — out of stock.';
+        }
+        successMsg += ' <a href="/cart">View Cart</a>';
+        showMessage(successMsg, 'success');
+      })
+      .catch(function () {
+        addAllBtn.textContent = originalText;
+        addAllBtn.disabled = false;
+        showMessage('Something went wrong — please try again.', 'error');
+      });
+  });
+
+  // ── Reveal on scroll ──
+  {% if enable_anim %}
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reducedMotion) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    root.querySelectorAll('.bok-reveal').forEach(function (el) { observer.observe(el); });
+
+    document.addEventListener('shopify:section:unload', function (e) {
+      if (e.detail.sectionId === '{{ section.id }}') observer.disconnect();
+    });
+  } else {
+    root.querySelectorAll('.bok-reveal').forEach(function (el) { el.classList.add('is-visible'); });
+  }
+  {% else %}
+  root.querySelectorAll('.bok-reveal').forEach(function (el) { el.classList.add('is-visible'); });
+  {% endif %}
+
+  // Initial state
+  recalcSummary();
+});
+</script>
+
+{% schema %}
+{
+  "name": "Bulk Order Page",
+  "tag": "section",
+  "class": "burnlab-bulk-order-page-section",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "main_title", "label": "Title", "default": "Bulk Order" },
+    { "type": "text", "id": "subtitle", "label": "Subtitle" },
+
+    { "type": "header", "content": "Product Source" },
+    { "type": "collection", "id": "collection", "label": "Collection", "info": "Products in this collection are listed for bulk ordering." },
+    { "type": "range", "id": "products_per_page", "label": "Products per page", "min": 6, "max": 96, "step": 6, "default": 24 },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "checkbox", "id": "show_search", "label": "Show search filter", "default": true },
+    { "type": "textarea", "id": "empty_state_text", "label": "Empty state message", "info": "Shown when no collection is selected or it has no products." },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "accent_color_light", "label": "Accent color (Light Mode)", "default": "#07d16e" },
+    { "type": "color", "id": "accent_color_dark", "label": "Accent color (Dark Mode)", "default": "#07d16e" },
+
+    { "type": "header", "content": "Animations" },
+    { "type": "checkbox", "id": "enable_animations", "label": "Enable reveal animations", "default": true },
+
+    { "type": "header", "content": "Desktop Padding" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 64 },
+
+    { "type": "header", "content": "Mobile Padding" },
+    { "type": "range", "id": "padding_top_mobile", "label": "Padding top (mobile)", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 36 },
+    { "type": "range", "id": "padding_bottom_mobile", "label": "Padding bottom (mobile)", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 36 }
+  ],
+  "presets": [
+    { "name": "Bulk Order Page" }
+  ]
+}
+{% endschema %}

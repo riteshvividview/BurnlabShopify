@@ -35,6 +35,68 @@
     z-index: 1;
   }
 
+  /* ── Full-width fix ──
+     hotspot-section.css paints the dark box on .hotspot_row (not
+     .container) — .container is just a max-width wrapper around it.
+     .container caps at a fixed max-width with auto side margins, which
+     shrinks .hotspot_row along with it, producing the "boxed card with
+     visible margins" look instead of the dark background spanning the
+     full section width. No padding is added here on .container itself
+     — .hotspot_row already has its own responsive inner padding
+     (3rem 3rem / 3rem 2rem / 3rem 1rem across breakpoints, defined in
+     hotspot-section.css) which insets its *content* without insetting
+     its *background*; adding padding on .container here would instead
+     inset the background itself, recreating the same gap. Overridden
+     only inside this section (scoped by #shopify-section-{{ section.id }}),
+     so no other section reusing the same .container class is affected. */
+  #shopify-section-{{ section.id }} .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  /* ── True viewport-edge bleed on mobile ──
+     max-width:100% above only removes .container's OWN cap — it still
+     sits inside the theme's main page wrapper, which has its own side
+     padding, so the box stopped short of the real screen edges (the
+     gap reported in mobile screenshots). Same 100vw negative-margin
+     bleed technique already used below for .htp-container-img, applied
+     to .container so the whole dark box — not just the image — reaches
+     the true edges on mobile. Desktop is untouched. */
+  @media screen and (max-width: 768px) {
+    #shopify-section-{{ section.id }} .container {
+      position: relative;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      left: 50% !important;
+      right: 50% !important;
+      margin-left: -50vw !important;
+      margin-right: -50vw !important;
+      padding-inline: 0 !important;
+    }
+  }
+
+  /* ── Remove rounded corners ──
+     "Section border radius" (--border-radius) was rounding the dark
+     box's top/bottom corners, which — combined with the box not
+     reaching the true edges of the section — showed the page
+     background peeking through as a gap. Zeroing the variable itself
+     (whatever element reads var(--border-radius) in hotspot-section.css)
+     plus the likely wrapper classes directly, so the box renders as a
+     single flat, edge-to-edge rectangle. Scoped to this section only. */
+  #shopify-section-{{ section.id }} .color_scheme {
+    --border-radius: 0px;
+  }
+  #shopify-section-{{ section.id }} .hotspot_row,
+  #shopify-section-{{ section.id }} .hotspot-main,
+  #shopify-section-{{ section.id }} .hotspot-container,
+  #shopify-section-{{ section.id }} .htp-container-img,
+  #shopify-section-{{ section.id }} .hotspot-image,
+  #shopify-section-{{ section.id }} .htp_img_inner {
+    border-radius: 0 !important;
+  }
+
   /* ── Title font size — desktop/mobile, smoothly scaled in between ── */
   #shopify-section-{{ section.id }} .section_heading {
     font-size: clamp(

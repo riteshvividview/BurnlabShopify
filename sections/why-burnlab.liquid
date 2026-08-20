@@ -195,6 +195,25 @@
   max-width: min(var(--wb-card-w, 220px), 100%);
 }
 
+/* Strict desktop column count — the flex-wrap layout above sizes cards by
+   a fixed px width, so how many land on one row is just whatever happens
+   to fit at that exact viewport width, giving inconsistent 3/4/5-per-row
+   results across different desktop/laptop screen sizes. From the tablet
+   breakpoint up, force an actual CSS Grid with exactly "Columns (desktop)"
+   equal-width columns in a single row, regardless of viewport width. */
+@media (min-width: 990px) {
+  #{{ section_id }}[data-style="cards"] .wb-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--wb-cols-d), 1fr);
+    justify-content: initial;
+  }
+  #{{ section_id }}[data-style="cards"] .wb-card {
+    flex: initial;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 /* ── Mobile: full-width, equal-height, centered cards ──
    Overrides the fixed --wb-card-w sizing above — on small screens every
    card stretches edge-to-edge (within the section's side padding), gets
@@ -1044,7 +1063,7 @@
       "id": "columns_desktop",
       "label": "Columns (desktop)",
       "min": 1, "max": 5, "step": 1, "default": 5,
-      "info": "Applies to the Minimal strip layout. Boxed cards width is controlled by \"Card width (px)\" above instead."
+      "info": "Number of columns on desktop (990px+) for both the Minimal strip and Boxed cards layouts."
     },
     {
       "type": "select",

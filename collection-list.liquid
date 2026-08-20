@@ -18,6 +18,9 @@
   assign accent_color    = section.settings.accent_color    | default: '#07d16e'
   assign card_width_desktop = section.settings.card_width_desktop | default: 260
   assign card_width_mobile  = section.settings.card_width_mobile  | default: 160
+  assign columns_desktop    = section.settings.columns_desktop    | default: 4
+  assign columns_tablet     = section.settings.columns_tablet     | default: 2
+  assign columns_mobile     = section.settings.columns_mobile     | default: 2
   assign card_gap           = section.settings.card_gap           | default: 20
   assign card_radius     = section.settings.card_radius     | default: 16
   assign card_style      = section.settings.card_style      | default: 'overlay'
@@ -253,11 +256,24 @@
   }
 
   /* ── GRID ───────────────────────────────────────────────── */
+  /* Explicit column counts per breakpoint (Columns on Desktop/Tablet/
+     Mobile settings) rather than grid-template-columns: repeat(auto-fill,
+     minmax(...)) — auto-fill computes its own column count purely from
+     "Card Min Width" vs available viewport width, ignoring the column
+     settings entirely, so wider desktop viewports kept packing in more
+     columns than configured (e.g. 7 columns on a very wide screen even
+     with "Columns on Desktop" set to 6). */
   #{{ section_id }} .clist-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-w), 1fr));
+    grid-template-columns: repeat({{ columns_desktop }}, 1fr);
     gap: var(--card-gap);
     align-items: start;
+  }
+
+  @media (max-width: 1024px) {
+    #{{ section_id }} .clist-grid {
+      grid-template-columns: repeat({{ columns_tablet }}, 1fr);
+    }
   }
 
   /* ── CARD BASE ──────────────────────────────────────────── */
@@ -276,16 +292,30 @@
     width: 100%;
     aspect-ratio: {{ aspect_ratio }};
     overflow: hidden;
+    background-color: var(--section-bg);
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
   }
 
-  /* img fills wrapper absolutely */
+  /* img fills wrapper absolutely — !important because the theme's own
+     base stylesheet likely carries a generic "img { height: auto }"
+     responsive-image reset; without overriding it, a landscape source
+     photo dropped into this portrait-ratio wrapper renders at less
+     than the wrapper's full height (auto height from a 100%-width,
+     landscape-ratio image is shorter than the container), leaving the
+     section's own dark background visible as a gap at the bottom —
+     that's the "coverage" gap, not a design gradient. */
   #{{ section_id }} .clist-img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    position: absolute !important;
+    inset: 0 !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    display: block !important;
     transition: transform 0.75s var(--ease-expo);
     will-change: transform;
   }
@@ -325,18 +355,13 @@
     z-index: 1;
   }
 
-  /* Bottom gradient — always on so default title stays readable */
+  /* No visible dark band behind the title anymore — legibility now
+     comes from a text-shadow on .clist-card-bottom-title instead (see
+     below). .clist-img already fills this wrapper edge-to-edge via
+     object-fit:cover, so nothing here was ever a coverage gap. */
   #{{ section_id }} .clist-card-grad {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 65%;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.80) 100%);
-    z-index: 2;
-    pointer-events: none;
-    transition: opacity 0.35s ease;
+    display: none;
   }
-  #{{ section_id }} .clist-card:hover .clist-card-grad,
-  #{{ section_id }} .clist-card.is-active .clist-card-grad { opacity: 0; }
 
   /* ── BADGE ──────────────────────────────────────────────── */
   #{{ section_id }} .clist-badge {
@@ -365,7 +390,7 @@
     position: absolute;
     bottom: 0; left: 0; right: 0;
     z-index: 5;
-    padding: clamp(1.2rem, 2vw, 2rem);
+    padding: clamp(1.2rem, 2vw, 2rem) clamp(1.2rem, 2vw, 2rem) clamp(1.8rem, 3vw, 2.6rem);
     transition: opacity 0.3s ease, transform 0.35s var(--ease-expo);
   }
   #{{ section_id }} .clist-card:hover .clist-card-bottom,
@@ -381,6 +406,7 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     line-height: 1.2;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65), 0 2px 12px rgba(0, 0, 0, 0.45);
   }
 
   /* ── HOVER PANEL — slides up from bottom ─────────────────── */
@@ -574,7 +600,7 @@
       padding-bottom: {{ section.settings.padding_bottom_mobile }}px !important;
     }
     #{{ section_id }} .clist-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat({{ columns_mobile }}, 1fr);
     }
     #{{ section_id }} .clist-heading {
       font-size: clamp(2rem, 8vw, 3rem);
@@ -585,22 +611,65 @@
     }
     #{{ section_id }} .clist-eyebrow { justify-content: flex-start !important; }
     #{{ section_id }} .clist-subtitle { text-align: left !important; }
+
+    /* Default (pre-hover) title — previously had no mobile override at
+       all, so it rendered at its desktop clamp() minimum (1.3rem)
+       regardless of how many columns were configured, which is too
+       large once cards get narrow in 2-3 column mobile layouts. */
+    #{{ section_id }} .clist-card-bottom {
+      padding: clamp(0.85rem, 3vw, 1.4rem);
+    }
+    #{{ section_id }} .clist-card-bottom-title {
+      font-size: clamp(0.975rem, 3.6vw, 1.225rem);
+      letter-spacing: 0.02em;
+    }
+
     #{{ section_id }} .clist-card-hover {
       padding: clamp(0.85rem, 3vw, 1.2rem);
     }
     #{{ section_id }} .clist-hover-title {
-      font-size: clamp(1rem, 4vw, 1.3rem);
+      font-size: clamp(0.975rem, 3.6vw, 1.225rem);
+      letter-spacing: 0.02em;
       margin-bottom: 0.4rem;
     }
     #{{ section_id }} .clist-hover-desc {
-      font-size: clamp(0.85rem, 3vw, 1rem);
+      font-size: clamp(0.78rem, 2.8vw, 0.95rem);
       margin-bottom: 0.6rem;
       -webkit-line-clamp: 3;
     }
     #{{ section_id }} .clist-hover-cta {
-      padding: 7px 14px;
-      font-size: clamp(0.8rem, 3vw, 0.95rem);
+      padding: 6px 12px;
+      font-size: clamp(0.72rem, 2.6vw, 0.88rem);
       margin-bottom: 0.4rem;
+    }
+
+    /* Extra shrink specifically for 3-column mobile — cards are
+       roughly a third of the viewport wide there, so even the sizes
+       above are still too big for comfortable, non-wrapping titles. */
+    #{{ section_id }}[data-cols-mobile="3"] .clist-card-bottom {
+      padding: clamp(0.6rem, 2.2vw, 0.9rem);
+    }
+    #{{ section_id }}[data-cols-mobile="3"] .clist-card-bottom-title,
+    #{{ section_id }}[data-cols-mobile="3"] .clist-hover-title {
+      font-size: clamp(0.805rem, 3vw, 0.975rem);
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+    #{{ section_id }}[data-cols-mobile="3"] .clist-card-hover {
+      padding: clamp(0.6rem, 2.2vw, 0.9rem);
+    }
+    #{{ section_id }}[data-cols-mobile="3"] .clist-hover-desc {
+      font-size: clamp(0.65rem, 2.4vw, 0.78rem);
+      -webkit-line-clamp: 2;
+      margin-bottom: 0.4rem;
+    }
+    #{{ section_id }}[data-cols-mobile="3"] .clist-hover-cta {
+      padding: 5px 10px;
+      font-size: clamp(0.6rem, 2.2vw, 0.72rem);
+      gap: 4px;
+    }
+    #{{ section_id }}[data-cols-mobile="3"] .clist-hover-cta svg {
+      width: 9px; height: 9px;
     }
   }
 
@@ -611,9 +680,11 @@
   }
 
   @media (max-width: 480px) {
-    #{{ section_id }} .clist-grid {
-      grid-template-columns: repeat(auto-fill, minmax(var(--card-min-w), 1fr));
-    }
+    /* grid-template-columns intentionally not overridden here — it stays
+       driven by the "Columns on Mobile" setting from the 768px
+       breakpoint above so that control applies uniformly across the
+       whole mobile range instead of reverting to auto-fill on small
+       phones. */
     #{{ section_id }} .clist-heading {
       font-size: clamp(2rem, 8vw, 3rem);
     }
@@ -624,6 +695,7 @@
   id="{{ section_id }}"
   class="burnlab-clist"
   data-section-id="{{ section.id }}"
+  data-cols-mobile="{{ columns_mobile }}"
   style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
 >
 
@@ -711,8 +783,14 @@
           {{ block.shopify_attributes }}
         >
           <!-- img-wrap is in-flow and sets card height via aspect-ratio.
-               Everything else is absolute inside it. -->
-          <div class="clist-img-wrap">
+               Everything else is absolute inside it. The wrapper also
+               carries the same photo as a CSS background-size:cover
+               layer underneath the <img> — belt-and-suspenders so the
+               card is guaranteed fully covered by the image even in
+               the split second before the <img> itself paints, with
+               zero chance of a gap regardless of the <img>'s own
+               object-fit behavior. -->
+          <div class="clist-img-wrap"{% if bk_img != blank %} style="background-image:url('{{ bk_img | image_url: width: 900 }}');"{% endif %}>
             {%- if bk_img != blank -%}
               {{ bk_img | image_url: width: 900 | image_tag:
                 loading: 'lazy',
@@ -1271,7 +1349,7 @@
       "step": 20,
       "unit": "px",
       "default": 260,
-      "info": "Minimum card width on desktop. The grid auto-fills columns based on this."
+      "info": "Reference width only — actual column count on desktop is set by \"Columns on Desktop\" below."
     },
     {
       "type": "range",
@@ -1342,6 +1420,16 @@
       "max": 4,
       "step": 1,
       "default": 2
+    },
+    {
+      "type": "range",
+      "id": "columns_mobile",
+      "label": "Columns on Mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 2,
+      "info": "Number of card columns on screens 768px and narrower."
     },
     {
       "type": "range",

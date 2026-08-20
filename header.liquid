@@ -28,6 +28,7 @@
   assign hdr_dark_text   = section.settings.hdr_dark_text    | default: '#eaf4f5'
   assign hdr_light_text  = section.settings.hdr_light_text   | default: '#001a2e'
   assign accent          = section.settings.accent_color     | default: '#07d16e'
+  assign accent_light    = section.settings.accent_color_light | default: '#04914f'
   assign drawer_bg_dark  = section.settings.drawer_bg_dark   | default: '#001a2e'
   assign drawer_bg_light = section.settings.drawer_bg_light  | default: '#f0f5f8'
   assign drawer_txt_dark = section.settings.drawer_text_dark | default: '#eaf4f5'
@@ -37,7 +38,6 @@
   assign drawer_logo_size        = section.settings.drawer_logo_size        | default: 40
   assign drawer_account_label    = section.settings.drawer_account_label    | default: 'My Account'
   assign drawer_account_position = section.settings.drawer_account_position | default: 'end'
-  assign drawer_show_account     = section.settings.drawer_show_account
   if customer
     assign acct_dest = routes.account_url
   else
@@ -55,6 +55,7 @@
   assign ann_icon_size   = section.settings.announcement_icon_size  | default: 14
   assign ann_position    = section.settings.announcement_position   | default: 'fixed'
   assign ann_mode        = section.settings.announcement_mode        | default: 'scrolling'
+  assign ann_font_size_mobile = section.settings.announcement_font_size_mobile | default: 11
 
   assign ann_visible = false
   if ann_enabled and ann_text != blank
@@ -76,6 +77,16 @@
   if spacer_height > 0
     assign show_spacer = true
   endif
+
+  # Total visible height the announcement bar + header nav occupy at
+  # the top of the viewport on first paint, regardless of whether the
+  # header is sticky/relative (which already reserves this space in
+  # normal flow) or fixed (which needs the spacer above). Other
+  # sections — e.g. hero-section.liquid — read this via the
+  # --bl-header-total-height CSS var to size themselves against
+  # "the rest of the viewport" without needing their own JS.
+  assign bl_total_header_height     = ann_offset | plus: header_height
+  assign bl_total_header_height_mob = ann_offset | plus: hdr_height_mob
 -%}
 
 {% style %}
@@ -97,6 +108,7 @@
   --bl-mode-body-bg:     #000f1c;
   --bl-mode-shadow:      0 4px 40px rgba(0, 0, 0, 0.42);
   --bl-mode-accent:      {{ accent }};
+  --bl-mode-nav-accent:  {{ accent }};
   --bl-drawer-bg:        {{ drawer_bg_dark }};
   --bl-drawer-text:      {{ drawer_txt_dark }};
   --bl-drawer-accent:    {{ drawer_accent }};
@@ -117,7 +129,8 @@
   --bl-mode-body-bg:     #f0f5f8;
   --bl-mode-shadow:      0 4px 40px rgba(0, 26, 46, 0.10);
   --bl-mode-accent:      {{ accent }};
-  --bl-drawer-bg:        {{ drawer_bg_light }};
+  --bl-mode-nav-accent:  {{ accent_light }};
+  --bl-drawer-bg:        color-mix(in srgb, {{ drawer_bg_light }} 55%, white 45%);
   --bl-drawer-text:      {{ drawer_txt_light }};
   --bl-drawer-accent:    {{ drawer_accent_light }};
   --bl-drawer-border:    rgba(0, 26, 46, 0.12);
@@ -227,6 +240,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #{{ section_id }} .bl-hdr-ann-track { animation-play-state: paused; }
 }
+@media (max-width: 768px) {
+  #{{ section_id }} .bl-hdr-ann-item { font-size: {{ ann_font_size_mobile }}px; }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    MOBILE DRAWER — comprehensive theming
@@ -300,7 +316,7 @@ body {
 .menu-drawer summary {
   color: var(--bl-drawer-text) !important;
   font-family: 'DM Sans', sans-serif !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   font-size: 1.55rem !important;
   letter-spacing: 0.015em !important;
 }
@@ -438,17 +454,21 @@ body {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: none; }
 }
-/* Sub-links inside expanded accordions */
-#mobile_menu_drawer details[open] a,
-.menu-drawer details[open] a {
+/* Sub-links inside expanded accordions — scoped to `> *:not(summary) a`
+   rather than a bare `details[open] a`, since the latter also matches
+   the trigger link itself (the <a> sitting inside <summary>, which is
+   a descendant of <details> too), wrongly giving the "Resources"
+   trigger the same left accent bar as its actual sub-links below. */
+#mobile_menu_drawer details[open] > *:not(summary) a,
+.menu-drawer details[open] > *:not(summary) a {
   color: var(--bl-drawer-text) !important;
   font-size: 1.4rem !important;
   padding-left: 1.2rem !important;
   border-left: 2px solid rgba(7,209,110,0.25) !important;
   display: block;
 }
-#mobile_menu_drawer details[open] a:hover,
-.menu-drawer details[open] a:hover {
+#mobile_menu_drawer details[open] > *:not(summary) a:hover,
+.menu-drawer details[open] > *:not(summary) a:hover {
   color: var(--bl-drawer-accent) !important;
   border-left-color: var(--bl-drawer-accent) !important;
 }
@@ -478,12 +498,10 @@ body {
 }
 
 /* ── Logo in drawer — schema-controlled height ── */
-#mobile_menu_drawer img,
 #mobile_menu_drawer .header_name-logo-wrapper img,
 #mobile_menu_drawer .menu-drawer__logo img,
 .menu-drawer .menu-drawer__logo img,
-.menu-drawer .header_name-logo-wrapper img,
-.menu-drawer img:not([class*="icon"]) {
+.menu-drawer .header_name-logo-wrapper img {
   height: {{ drawer_logo_size }}px !important;
   max-height: {{ drawer_logo_size }}px !important;
   width: auto !important;
@@ -570,81 +588,317 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE "ALL CATEGORIES" ACCORDION — expands in place inside the
-   hamburger drawer. Categories come from the same section.blocks
-   source the desktop mega menu uses (see cat_blocks below).
+   MOBILE CATEGORY TABS WIDGET — replaces the old "All Categories"
+   accordion. Sits directly in the mobile menu list (no collapsible
+   toggle of its own) as a two-pane widget: a left rail of category
+   tabs (thumbnail + label) and a right pane showing the active tab's
+   subcategories. Categories come from the same section.blocks source
+   the desktop mega menu uses (see cat_blocks in menu-drawer.liquid) —
+   a block only appears here if its "Display on mobile view" setting
+   is on; the desktop mega menu is unaffected by that toggle.
    ═══════════════════════════════════════════════════════════════ */
 
-#mobile_menu_drawer .mob_categories_toggle {
+#mobile_menu_drawer .mob_cat_widget {
   display: flex !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background: var(--bl-drawer-bg) !important;
+  border: 1px solid var(--bl-drawer-border) !important;
+  margin: 0.2rem 0 0.6rem !important;
+}
+
+#mobile_menu_drawer .mob_cat_rail {
+  display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  gap: 0.8rem;
+  gap: 1.1rem !important;
+  width: 9.75rem !important;
+  flex-shrink: 0 !important;
+  padding: 1.4rem 0.5rem !important;
+  max-height: 32rem !important;
+  overflow-y: auto !important;
+  background: color-mix(in srgb, var(--bl-drawer-bg) 82%, black 18%) !important;
+  border-right: 1px solid var(--bl-drawer-border) !important;
+}
+
+#mobile_menu_drawer .mob_cat_tab {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
   width: 100% !important;
   background: transparent !important;
   border: none !important;
   cursor: pointer !important;
+  padding: 0 !important;
   font: inherit;
-  text-align: left;
 }
 
-/* Hover no longer shifts the label — only a click does */
-#mobile_menu_drawer .mob_categories_toggle:hover {
-  padding-left: inherit !important;
+#mobile_menu_drawer .mob_cat_tab_thumb {
+  width: 4.4rem !important;
+  height: 4.4rem !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid transparent !important;
+  background: var(--bl-drawer-bg) !important;
+  transition: border-color 0.25s ease, transform 0.25s ease !important;
+  flex-shrink: 0 !important;
 }
 
-#mobile_menu_drawer .mob_categories_label {
-  display: inline-block;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+#mobile_menu_drawer .mob_cat_tab_thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
 }
 
-#mobile_menu_drawer .mob_categories_toggle--open .mob_categories_label {
-  transform: translateX(-6px);
-}
-
-#mobile_menu_drawer .mob_categories_chevron {
-  font-size: 1.3rem !important;
-  color: var(--bl-drawer-text) !important;
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s ease !important;
-  flex-shrink: 0;
-}
-
-#mobile_menu_drawer .mob_categories_toggle--open .mob_categories_chevron {
-  transform: rotate(180deg);
+#mobile_menu_drawer .mob_cat_tab_thumb_placeholder {
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
   color: var(--bl-drawer-accent) !important;
+  text-transform: uppercase !important;
 }
 
-#mobile_menu_drawer .mob_categories_panel {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+#mobile_menu_drawer .mob_cat_tab.is-active .mob_cat_tab_thumb {
+  border-color: var(--bl-drawer-accent) !important;
+  transform: scale(1.06);
 }
 
-#mobile_menu_drawer .mob_categories_list {
+#mobile_menu_drawer .mob_cat_tab_label {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.01em !important;
+  text-align: center !important;
+  line-height: 1.22 !important;
+  color: var(--bl-drawer-text) !important;
+  opacity: 0.55;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  transition: color 0.2s ease, opacity 0.2s ease !important;
+}
+
+#mobile_menu_drawer .mob_cat_tab.is-active .mob_cat_tab_label {
+  color: var(--bl-drawer-accent) !important;
+  opacity: 1;
+}
+
+#mobile_menu_drawer .mob_cat_panel_wrap {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-height: 32rem !important;
+  overflow-y: auto !important;
+}
+
+#mobile_menu_drawer .mob_cat_panel {
+  display: none !important;
+}
+
+#mobile_menu_drawer .mob_cat_panel.is-active {
+  display: block !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_list {
   list-style: none !important;
-  padding: 0.4rem 0 0.8rem !important;
   margin: 0 !important;
+  padding: 0.4rem 0 !important;
 }
 
-#mobile_menu_drawer .mob_categories_item {
+#mobile_menu_drawer .mob_cat_sub_item {
   border: none !important;
 }
 
-#mobile_menu_drawer .mob_categories_link {
-  display: block !important;
-  padding: 0.9rem 1.2rem !important;
-  font-size: 1.4rem !important;
-  font-weight: 500 !important;
-  color: var(--bl-drawer-text) !important;
-  border-left: 2px solid rgba(7, 209, 110, 0.25) !important;
-  transition: color 0.22s ease, border-color 0.22s ease, padding-left 0.22s ease !important;
+#mobile_menu_drawer .mob_cat_sub_item + .mob_cat_sub_item {
+  border-top: 1px solid var(--bl-drawer-border) !important;
 }
 
-#mobile_menu_drawer .mob_categories_link:hover {
+/* Subcategory row — an accordion toggle (title + plus/minus icon)
+   instead of a plain link, since each subcategory now expands to show
+   its own mini product list pulled from the chosen collection. */
+#mobile_menu_drawer .mob_cat_sub_toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.6rem !important;
+  width: 100% !important;
+  padding: 1rem 1.2rem !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  font: inherit;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+  color: var(--bl-drawer-text) !important;
+  text-align: left !important;
+  transition: color 0.2s ease !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_toggle:hover {
   color: var(--bl-drawer-accent) !important;
-  border-left-color: var(--bl-drawer-accent) !important;
-  padding-left: 1.8rem !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_icon {
+  position: relative !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  flex-shrink: 0 !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_icon::before,
+#mobile_menu_drawer .mob_cat_sub_icon::after {
+  content: '' !important;
+  position: absolute !important;
+  background: var(--bl-drawer-accent) !important;
+  border-radius: 2px !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_icon::before {
+  left: 0 !important;
+  top: 50% !important;
+  width: 100% !important;
+  height: 2px !important;
+  transform: translateY(-50%) !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_icon::after {
+  top: 0 !important;
+  left: 50% !important;
+  width: 2px !important;
+  height: 100% !important;
+  transform: translateX(-50%) !important;
+  transition: opacity 0.2s ease !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_toggle[aria-expanded="true"] .mob_cat_sub_icon::after {
+  opacity: 0 !important;
+}
+
+/* Collapsible product list — JS drives max-height for a smooth
+   expand/collapse instead of an instant show/hide. */
+#mobile_menu_drawer .mob_cat_sub_products {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 1.2rem;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, padding 0.35s ease;
+}
+
+#mobile_menu_drawer .mob_cat_sub_toggle[aria-expanded="true"] + .mob_cat_sub_products {
+  padding: 0 1.2rem 1rem;
+  opacity: 1;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_list {
+  list-style: none !important;
+  margin: 0 0 0.8rem !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.6rem !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  padding: 0.5rem !important;
+  border-radius: 10px !important;
+  background: var(--bl-drawer-bg) !important;
+  border: 1px solid var(--bl-drawer-border) !important;
+  color: var(--bl-drawer-text) !important;
+  text-decoration: none !important;
+  transition: border-color 0.2s ease, color 0.2s ease !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_link:hover {
+  border-color: var(--bl-drawer-accent) !important;
+  color: var(--bl-drawer-accent) !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_img {
+  width: 3.6rem !important;
+  height: 3.6rem !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  background: color-mix(in srgb, var(--bl-drawer-bg) 82%, black 18%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_img img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_product_title {
+  font-size: 1.15rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  line-height: 1.3 !important;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_viewmore {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  padding: 0.8rem !important;
+  border-radius: 8px !important;
+  background: var(--bl-drawer-accent) !important;
+  color: var(--bl-navy, #001a2e) !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  transition: filter 0.2s ease !important;
+}
+
+#mobile_menu_drawer .mob_cat_sub_viewmore:hover {
+  filter: brightness(1.08);
+}
+
+/* Main Collection mode — the product list + view-more button sit
+   directly in the category panel (no accordion toggle wraps them),
+   so unlike the subcategory version they need their own padding
+   instead of inheriting it from `.mob_cat_sub_products`. */
+#mobile_menu_drawer .mob_cat_main_collection_list {
+  padding: 1rem 1.2rem 0 !important;
+}
+
+#mobile_menu_drawer .mob_cat_main_collection_viewmore {
+  margin: 0.4rem 1.2rem 1rem !important;
+  width: calc(100% - 2.4rem) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DRAWER WIDTH — the base theme's own drawer CSS was leaving the
+   panel narrower than the viewport on mobile (a visible strip of
+   backdrop on the right edge). Force it to genuinely span full width
+   there, matching the "full-screen mobile nav" look this menu is
+   meant to have.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  #mobile_menu_drawer,
+  #mobile_menu_drawer.mobile_drawer_wrapper,
+  menudrawer-mobile {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -812,6 +1066,18 @@ header-element {
   #{{ section_id }} .bl-hdr-spacer { display: none; }
 {% endif %}
 
+/* Global header-height var other sections (e.g. hero-section.liquid)
+   read via var(--bl-header-total-height) instead of measuring the DOM
+   in their own JS. */
+:root {
+  --bl-header-total-height: {{ bl_total_header_height }}px;
+}
+@media (max-width: 1024px) {
+  :root {
+    --bl-header-total-height: {{ bl_total_header_height_mob }}px;
+  }
+}
+
 /* ─── Wrapper — NO overflow:hidden (would clip dropdowns) ────── */
 
 #{{ section_id }} .bl-hdr-wrapper {
@@ -946,7 +1212,7 @@ header-element {
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: var(--bl-mode-accent);
+  background: var(--bl-mode-nav-accent);
   border-radius: 2px;
   transition: width 0.35s var(--bl-ease-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
@@ -954,7 +1220,7 @@ header-element {
 #{{ section_id }} .bl-nav-link:hover,
 #{{ section_id }} .bl-nav-link[aria-current="page"],
 #{{ section_id }} .bl-nav-link.is-active {
-  color: var(--bl-mode-accent);
+  color: var(--bl-mode-nav-accent);
   background: var(--bl-mode-icon-hover);
 }
 
@@ -975,7 +1241,7 @@ header-element {
 #{{ section_id }} .bl-nav-item:hover .bl-nav-chevron,
 #{{ section_id }} .bl-nav-item:focus-within .bl-nav-chevron {
   transform: rotate(180deg);
-  color: var(--bl-mode-accent);
+  color: var(--bl-mode-nav-accent);
 }
 
 /* ─── Dropdown — z-index:300 ensures it floats above page content */
@@ -1035,7 +1301,7 @@ header-element {
 
 #{{ section_id }} .bl-nav-dropdown-link:hover,
 #{{ section_id }} .bl-nav-dropdown-link[aria-current="page"] {
-  color: var(--bl-mode-accent);
+  color: var(--bl-mode-nav-accent);
   background: var(--bl-mode-icon-hover);
   padding-left: 2rem;
 }
@@ -1303,9 +1569,16 @@ header-element {
 #{{ section_id }} .bl-mega-categories {
   position: absolute;
   top: calc(100% + 0.8rem);
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  width: min(780px, calc(100vw - 4rem));
+  /* `left` is a px value the JS below sets on every open/resize, clamped
+     so the panel never overflows the viewport regardless of where the
+     "All Categories" trigger sits in the header (it's the first nav
+     item, far from centered, so centering purely on it — the old
+     left:50%/translateX(-50%) approach — pushed the panel off the left
+     edge on realistic viewport widths). Falls back to flush-left with
+     the trigger before JS runs on the very first paint. */
+  left: 0;
+  transform: translateY(-8px);
+  width: min(960px, calc(100vw - 3.2rem));
   background: #ffffff;
   border-radius: 16px;
   padding: 2rem;
@@ -1333,12 +1606,16 @@ header-element {
   opacity: 1;
   visibility: visible;
   pointer-events: all;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 #{{ section_id }} .bl-mega-cat-grid {
   display: grid;
-  grid-template-columns: repeat({{ section.settings.mega_columns | default: 3 }}, 1fr);
+  /* Always exactly 4 columns on desktop (this panel only ever renders
+     above the 1024px breakpoint where .bl-nav is hidden) — fixed
+     regardless of block count so the panel's width stays predictable
+     and the positioning JS below can reliably keep it on-screen. */
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
   row-gap: {{ section.settings.mega_row_gap | default: 4 }}px;
   column-gap: {{ section.settings.mega_col_gap | default: 4 }}px;
 }
@@ -1357,11 +1634,12 @@ header-element {
   letter-spacing: 0;
   text-transform: none;
   transition: background 0.2s ease, color 0.2s ease;
+  min-width: 0;
 }
 
 #{{ section_id }} .bl-mega-cat-item:hover {
   background: #f0f7f5;
-  color: #07d16e;
+  color: var(--bl-mode-nav-accent);
 }
 
 #{{ section_id }} .bl-mega-cat-img-wrap {
@@ -1398,6 +1676,9 @@ header-element {
   font-size: 1.4rem;
   font-weight: 500;
   color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.3;
 }
 
@@ -1794,9 +2075,16 @@ document.addEventListener('DOMContentLoaded', function () {
       drawer.querySelectorAll(
         'a, summary, button, span, p, h1, h2, h3, h4, h5, label'
       ).forEach(function(el) {
-        if (!el.classList.contains('visually-hidden') && !el.closest('.bl-drawer-acct-wrap')) {
+        if (!el.classList.contains('visually-hidden') && !el.closest('.bl-drawer-acct-wrap') && !el.closest('.mob_cat_sub_viewmore')) {
           el.style.setProperty('color', txt, 'important');
         }
+      });
+
+      /* "View More" button — background stays the accent color in both
+         modes, so its text needs the opposite fixed color for contrast
+         (not the general drawer text color used everywhere else). */
+      drawer.querySelectorAll('.mob_cat_sub_viewmore').forEach(function(el) {
+        el.style.setProperty('color', isDark ? '#000000' : '#ffffff', 'important');
       });
 
       /* Divider lines */
@@ -1846,7 +2134,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var drawerLogoSrc = isDark ? DRAWER_LOGO_DARK : DRAWER_LOGO_LIGHT;
       if (drawerLogoSrc) {
         drawer.querySelectorAll(
-          'img, .header_name-logo-wrapper img, .menu-drawer__logo img'
+          '.header_name-logo-wrapper img, .menu-drawer__logo img'
         ).forEach(function(el) {
           if (el.getAttribute('src') !== drawerLogoSrc) {
             el.setAttribute('src', drawerLogoSrc);
@@ -1861,7 +2149,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var BL_ACCT_URL      = {{ acct_dest | json }};
   var BL_ACCT_LABEL    = {{ drawer_account_label | json }};
   var BL_ACCT_POSITION = '{{ drawer_account_position }}';
-  var BL_ACCT_SHOW     = {% if drawer_show_account == false %}false{% else %}true{% endif %};
+  var BL_ACCT_SHOW     = false; /* "My Account" removed from the mobile hamburger drawer */
 
   function injectAccountButton() {
     if (!BL_ACCT_SHOW) return;
@@ -2096,6 +2384,31 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
+  // ─── Categories mega menu: viewport-safe positioning ───────────
+  // The trigger ("All Categories") sits near the left of the nav, not
+  // centered — so centering the panel purely on the trigger (the old
+  // left:50%/translateX(-50%) approach) pushed it off the left edge of
+  // the viewport on realistic desktop widths. Instead this centers the
+  // panel under the trigger when there's room, then slides it inward
+  // just enough to keep both edges inside the viewport (16px margin).
+  var megaItem = document.querySelector('#{{ section_id }} .bl-nav-item--mega');
+  var megaPanel = document.querySelector('#{{ section_id }} .bl-mega-categories');
+  if (megaItem && megaPanel) {
+    var positionMegaPanel = function () {
+      var triggerRect = megaItem.getBoundingClientRect();
+      var panelWidth = megaPanel.offsetWidth;
+      var margin = 16;
+      var idealLeft = triggerRect.left + (triggerRect.width / 2) - (panelWidth / 2);
+      var maxLeft = window.innerWidth - panelWidth - margin;
+      var clampedLeft = Math.max(margin, Math.min(idealLeft, maxLeft));
+      megaPanel.style.left = (clampedLeft - triggerRect.left) + 'px';
+    };
+    positionMegaPanel();
+    megaItem.addEventListener('mouseenter', positionMegaPanel);
+    megaItem.addEventListener('focusin', positionMegaPanel);
+    window.addEventListener('resize', positionMegaPanel, { passive: true });
+  }
+
 });
 </script>
 
@@ -2202,6 +2515,17 @@ document.addEventListener('DOMContentLoaded', function () {
       "info": "When Fixed, the header attaches directly below it and offsets automatically."
     },
     {
+      "type": "range",
+      "id": "announcement_font_size_mobile",
+      "label": "Mobile announcement text size",
+      "min": 8,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "default": 11,
+      "info": "Text size for the announcement bar on mobile screens (768px and narrower)."
+    },
+    {
       "type": "header",
       "content": "Brand Logo"
     },
@@ -2281,16 +2605,8 @@ document.addEventListener('DOMContentLoaded', function () {
     },
     {
       "type": "header",
-      "content": "Categories Mega Menu Grid"
-    },
-    {
-      "type": "range",
-      "id": "mega_columns",
-      "label": "Number of columns",
-      "min": 2,
-      "max": 5,
-      "step": 1,
-      "default": 3
+      "content": "Categories Mega Menu Grid",
+      "info": "Desktop always shows a fixed 4-column grid so the panel stays predictably sized and never overflows the viewport; these settings control spacing only."
     },
     {
       "type": "range",
@@ -2544,6 +2860,13 @@ document.addEventListener('DOMContentLoaded', function () {
       "default": "#07d16e"
     },
     {
+      "type": "color",
+      "id": "accent_color_light",
+      "label": "Nav hover accent color (light mode)",
+      "default": "#04914f",
+      "info": "Used for nav link, dropdown, and categories menu hover/active states in light mode. A darker green reads better on light backgrounds. Dark mode keeps using the main accent color above."
+    },
+    {
       "type": "header",
       "content": "Color Scheme"
     },
@@ -2586,6 +2909,178 @@ document.addEventListener('DOMContentLoaded', function () {
           "id": "category_link",
           "label": "Category link",
           "info": "URL that opens when the category is clicked."
+        },
+        {
+          "type": "header",
+          "content": "Mobile Menu"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Display on mobile view",
+          "default": true,
+          "info": "Turn off to hide this category tab from the mobile hamburger menu entirely. Desktop \"All Categories\" mega menu is unaffected."
+        },
+        {
+          "type": "header",
+          "content": "Mobile Main Collection",
+          "info": "Set this to show this collection's products directly on the category tab, with no subcategory list. When a Main Collection is chosen, the Mobile Subcategories settings below are ignored for this category."
+        },
+        {
+          "type": "collection",
+          "id": "main_collection",
+          "label": "Main Collection"
+        },
+        {
+          "type": "range",
+          "id": "main_collection_count",
+          "label": "Main Collection — Products to show",
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "default": 8
+        },
+        {
+          "type": "checkbox",
+          "id": "main_collection_view_more",
+          "label": "Main Collection — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
+        },
+        {
+          "type": "header",
+          "content": "Mobile Subcategories",
+          "info": "Ignored when a Main Collection is set above. Each subcategory expands to show product thumbnails + titles pulled live from the collection you pick — up to 5 subcategories. Leave a name blank to skip that row."
+        },
+        {
+          "type": "text",
+          "id": "sub_category_name_1",
+          "label": "Subcategory 1 — Name"
+        },
+        {
+          "type": "collection",
+          "id": "sub_category_collection_1",
+          "label": "Subcategory 1 — Collection"
+        },
+        {
+          "type": "range",
+          "id": "sub_category_count_1",
+          "label": "Subcategory 1 — Products to show",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "sub_category_view_more_1",
+          "label": "Subcategory 1 — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
+        },
+        {
+          "type": "text",
+          "id": "sub_category_name_2",
+          "label": "Subcategory 2 — Name"
+        },
+        {
+          "type": "collection",
+          "id": "sub_category_collection_2",
+          "label": "Subcategory 2 — Collection"
+        },
+        {
+          "type": "range",
+          "id": "sub_category_count_2",
+          "label": "Subcategory 2 — Products to show",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "sub_category_view_more_2",
+          "label": "Subcategory 2 — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
+        },
+        {
+          "type": "text",
+          "id": "sub_category_name_3",
+          "label": "Subcategory 3 — Name"
+        },
+        {
+          "type": "collection",
+          "id": "sub_category_collection_3",
+          "label": "Subcategory 3 — Collection"
+        },
+        {
+          "type": "range",
+          "id": "sub_category_count_3",
+          "label": "Subcategory 3 — Products to show",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "sub_category_view_more_3",
+          "label": "Subcategory 3 — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
+        },
+        {
+          "type": "text",
+          "id": "sub_category_name_4",
+          "label": "Subcategory 4 — Name"
+        },
+        {
+          "type": "collection",
+          "id": "sub_category_collection_4",
+          "label": "Subcategory 4 — Collection"
+        },
+        {
+          "type": "range",
+          "id": "sub_category_count_4",
+          "label": "Subcategory 4 — Products to show",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "sub_category_view_more_4",
+          "label": "Subcategory 4 — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
+        },
+        {
+          "type": "text",
+          "id": "sub_category_name_5",
+          "label": "Subcategory 5 — Name"
+        },
+        {
+          "type": "collection",
+          "id": "sub_category_collection_5",
+          "label": "Subcategory 5 — Collection"
+        },
+        {
+          "type": "range",
+          "id": "sub_category_count_5",
+          "label": "Subcategory 5 — Products to show",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "sub_category_view_more_5",
+          "label": "Subcategory 5 — Show \"View More\" button",
+          "default": true,
+          "info": "Links to the collection page."
         }
       ]
     },

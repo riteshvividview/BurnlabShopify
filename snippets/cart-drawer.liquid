@@ -15,31 +15,42 @@
 
 :root,
 [data-theme="dark"] {
-  --bl-cdr-bg:       #001828;
-  --bl-cdr-text:     #eaf4f5;
-  --bl-cdr-accent:   #07d16e;
-  --bl-cdr-item-bg:  #001a2e;
-  --bl-cdr-border:   rgba(51,104,112,0.22);
-  --bl-cdr-muted:    rgba(234,244,245,0.50);
-  --bl-cdr-overlay:  rgba(0,10,20,0.75);
-  --bl-cdr-shadow:   -8px 0 48px rgba(0,0,0,0.50);
-  --bl-cdr-inp-bg:   rgba(255,255,255,0.05);
+  --bl-cdr-bg:            #001828;
+  --bl-cdr-text:          #eaf4f5;
+  --bl-cdr-accent:        #07d16e;
+  --bl-cdr-cta-text:      #001a2e;
+  --bl-cdr-item-bg:       #001a2e;
+  --bl-cdr-border:        rgba(51,104,112,0.22);
+  --bl-cdr-muted:         rgba(234,244,245,0.50);
+  --bl-cdr-overlay:       rgba(0,10,20,0.75);
+  --bl-cdr-shadow:        -8px 0 48px rgba(0,0,0,0.50);
+  --bl-cdr-inp-bg:        rgba(255,255,255,0.05);
 }
 
 [data-theme="light"] {
-  --bl-cdr-bg:      #f0f5f8;
-  --bl-cdr-text:    #001a2e;
-  --bl-cdr-item-bg: #ffffff;
-  --bl-cdr-border:  rgba(0,26,46,0.12);
-  --bl-cdr-muted:   rgba(0,26,46,0.50);
-  --bl-cdr-overlay: rgba(0,26,46,0.55);
-  --bl-cdr-shadow:  -8px 0 48px rgba(0,26,46,0.22);
-  --bl-cdr-inp-bg:  rgba(0,26,46,0.04);
+  --bl-cdr-bg:            #f0f5f8;
+  --bl-cdr-text:          #001a2e;
+  /* Teal instead of the same bright green used in dark mode — the
+     green read as too light/washed out against a white background. */
+  --bl-cdr-accent:        #336870;
+  --bl-cdr-cta-text:      #ffffff;
+  --bl-cdr-item-bg:       #ffffff;
+  --bl-cdr-border:        rgba(0,26,46,0.12);
+  --bl-cdr-muted:         rgba(0,26,46,0.50);
+  --bl-cdr-overlay:       rgba(0,26,46,0.55);
+  --bl-cdr-shadow:        -8px 0 48px rgba(0,26,46,0.22);
+  --bl-cdr-inp-bg:        rgba(0,26,46,0.04);
 }
 
-/* ── Overlay backdrop ── */
+/* ── Overlay backdrop ──
+   z-index must beat header.liquid's own stacking (its section wrapper
+   and outer bar force themselves to z-index:9999), otherwise the
+   drawer — and its close button — render underneath the fixed header. */
 #cart_drawer,
 .cart_drawer_wrapper {
+  position:   fixed !important;
+  inset:      0 !important;
+  z-index:    999999 !important;
   background-color: var(--bl-cdr-overlay) !important;
   background:       var(--bl-cdr-overlay) !important;
 }
@@ -47,12 +58,19 @@
 /* ── Slide-in panel ── */
 .cart_drawer_inner,
 .drawer-wrapper_inner.cart_drawer_inner {
+  position:   fixed !important;
+  top:        0 !important;
+  right:      0 !important;
+  height:     100vh !important;
+  height:     100dvh !important;
+  z-index:    1000000 !important;
   background-color: var(--bl-cdr-bg) !important;
   background:       var(--bl-cdr-bg) !important;
   color:            var(--bl-cdr-text) !important;
   font-family:      'DM Sans', sans-serif !important;
   border-left:      1px solid var(--bl-cdr-border) !important;
   box-shadow:       var(--bl-cdr-shadow) !important;
+  border-radius:    0 !important;
   display:          flex !important;
   flex-direction:   column !important;
 }
@@ -70,15 +88,15 @@
 }
 
 .cart_drawer_header h4 {
-  font-family:    'Archivo Black', sans-serif !important;
-  font-weight:    400 !important;
+  font-family:    'DM Sans', sans-serif !important;
+  font-weight:    800 !important;
   font-size:      clamp(1.6rem, 2vw, 2rem) !important;
   letter-spacing: -0.01em !important;
   color:          var(--bl-cdr-text) !important;
   margin:         0 !important;
 }
 
-/* Close button */
+/* Close button — icon only, no circular background/border */
 .cart_drawer_header .drawer-wrapper__close,
 .cart_drawer_header .localization_drawer_close {
   width:       3.6rem !important;
@@ -86,19 +104,19 @@
   display:     flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background:  rgba(7,209,110,0.08) !important;
-  border:      1px solid rgba(7,209,110,0.22) !important;
-  border-radius: 50% !important;
+  background:  transparent !important;
+  border:      none !important;
+  border-radius: 0 !important;
   color:       var(--bl-cdr-accent) !important;
   cursor:      pointer !important;
-  transition:  background 0.22s ease, transform 0.25s ease !important;
+  transition:  color 0.22s ease, transform 0.25s ease !important;
   flex-shrink: 0 !important;
 }
 
 .cart_drawer_header .drawer-wrapper__close:hover,
 .cart_drawer_header .localization_drawer_close:hover {
-  background: rgba(7,209,110,0.16) !important;
-  transform:  rotate(90deg) scale(1.05) !important;
+  color:      var(--bl-cdr-accent) !important;
+  transform:  rotate(90deg) scale(1.1) !important;
 }
 
 .cart_drawer_header .icon_wrapper,
@@ -189,8 +207,8 @@
 
 /* Price */
 .cart_drawer_item_info .item_price_wrapper {
-  font-family: 'Archivo Black', sans-serif !important;
-  font-weight: 400 !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 700 !important;
   font-size:   clamp(1.2rem, 1.4vw, 1.5rem) !important;
   color:       var(--bl-cdr-text) !important;
   display:     flex !important;
@@ -337,6 +355,16 @@ item-quantity {
   stroke:   currentColor !important;
   pointer-events: none !important;
 }
+/* The raw icon-trash.svg ships with its own hardcoded fill (rendering
+   purple regardless of theme) — stroke:currentColor above doesn't
+   touch fill, so force it explicitly on every path/shape inside. */
+.item_remove_btn svg path,
+.item_remove_btn svg polyline,
+.item_remove_btn svg line,
+.item_remove_btn svg rect {
+  fill:   currentColor !important;
+  stroke: currentColor !important;
+}
 
 /* Cart error message */
 .cart_error,
@@ -350,8 +378,8 @@ item-quantity {
   background:   var(--bl-cdr-bg) !important;
 }
 .cart_drawer_upsell_head h2 {
-  font-family:    'Archivo Black', sans-serif !important;
-  font-weight:    400 !important;
+  font-family:    'DM Sans', sans-serif !important;
+  font-weight:    800 !important;
   font-size:      clamp(1.4rem, 1.8vw, 1.8rem) !important;
   letter-spacing: -0.01em !important;
   color:          var(--bl-cdr-text) !important;
@@ -367,6 +395,126 @@ item-quantity {
   vertical-align: 0.2em !important;
 }
 
+/* ── Upsell product cards ("You May Also Like") ──
+   Rendered by snippets/product-card.liquid (via the recommendations
+   API + Swiper — markup/logic untouched here, colors/sizing only).
+   That snippet's own CSS (product-card.css) reads --color-text,
+   --bg-color, --color-primary-button-* etc from Shopify's color-scheme
+   system, which never follows the site's dark/light data-theme toggle,
+   and some product cards render taller than others (a longer title
+   wraps to 2 lines, pushing the price row down) with no shared height
+   — the same fixes as elsewhere: recolor to our theme tokens, force
+   equal card height, and swap the heading font to DM Sans. */
+/* Each slide renders a bare title-only <a href> alongside the real
+   visual card (image/title/price) for that same product — not a
+   duplicate to dedupe, but the ONLY link for that product; the card
+   itself isn't wrapped in an anchor at all. Every other anchor in
+   this widget (real card links, swiper nav buttons) contains — or
+   is — an image or icon; a plain-text-only link never legitimately
+   appears here, so hiding by "no image inside" alone is reliable
+   without assuming a specific sibling/parent structure (an earlier
+   version assumed the stray link was always the image card's
+   immediate previous sibling, which didn't hold for every render).
+   Declarative :has() re-evaluates live as content streams in, so
+   there's no unstyled flash to catch with JS timing. The matching
+   JS below makes the now-unlinked card body clickable to that URL. */
+.cart_drawer_upsell_products a:not(:has(img)) {
+  display: none !important;
+}
+
+.cart_drawer_upsell_products .swiper-wrapper {
+  display:     flex !important;
+  align-items: stretch !important;
+}
+.cart_drawer_upsell_products .cart_upsell_item.swiper-slide {
+  height:  auto !important;
+  display: flex !important;
+}
+.cart_drawer_upsell_products .product_card_wrapper {
+  width:          100% !important;
+  height:         100% !important;
+  display:        flex !important;
+  flex-direction: column !important;
+  font-family:    'DM Sans', sans-serif !important;
+}
+.cart_drawer_upsell_products .product_card_image {
+  aspect-ratio: 1 / 1 !important;
+  height:       auto !important;
+  flex-shrink:  0 !important;
+  background:   var(--bl-cdr-item-bg) !important;
+}
+/* Content flows normally (top-down) right after the image instead of
+   being pinned to the card's bottom edge — bottom-pinning made the
+   price sit at a different height on every card depending on how much
+   blank space was left over, since titles clamp to a fixed 2-line slot
+   regardless of their real length. Flowing normally means every card's
+   title starts at the same point below the image, and every price
+   starts at the same point below the title. */
+.cart_drawer_upsell_products .product_card_content {
+  margin-top: 0.6rem !important;
+}
+.cart_drawer_upsell_products .p_title {
+  display:            -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow:           hidden !important;
+  min-height:         2.2em !important;
+  color:              var(--bl-cdr-text) !important;
+  font-family:        'DM Sans', sans-serif !important;
+  font-size:          1.15rem !important;
+  font-weight:        600 !important;
+  text-align:         left !important;
+}
+.cart_drawer_upsell_products .p_description,
+.cart_drawer_upsell_products .product_vendor {
+  color:       var(--bl-cdr-muted) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  text-align:  left !important;
+}
+.cart_drawer_upsell_products .product_card_price_inner {
+  justify-content: flex-start !important;
+}
+/* Every price — single or range — now reads "Starts from ₹X" (wrapped
+   by the script below), so both classes share the same muted
+   regular-weight lead-in style; only the highlighted span is bold +
+   accent colored. */
+.cart_drawer_upsell_products .regular_price,
+.cart_drawer_upsell_products .product_card_price_varies {
+  color:       var(--bl-cdr-muted) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  font-size:   1.1rem !important;
+  text-align:  left !important;
+}
+.cart_drawer_upsell_products .bl-cdr-price-highlight {
+  color:       var(--bl-cdr-accent) !important;
+  font-weight: 800 !important;
+  font-size:   1.4rem !important;
+}
+.cart_drawer_upsell_products .product_card_price_inner .cap {
+  color:       var(--bl-cdr-muted) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+.cart_drawer_upsell_products .badge_inner {
+  background: var(--bl-cdr-item-bg) !important;
+}
+.cart_drawer_upsell_products .badge_inner span {
+  color:       var(--bl-cdr-text) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+.cart_drawer_upsell_products .quick_view_inner button {
+  background:  var(--bl-cdr-accent) !important;
+  border-color: var(--bl-cdr-accent) !important;
+  box-shadow:  none !important;
+}
+.cart_drawer_upsell_products .quick_view_inner button svg path {
+  fill: var(--bl-cdr-cta-text) !important;
+}
+.cart_drawer_upsell_products .cu.swiper-button-prev,
+.cart_drawer_upsell_products .cu.swiper-button-next {
+  color: var(--bl-cdr-text) !important;
+}
+
 /* ── Empty cart ── */
 .empty_cart_drawer {
   display:         flex !important;
@@ -379,8 +527,8 @@ item-quantity {
   background:      var(--bl-cdr-bg) !important;
 }
 .empty_cart_drawer h5 {
-  font-family:    'Archivo Black', sans-serif !important;
-  font-weight:    400 !important;
+  font-family:    'DM Sans', sans-serif !important;
+  font-weight:    800 !important;
   font-size:      clamp(1.8rem, 3vw, 2.4rem) !important;
   letter-spacing: -0.02em !important;
   color:          var(--bl-cdr-text) !important;
@@ -394,9 +542,9 @@ item-quantity {
   background:      var(--bl-cdr-accent) !important;
   border:          none !important;
   border-radius:   9px !important;
-  color:           #001a2e !important;
-  font-family:     'Archivo Black', sans-serif !important;
-  font-weight:     400 !important;
+  color:           var(--bl-cdr-cta-text) !important;
+  font-family:     'DM Sans', sans-serif !important;
+  font-weight:     700 !important;
   font-size:       clamp(1.3rem, 1.5vw, 1.5rem) !important;
   text-decoration: none !important;
   cursor:          pointer !important;
@@ -442,6 +590,8 @@ item-quantity {
 .cart_drawer_discount_inner details > summary::-webkit-details-marker { display: none !important; }
 
 .cart_drawer_note .cart_note_trigger,
+.cart_drawer_note .cart_add_note,
+.cart_drawer_note .cart_edit_note,
 .cart_drawer_discount_trigger p {
   font-family: 'DM Sans', sans-serif !important;
   font-size:   clamp(1.2rem, 1.4vw, 1.4rem) !important;
@@ -452,6 +602,13 @@ item-quantity {
 }
 .cart_drawer_cart_note_wrapper details > summary:hover .cart_note_trigger,
 .cart_drawer_discount_inner details > summary:hover p { color: var(--bl-cdr-accent) !important; }
+
+/* "add cart note" / "edit cart note" copy comes from the theme's
+   locale file lowercase — capitalize each word purely for display. */
+.cart_add_note,
+.cart_edit_note {
+  text-transform: capitalize !important;
+}
 
 /* + icon in accordion */
 .cart_drawer_note > span svg,
@@ -491,38 +648,73 @@ details[open] .cart_drawer_discount_trigger > span svg {
 .cart_note_inner textarea:focus { border-color: var(--bl-cdr-accent) !important; }
 .cart_note_inner textarea::placeholder { color: var(--bl-cdr-muted) !important; }
 
-/* Discount content */
-.cart_drawer_discount_content { padding: 0 1.2rem 1.2rem !important; background: var(--bl-cdr-item-bg) !important; }
-.cart_drawer_discount_content .input_wrapper { position: relative !important; margin-bottom: 0.8rem !important; }
-.cart_drawer_discount_content input[name="discount"] {
+/* Discount content
+   Every selector here is prefixed with the #cart_drawer id to out-
+   specificity Evolve's own cart-drawer.css — without it, some of these
+   rules (input border-radius/border, button layout) were losing that
+   fight, which is what produced the oversized pill radius, the stray
+   double-border artifacts, and the input/button misalignment. */
+#cart_drawer .cart_drawer_discount_content { padding: 0 1.2rem 1.2rem !important; background: var(--bl-cdr-item-bg) !important; }
+
+/* Input + Apply button sit in one row, vertically centered. */
+#cart_drawer #cart_discount_form {
+  display:     flex !important;
+  align-items: center !important;
+  gap:         0.7rem !important;
+}
+#cart_drawer #cart_discount_form .input_wrapper {
+  position: relative !important;
+  flex:     1 1 auto !important;
+  min-width: 0 !important;
+  margin:   0 !important;
+}
+#cart_drawer .cart_drawer_discount_content input[name="discount"] {
+  -webkit-appearance: none !important;
+  appearance:  none !important;
+  box-shadow:  none !important;
   width:       100% !important;
-  padding:     0.9rem 1rem !important;
+  height:      4.4rem !important;
+  padding:     0 1rem !important;
   background:  var(--bl-cdr-inp-bg) !important;
   border:      1px solid var(--bl-cdr-border) !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   color:       var(--bl-cdr-text) !important;
   font-family: 'DM Sans', sans-serif !important;
   font-size:   clamp(1.2rem, 1.4vw, 1.3rem) !important;
   outline:     none !important;
   transition:  border-color 0.22s ease !important;
 }
-.cart_drawer_discount_content input[name="discount"]:focus { border-color: var(--bl-cdr-accent) !important; }
-.cart_drawer_discount_content input[name="discount"]::placeholder { color: var(--bl-cdr-muted) !important; }
+#cart_drawer .cart_drawer_discount_content input[name="discount"]:focus { border-color: var(--bl-cdr-accent) !important; }
+#cart_drawer .cart_drawer_discount_content input[name="discount"]::placeholder { color: var(--bl-cdr-muted) !important; }
+/* This label duplicates the input's own placeholder text 1:1 and its
+   floating-notch position was clashing with Evolve's base styling,
+   overlapping the typed value instead of floating above the border.
+   Visually hidden (kept in the DOM for screen readers) so the field
+   looks like a normal input — same as the cart note textarea. */
 .cart_drawer_discount_content label {
-  position:   absolute !important;
-  top:        -0.6rem !important; left: 0.8rem !important;
-  font-size:  1rem !important; font-weight: 600 !important;
-  color:      var(--bl-cdr-accent) !important;
-  background: var(--bl-cdr-item-bg) !important;
-  padding:    0 0.3rem !important;
-  pointer-events: none !important;
+  position:  absolute !important;
+  width:     1px !important;
+  height:    1px !important;
+  padding:   0 !important;
+  margin:    -1px !important;
+  overflow:  hidden !important;
+  clip:      rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border:    0 !important;
+  background: transparent !important;
+  transform: none !important;
 }
-.cart_drawer_discount_content_btn .btn {
-  width:       100% !important;
-  padding:     0.85rem !important;
+#cart_drawer .cart_drawer_discount_content_btn {
+  flex:      0 0 auto !important;
+  margin:    0 !important;
+}
+#cart_drawer .cart_drawer_discount_content_btn .btn {
+  width:       auto !important;
+  height:      4.4rem !important;
+  padding:     0 1.4rem !important;
   background:  transparent !important;
   border:      1px solid var(--bl-cdr-accent) !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   color:       var(--bl-cdr-accent) !important;
   font-family: 'DM Sans', sans-serif !important;
   font-size:   clamp(1.2rem, 1.4vw, 1.3rem) !important;
@@ -530,10 +722,13 @@ details[open] .cart_drawer_discount_trigger > span svg {
   cursor:      pointer !important;
   text-align:  center !important;
   text-decoration: none !important;
-  display:     block !important;
+  display:     inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
   transition:  background 0.22s ease !important;
 }
-.cart_drawer_discount_content_btn .btn:hover { background: rgba(7,209,110,0.10) !important; }
+#cart_drawer .cart_drawer_discount_content_btn .btn:hover { background: rgba(7,209,110,0.10) !important; }
 
 /* Applied discount tags */
 .cart_applied_discount {
@@ -574,8 +769,8 @@ details[open] .cart_drawer_discount_trigger > span svg {
 .cart_drawer_items_subtotals p { font-family: 'DM Sans', sans-serif !important; margin: 0 !important; }
 .cart_drawer_items_subtotals .item_subtotal { font-size: clamp(1.2rem,1.4vw,1.4rem) !important; color: var(--bl-cdr-muted) !important; font-weight: 500 !important; }
 .cart_drawer_items_subtotals p:last-child {
-  font-family: 'Archivo Black', sans-serif !important;
-  font-weight: 400 !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 800 !important;
   font-size:   clamp(1.6rem, 2vw, 2rem) !important;
   color:       var(--bl-cdr-accent) !important;
   white-space: nowrap !important;
@@ -630,23 +825,25 @@ details[open] .cart_drawer_discount_trigger > span svg {
   background:      var(--bl-cdr-accent) !important;
   border:          none !important;
   border-radius:   9px !important;
-  color:           #001a2e !important;
-  font-family:     'Archivo Black', sans-serif !important;
-  font-weight:     400 !important;
+  color:           var(--bl-cdr-cta-text) !important;
+  font-family:     'DM Sans', sans-serif !important;
+  font-weight:     700 !important;
   font-size:       clamp(1.3rem, 1.5vw, 1.5rem) !important;
   letter-spacing:  0.01em !important;
   text-decoration: none !important;
   cursor:          pointer !important;
   position:        relative !important;
   overflow:        hidden !important;
-  transition:      opacity 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease !important;
+  box-shadow:      none !important;
+  transition:      opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease !important;
 }
 .cart_drawer_items_btns .btn-secondary:hover,
 .cart_drawer_items_btns > a:last-of-type:hover,
 .cart_drawer_items_btns magnetic-button:last-of-type a:hover {
-  opacity:    0.9 !important;
+  opacity:    0.92 !important;
   transform:  translateY(-2px) !important;
-  box-shadow: 0 8px 28px rgba(7,209,110,0.38) !important;
+  filter:     brightness(1.06) !important;
+  box-shadow: none !important;
 }
 
 /* wave-btn: hide the wave decoration, show span text */
@@ -983,13 +1180,7 @@ details[open] .cart_drawer_discount_trigger > span svg {
 
               {% if settings.show_tax_info %}
                 <span class="cart_items_tax_info">
-                  {%- if cart.duties_included and cart.taxes_included -%}
-                    {%- if shop.shipping_policy.body == blank -%}{{ 'sections.cart.duties_and_taxes_included_shipping_at_checkout_without_policy' | t }}{%- else -%}{{ 'sections.cart.duties_and_taxes_included_shipping_at_checkout_with_policy_html' | t: link: shop.shipping_policy.url }}{%- endif -%}
-                  {%- elsif cart.taxes_included -%}
-                    {%- if shop.shipping_policy.body == blank -%}{{ 'sections.cart.taxes_included_shipping_at_checkout_without_policy' | t }}{%- else -%}{{ 'sections.cart.taxes_included_shipping_at_checkout_with_policy_html' | t: link: shop.shipping_policy.url }}{%- endif -%}
-                  {%- else -%}
-                    {%- if shop.shipping_policy.body == blank -%}{{ 'sections.cart.taxes_at_checkout_shipping_at_checkout_without_policy' | t }}{%- else -%}{{ 'sections.cart.taxes_at_checkout_shipping_at_checkout_with_policy_html' | t: link: shop.shipping_policy.url }}{%- endif -%}
-                  {%- endif -%}
+                  Taxes included, Free express Shipping calculated at Checkout.
                 </span>
               {% endif %}
 
@@ -1013,3 +1204,117 @@ details[open] .cart_drawer_discount_trigger > span svg {
     </div>
   </div>
 </cart-contents>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── "You May Also Like" price display cleanup ──
+     Purely cosmetic text rewriting of the recommendation prices
+     rendered by snippets/product-card.liquid (which we don't have
+     access to edit) — swaps the shop's "INR." money-format prefix for
+     a ₹ symbol, trims a trailing ".00", and reformats every price
+     (single or range) as "Starts from ₹X" with the amount highlighted.
+     No cart or pricing LOGIC is touched, only how the already-rendered
+     text looks.
+
+     IMPORTANT: adding an item's quantity triggers Shopify's cart AJAX
+     update, which replaces the *entire* upsell block's markup with a
+     fresh, unformatted copy from the server — including swapping out
+     the .cart_drawer_upsell_products element itself for a brand new
+     node. A MutationObserver attached directly to that node stops
+     seeing anything once it's replaced. So instead we observe the
+     drawer's stable outer wrapper (#cart_drawer, which persists across
+     those updates) and re-query .cart_drawer_upsell_products fresh
+     every time, rather than relying on a cached reference. */
+  function formatSimplePrice(text) {
+    return text
+      .replace(/INR\.?\s*/gi, '₹')
+      .replace(/\.00(?!\d)/g, '')
+      .trim();
+  }
+
+  function formatPrices() {
+    var container = document.querySelector('.cart_drawer_upsell_products');
+    if (!container) return;
+
+    container.querySelectorAll('.product_card_price_inner .cap').forEach(function (el) {
+      if (el.dataset.blPriceFixed) return;
+      el.textContent = formatSimplePrice(el.textContent);
+      el.dataset.blPriceFixed = 'true';
+    });
+
+    container.querySelectorAll('.regular_price').forEach(function (el) {
+      if (el.dataset.blPriceFixed) return;
+      var cleaned = formatSimplePrice(el.textContent);
+      el.innerHTML = 'Starts from <span class="bl-cdr-price-highlight">' + cleaned + '</span>';
+      el.dataset.blPriceFixed = 'true';
+    });
+
+    container.querySelectorAll('.product_card_price_varies').forEach(function (el) {
+      if (el.dataset.blPriceFixed) return;
+      var cleaned = formatSimplePrice(el.textContent);
+      var match = cleaned.match(/^(₹[\d,]+)\s*[-–—]\s*₹[\d,]+$/);
+      var lower = match ? match[1] : cleaned;
+      el.innerHTML = 'Starts from <span class="bl-cdr-price-highlight">' + lower + '</span>';
+      el.dataset.blPriceFixed = 'true';
+    });
+  }
+
+  /* ── "You May Also Like" card link fix ──
+     Each slide renders a bare title-only <a href> alongside the real
+     visual card (image/title/price) for that same product — the CSS
+     above hides that stray link on sight. But the card body itself
+     was never wrapped in a link at all, so without this it's dead
+     space except for that one line of text. This takes the href off
+     the (now-hidden) stray anchor and makes the nearby card body
+     clickable to the same URL, so the whole card navigates like a
+     normal product card.
+
+     The stray link and its card aren't reliably direct siblings (an
+     earlier version assumed that and silently did nothing whenever a
+     render didn't match), so instead this walks up from the stray
+     link through a few ancestor levels — the same levels Swiper uses
+     for one "slide" — until it finds a scope containing an <img>,
+     then targets that image's nearest reasonable card wrapper. */
+  function fixUpsellCardLinks() {
+    var container = document.querySelector('.cart_drawer_upsell_products');
+    if (!container) return;
+
+    container.querySelectorAll('a[href]').forEach(function (a) {
+      if (a.querySelector('img') || a.dataset.blHandled) return;
+      a.dataset.blHandled = 'true';
+
+      var href = a.getAttribute('href');
+      var scope = a.parentElement;
+      var cardBody = null;
+
+      for (var depth = 0; depth < 4 && scope && !cardBody; depth++) {
+        var img = scope.querySelector('img');
+        if (img) {
+          cardBody = img.closest('.product_card_wrapper') || img.parentElement;
+        }
+        scope = scope.parentElement;
+      }
+
+      if (cardBody && !cardBody.dataset.blLinked) {
+        cardBody.dataset.blLinked = 'true';
+        cardBody.style.cursor = 'pointer';
+        cardBody.addEventListener('click', function (e) {
+          if (e.target.closest('a, button')) return;
+          window.location.href = href;
+        });
+      }
+    });
+  }
+
+  formatPrices();
+  fixUpsellCardLinks();
+
+  var observeRoot = document.getElementById('cart_drawer') || document.body;
+  new MutationObserver(function () {
+    formatPrices();
+    fixUpsellCardLinks();
+  }).observe(observeRoot, { childList: true, subtree: true });
+})();
+</script>

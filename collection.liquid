@@ -53,6 +53,13 @@
   assign padding_bottom        = section.settings.padding_bottom        | default: 80
   assign padding_top_mobile    = section.settings.padding_top_mobile    | default: 0
   assign padding_bottom_mobile = section.settings.padding_bottom_mobile | default: 48
+
+  if collection.handle == 'all'
+    assign hero_image = section.settings.all_products_hero_image
+  else
+    assign hero_image = collection.image
+  endif
+
   assign anim_dur              = anim_speed | times: 0.06 | plus: 0.3
   assign body_size_sm          = body_size | minus: 2
   assign card_title_sm         = card_title_size | minus: 2
@@ -563,14 +570,14 @@
   <div class="bl-col-hero">
     <div class="bl-col-hero-bg" aria-hidden="true">
       <div class="bl-col-hero-bg-fallback"></div>
-      {%- if collection.image -%}
+      {%- if hero_image -%}
         <img
-          src="{{ collection.image | image_url: width: 1800 }}"
-          srcset="{{ collection.image | image_url: width: 600 }} 600w, {{ collection.image | image_url: width: 1200 }} 1200w, {{ collection.image | image_url: width: 1800 }} 1800w"
+          src="{{ hero_image | image_url: width: 1800 }}"
+          srcset="{{ hero_image | image_url: width: 600 }} 600w, {{ hero_image | image_url: width: 1200 }} 1200w, {{ hero_image | image_url: width: 1800 }} 1800w"
           sizes="100vw"
-          alt="{{ collection.image.alt | default: collection.title | escape }}"
+          alt="{{ hero_image.alt | default: collection.title | escape }}"
           loading="eager" fetchpriority="high"
-          width="{{ collection.image.width }}" height="{{ collection.image.height }}"
+          width="{{ hero_image.width }}" height="{{ hero_image.height }}"
         >
       {%- endif -%}
     </div>
@@ -864,6 +871,7 @@ document.addEventListener('DOMContentLoaded', function () {
   "name": "BurnLab Collection",
   "settings": [
     { "type": "header", "content": "Collection Hero" },
+    { "type": "image_picker", "id": "all_products_hero_image", "label": "All Products Hero Image", "info": "Used only on the automatic /collections/all page, which has no collection image of its own. Ignored on all other collections." },
     { "type": "color",    "id": "hero_overlay_color",   "label": "Hero overlay color",         "default": "#001a2e" },
     { "type": "range",    "id": "hero_overlay_opacity", "label": "Hero overlay opacity",       "min": 0,   "max": 100, "step": 4,  "unit": "%",  "default": 60 },
     { "type": "text",     "id": "eyebrow_text",         "label": "Eyebrow label",              "default": "Collection" },

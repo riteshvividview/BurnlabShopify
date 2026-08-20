@@ -51,33 +51,164 @@
             {% for link in menu.links %}
               {%- assign link_lower = link.title | downcase | strip -%}
               {% if link_lower == categories_trigger and cat_blocks.size > 0 %}
-                <li class="mob_parent_li mob_categories_li">
-                  <button
-                    type="button"
-                    class="mob_parent_a mob_categories_toggle"
-                    aria-expanded="false"
-                    aria-controls="mob_categories_panel_{{ section.id }}"
-                  >
-                    <span class="mob_categories_label">{{- link.title -}}</span>
-                    <i class="fa-solid fa-chevron-down mob_categories_chevron" aria-hidden="true"></i>
-                  </button>
-                  <div class="mob_categories_panel" id="mob_categories_panel_{{ section.id }}">
-                    <ul class="mob_categories_list">
-                      {% for block in cat_blocks %}
-                        <li class="mob_categories_item">
-                          <a
-                            class="mob_categories_link"
-                            aria-label="{{ block.settings.category_name }}"
-                            href="{{ block.settings.category_link | default: '#' }}"
+                {%- liquid
+                  assign mobile_cat_visible_count = 0
+                  for block in cat_blocks
+                    if block.settings.show_on_mobile
+                      assign mobile_cat_visible_count = mobile_cat_visible_count | plus: 1
+                    endif
+                  endfor
+                -%}
+                {%- if mobile_cat_visible_count > 0 -%}
+                  <li class="mob_parent_li mob_cat_widget_li">
+                    <div class="mob_cat_widget" data-cat-widget>
+
+                      <div class="mob_cat_rail" role="tablist">
+                        {%- assign cat_rail_rendered = false -%}
+                        {%- for block in cat_blocks -%}
+                          {%- unless block.settings.show_on_mobile -%}
+                            {%- continue -%}
+                          {%- endunless -%}
+                          <button
+                            type="button"
+                            class="mob_cat_tab{% unless cat_rail_rendered %} is-active{% endunless %}"
+                            data-cat-tab
+                            data-cat-target="mob_cat_panel_{{ section.id }}_{{ forloop.index0 }}"
+                            role="tab"
+                            aria-selected="{% unless cat_rail_rendered %}true{% else %}false{% endunless %}"
                             {{ block.shopify_attributes }}
                           >
-                            {{- block.settings.category_name -}}
-                          </a>
-                        </li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-                </li>
+                            <span class="mob_cat_tab_thumb">
+                              {%- if block.settings.category_image != blank -%}
+                                <img
+                                  src="{{ block.settings.category_image | image_url: width: 96 }}"
+                                  alt="{{ block.settings.category_name | default: '' | escape }}"
+                                  loading="lazy"
+                                  width="44"
+                                  height="44"
+                                >
+                              {%- else -%}
+                                <span class="mob_cat_tab_thumb_placeholder">{{ block.settings.category_name | slice: 0, 1 }}</span>
+                              {%- endif -%}
+                            </span>
+                            <span class="mob_cat_tab_label">{{ block.settings.category_name }}</span>
+                          </button>
+                          {%- assign cat_rail_rendered = true -%}
+                        {%- endfor -%}
+                      </div>
+
+                      <div class="mob_cat_panel_wrap">
+                        {%- assign cat_panel_rendered = false -%}
+                        {%- for block in cat_blocks -%}
+                          {%- unless block.settings.show_on_mobile -%}
+                            {%- continue -%}
+                          {%- endunless -%}
+                          <div
+                            class="mob_cat_panel{% unless cat_panel_rendered %} is-active{% endunless %}"
+                            id="mob_cat_panel_{{ section.id }}_{{ forloop.index0 }}"
+                            data-cat-panel
+                            role="tabpanel"
+                          >
+                            {%- assign main_collection = block.settings.main_collection -%}
+                            {%- if main_collection != blank -%}
+                              {%- assign main_collection_count = block.settings.main_collection_count | default: 8 -%}
+                              {%- assign main_collection_viewmore = block.settings.main_collection_view_more -%}
+                              <ul class="mob_cat_sub_product_list mob_cat_main_collection_list">
+                                {%- for product in main_collection.products limit: main_collection_count -%}
+                                  <li class="mob_cat_sub_product_item">
+                                    <a href="{{ product.url }}" class="mob_cat_sub_product_link">
+                                      <span class="mob_cat_sub_product_img">
+                                        {%- if product.featured_image != blank -%}
+                                          <img
+                                            src="{{ product.featured_image | image_url: width: 80 }}"
+                                            alt="{{ product.title | default: '' | escape }}"
+                                            loading="lazy"
+                                            width="36"
+                                            height="36"
+                                          >
+                                        {%- endif -%}
+                                      </span>
+                                      <span class="mob_cat_sub_product_title">{{ product.title }}</span>
+                                    </a>
+                                  </li>
+                                {%- endfor -%}
+                              </ul>
+                              {%- if main_collection_viewmore and main_collection.url != blank -%}
+                                <a href="{{ main_collection.url }}" class="mob_cat_sub_viewmore mob_cat_main_collection_viewmore">View More</a>
+                              {%- endif -%}
+                            {%- else -%}
+                              <ul class="mob_cat_sub_list">
+                                {%- assign cat_has_sub = false -%}
+                                {%- for i in (1..5) -%}
+                                  {%- assign sub_name_key = 'sub_category_name_' | append: i -%}
+                                  {%- assign sub_coll_key = 'sub_category_collection_' | append: i -%}
+                                  {%- assign sub_count_key = 'sub_category_count_' | append: i -%}
+                                  {%- assign sub_viewmore_key = 'sub_category_view_more_' | append: i -%}
+                                  {%- assign sub_name = block.settings[sub_name_key] -%}
+                                  {%- if sub_name != blank -%}
+                                    {%- assign cat_has_sub = true -%}
+                                    {%- assign sub_collection = block.settings[sub_coll_key] -%}
+                                    {%- assign sub_count = block.settings[sub_count_key] | default: 4 -%}
+                                    {%- assign sub_viewmore = block.settings[sub_viewmore_key] -%}
+                                    {%- assign sub_panel_id = 'mob_cat_sub_products_' | append: section.id | append: '_' | append: forloop.parentloop.index0 | append: '_' | append: forloop.index0 -%}
+                                    <li class="mob_cat_sub_item">
+                                      <button
+                                        type="button"
+                                        class="mob_cat_sub_toggle"
+                                        data-sub-toggle
+                                        aria-expanded="false"
+                                        aria-controls="{{ sub_panel_id }}"
+                                      >
+                                        <span>{{- sub_name -}}</span>
+                                        <span class="mob_cat_sub_icon" aria-hidden="true"></span>
+                                      </button>
+                                      <div class="mob_cat_sub_products" id="{{ sub_panel_id }}" data-sub-products>
+                                        {%- if sub_collection != blank -%}
+                                          <ul class="mob_cat_sub_product_list">
+                                            {%- for product in sub_collection.products limit: sub_count -%}
+                                              <li class="mob_cat_sub_product_item">
+                                                <a href="{{ product.url }}" class="mob_cat_sub_product_link">
+                                                  <span class="mob_cat_sub_product_img">
+                                                    {%- if product.featured_image != blank -%}
+                                                      <img
+                                                        src="{{ product.featured_image | image_url: width: 80 }}"
+                                                        alt="{{ product.title | default: '' | escape }}"
+                                                        loading="lazy"
+                                                        width="36"
+                                                        height="36"
+                                                      >
+                                                    {%- endif -%}
+                                                  </span>
+                                                  <span class="mob_cat_sub_product_title">{{ product.title }}</span>
+                                                </a>
+                                              </li>
+                                            {%- endfor -%}
+                                          </ul>
+                                          {%- if sub_viewmore and sub_collection.url != blank -%}
+                                            <a href="{{ sub_collection.url }}" class="mob_cat_sub_viewmore">View More</a>
+                                          {%- endif -%}
+                                        {%- endif -%}
+                                      </div>
+                                    </li>
+                                  {%- endif -%}
+                                {%- endfor -%}
+                                {%- unless cat_has_sub -%}
+                                  <li class="mob_cat_sub_item">
+                                    <a class="mob_cat_sub_toggle" href="{{ block.settings.category_link | default: '#' }}" style="text-decoration:none;">
+                                      <span>{{- block.settings.category_name -}}</span>
+                                    </a>
+                                  </li>
+                                {%- endunless -%}
+                              </ul>
+                            {%- endif -%}
+                          </div>
+                          {%- assign cat_panel_rendered = true -%}
+                        {%- endfor -%}
+                      </div>
+
+                    </div>
+                  </li>
+                {%- endif -%}
               {% elsif link_lower == resources_trigger and resources_menu_handle != blank %}
                 <li class="mob_has_dropdown mob_parent_li">
                   <details>
@@ -239,29 +370,54 @@
 
 <script>
 (function () {
-  var toggle = document.querySelector('#mobile_menu_drawer .mob_categories_toggle');
-  var panel  = document.querySelector('#mobile_menu_drawer .mob_categories_panel');
-  if (!toggle || !panel) return;
+  var widget = document.querySelector('#mobile_menu_drawer .mob_cat_widget');
+  if (!widget) return;
 
-  var open = false;
+  var tabs   = widget.querySelectorAll('[data-cat-tab]');
+  var panels = widget.querySelectorAll('[data-cat-panel]');
 
-  toggle.addEventListener('click', function () {
-    open = !open;
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var targetId = tab.getAttribute('data-cat-target');
 
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.classList.toggle('mob_categories_toggle--open', open);
+      tabs.forEach(function (t) {
+        t.classList.remove('is-active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      panels.forEach(function (p) { p.classList.remove('is-active'); });
 
-    if (open) {
-      panel.style.maxHeight = panel.scrollHeight + 'px';
-      panel.style.opacity = '1';
-    } else {
-      /* Start from the current rendered height so the collapse animates
-         smoothly, then collapse to 0 on the next frame. */
-      panel.style.maxHeight = panel.scrollHeight + 'px';
-      void panel.offsetHeight;
-      panel.style.maxHeight = '0px';
-      panel.style.opacity = '0';
-    }
+      tab.classList.add('is-active');
+      tab.setAttribute('aria-selected', 'true');
+
+      var targetPanel = document.getElementById(targetId);
+      if (targetPanel) targetPanel.classList.add('is-active');
+    });
+  });
+
+  /* Subcategory accordion — clicking a subcategory row expands its
+     product list (fetched from the chosen collection at render time,
+     already in the DOM); opening one closes any other open row within
+     the same category panel. */
+  var subToggles = widget.querySelectorAll('[data-sub-toggle]');
+
+  subToggles.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      if (!panel) return;
+
+      var isOpen = btn.getAttribute('aria-expanded') === 'true';
+      var scope  = btn.closest('.mob_cat_panel') || widget;
+
+      scope.querySelectorAll('[data-sub-toggle]').forEach(function (other) {
+        if (other === btn) return;
+        other.setAttribute('aria-expanded', 'false');
+        var otherPanel = document.getElementById(other.getAttribute('aria-controls'));
+        if (otherPanel) otherPanel.style.maxHeight = '';
+      });
+
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      panel.style.maxHeight = isOpen ? '' : panel.scrollHeight + 'px';
+    });
   });
 })();
 </script>

@@ -184,6 +184,111 @@
 }
 
 /* =========================================================
+   TOOLBAR — search + category filter
+========================================================= */
+
+#{{ section_id }} .bl-blog-toolbar{
+  display:flex;
+  flex-direction:column;
+  gap:1.4rem;
+
+  margin-bottom:clamp(1.8rem, 3vw, 2.6rem);
+}
+
+#{{ section_id }} .bl-blog-search{
+  position:relative;
+
+  max-width:480px;
+}
+
+#{{ section_id }} .bl-blog-search svg{
+  position:absolute;
+  top:50%;
+  left:1.2rem;
+  transform:translateY(-50%);
+
+  width:1.6rem;
+  height:1.6rem;
+
+  color:var(--bl-mode-muted);
+
+  pointer-events:none;
+}
+
+#{{ section_id }} .bl-blog-search input{
+  width:100%;
+
+  padding:1.1rem 1.4rem 1.1rem 3.8rem;
+
+  border-radius:100px;
+  border:1px solid var(--bl-mode-border);
+  background:var(--bl-mode-card);
+  color:var(--bl-mode-text);
+
+  font-family:inherit;
+  font-size:.94rem;
+
+  transition:border-color .25s ease, background .35s ease, color .35s ease;
+}
+
+#{{ section_id }} .bl-blog-search input::placeholder{
+  color:var(--bl-mode-muted);
+}
+
+#{{ section_id }} .bl-blog-search input:focus{
+  outline:none;
+  border-color:var(--bl-mode-accent);
+}
+
+#{{ section_id }} .bl-blog-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.7rem;
+}
+
+#{{ section_id }} .bl-blog-tag-pill{
+  display:inline-flex;
+  align-items:center;
+
+  padding:.65rem 1.4rem;
+
+  border-radius:100px;
+  border:1px solid var(--bl-mode-border);
+  background:var(--bl-mode-card);
+  color:var(--bl-mode-muted);
+
+  font-size:.84rem;
+  font-weight:600;
+  text-decoration:none;
+  white-space:nowrap;
+
+  transition:border-color .25s ease, background .25s ease, color .25s ease;
+}
+
+#{{ section_id }} .bl-blog-tag-pill:hover{
+  border-color:var(--bl-mode-accent);
+  color:var(--bl-mode-text);
+}
+
+#{{ section_id }} .bl-blog-tag-pill.is-active{
+  border-color:var(--bl-mode-accent);
+  background:var(--bl-mode-accent);
+  color:#001a2e;
+}
+
+#{{ section_id }} .bl-blog-results-count{
+  margin-bottom:1.6rem;
+
+  font-size:.88rem;
+  font-weight:600;
+  color:var(--bl-mode-muted);
+}
+
+#{{ section_id }} .bl-blog-results-count strong{
+  color:var(--bl-mode-text);
+}
+
+/* =========================================================
    GRID
 ========================================================= */
 
@@ -218,7 +323,7 @@
 }
 
 #{{ section_id }} .bl-blog-card.featured .bl-blog-title{
-  font-size:clamp(1.4rem, 2.4vw, 2rem);
+  font-size:clamp(1.6rem, 2.6vw, 2.3rem);
 }
 
 #{{ section_id }} .bl-blog-card.featured .bl-blog-excerpt{
@@ -298,6 +403,24 @@
   pointer-events:none;
 }
 
+#{{ section_id }} .bl-blog-card-badge{
+  position:absolute;
+  z-index:2;
+  top:1.2rem;
+  left:1.2rem;
+
+  padding:.5rem 1.1rem;
+
+  border-radius:100px;
+  background:var(--bl-mode-accent);
+  color:#001a2e;
+
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
 /* =========================================================
    CONTENT
 ========================================================= */
@@ -328,14 +451,24 @@
 #{{ section_id }} .bl-blog-title{
   margin:0 0 .7rem;
 
-  font-size:1.16rem;
-  line-height:1.4;
+  font-size:1.38rem;
+  line-height:1.35;
   font-weight:700;
 }
 
 #{{ section_id }} .bl-blog-title a{
   text-decoration:none;
   color:inherit;
+}
+
+/* Stretched link — makes the whole card clickable (image, meta,
+   excerpt, empty space) while keeping a single real <a>, rather than
+   nesting a <a> around block content, which would be invalid HTML. */
+#{{ section_id }} .bl-blog-title a.bl-blog-stretched-link::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
 }
 
 #{{ section_id }} .bl-blog-excerpt{
@@ -453,6 +586,21 @@
     max-width:100%;
   }
 
+  #{{ section_id }} .bl-blog-search{
+    max-width:100%;
+  }
+
+  #{{ section_id }} .bl-blog-tags{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding-bottom:.2rem;
+  }
+
+  #{{ section_id }} .bl-blog-tags::-webkit-scrollbar{
+    display:none;
+  }
+
   #{{ section_id }} .bl-blog-content{
     padding:1.1rem 1.1rem 1.3rem;
   }
@@ -517,15 +665,56 @@
 
     </div>
 
+    {% if section.settings.show_search or section.settings.show_category_filter %}
+      <div class="bl-blog-toolbar bl-reveal">
+
+        {% if section.settings.show_search %}
+          <div class="bl-blog-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              id="bl-blog-search-{{ section.id }}"
+              placeholder="{{ section.settings.search_placeholder }}"
+              autocomplete="off"
+              aria-label="Search articles"
+            >
+          </div>
+        {% endif %}
+
+        {% if section.settings.show_category_filter and blog.all_tags.size > 0 %}
+          <div class="bl-blog-tags" role="list">
+            <a href="{{ blog.url }}" class="bl-blog-tag-pill{% if current_tags.size == 0 %} is-active{% endif %}">All</a>
+            {% for tag in blog.all_tags %}
+              <a href="{{ blog.url }}/tagged/{{ tag | handle }}" class="bl-blog-tag-pill{% if current_tags contains tag %} is-active{% endif %}">{{ tag }}</a>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+      </div>
+    {% endif %}
+
     {% paginate blog.articles by section.settings.limit %}
 
-      <div class="bl-blog-grid">
+      {% if section.settings.show_results_count %}
+        <div class="bl-blog-results-count bl-reveal">
+          Showing <strong>{{ paginate.items }}</strong> article{% unless paginate.items == 1 %}s{% endunless %}
+        </div>
+      {% endif %}
+
+      <div class="bl-blog-grid" id="bl-blog-grid-{{ section.id }}">
 
         {% for article in blog.articles %}
 
-          <article class="bl-blog-card {% if forloop.first and section.settings.enable_featured %}featured{% endif %} bl-reveal">
+          <article class="bl-blog-card {% if forloop.first and section.settings.enable_featured %}featured{% endif %} bl-reveal" data-search-title="{{ article.title | strip_html | escape }}">
 
             <div class="bl-blog-media">
+
+              {% if article.tags.size > 0 %}
+                <span class="bl-blog-card-badge">{{ article.tags.first }}</span>
+              {% endif %}
 
               {% if article.image %}
                 {{
@@ -560,7 +749,7 @@
               </div>
 
               <h2 class="bl-blog-title">
-                <a href="{{ article.url }}">
+                <a href="{{ article.url }}" class="bl-blog-stretched-link">
                   {{ article.title }}
                 </a>
               </h2>
@@ -571,7 +760,7 @@
                 </div>
               {% endif %}
 
-              <a href="{{ article.url }}" class="bl-blog-btn">
+              <a href="{{ article.url }}" class="bl-blog-btn" tabindex="-1">
 
                 {{ section.settings.button_label }}
 
@@ -632,6 +821,32 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   revealItems.forEach(el => observer.observe(el));
+
+});
+
+</script>
+{% endif %}
+
+{% if section.settings.show_search %}
+<script>
+
+document.addEventListener('DOMContentLoaded', function(){
+
+  const searchInput = document.getElementById('bl-blog-search-{{ section.id }}');
+  const grid = document.getElementById('bl-blog-grid-{{ section.id }}');
+
+  if(!searchInput || !grid) return;
+
+  searchInput.addEventListener('input', function(){
+
+    const query = searchInput.value.trim().toLowerCase();
+
+    grid.querySelectorAll('.bl-blog-card').forEach(function(card){
+      const title = (card.getAttribute('data-search-title') || '').toLowerCase();
+      card.style.display = (query === '' || title.indexOf(query) !== -1) ? '' : 'none';
+    });
+
+  });
 
 });
 
@@ -755,8 +970,43 @@ document.addEventListener('DOMContentLoaded', function(){
       "min": 0,
       "max": 40,
       "step": 2,
-      "default": 24,
+      "default": 14,
       "unit": "px"
+    },
+
+    {
+      "type": "header",
+      "content": "Search & Filters"
+    },
+
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Show Search Bar",
+      "default": true
+    },
+
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "Search Placeholder Text",
+      "default": "Search articles..."
+    },
+
+    {
+      "type": "checkbox",
+      "id": "show_category_filter",
+      "label": "Show Category Filter",
+      "default": true,
+      "info": "Uses this blog's article tags as categories. Hidden automatically if the blog has no tags."
+    },
+
+    {
+      "type": "checkbox",
+      "id": "show_results_count",
+      "label": "Show Results Count",
+      "default": true,
+      "info": "Shows \"Showing X articles\" above the grid."
     },
 
     {

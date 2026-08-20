@@ -24,17 +24,17 @@
   }
 
   /* ── SECTION SHELL ──────────────────────────────────────── */
-  /* Full-viewport hero: 100vw × 100vh.
-     JS below measures the header spacer and applies a negative margin-top
-     on the .burnlab-hero-section wrapper so the hero starts at the very
-     top of the page with the fixed header floating on top of it.
-     NOTE: No !important here — the JS uses setProperty('important') which
-     would otherwise be silently blocked by !important in a CSS rule. */
+  /* Sits in normal document flow directly below the header (sticky
+     headers already reserve their own space; fixed headers reserve it
+     via .bl-hdr-spacer) — no negative margin / JS offset needed.
+     min-height fills the rest of the first viewport below the header,
+     using the --bl-header-total-height var published by header.liquid,
+     so it stays in sync with the merchant's actual header/announcement
+     bar settings instead of a hardcoded pixel guess. */
   #{{ section_id }} {
     position: relative;
-    width: 100vw;
-    height: 100vh;
-    min-height: 680px;
+    width: 100%;
+    min-height: calc(100vh - var(--bl-header-total-height, 72px));
     margin-top: 0;
     overflow: hidden;
     background: var(--bl-hero-bg, #001a2e);
@@ -47,8 +47,7 @@
   [data-theme="light"] #{{ section_id }} { --bl-hero-bg: #ffffff; }
   @media (max-width: 768px) {
     #{{ section_id }} {
-      height: 100vh;
-      min-height: 680px;
+      min-height: calc(100vh - var(--bl-header-total-height, 60px));
     }
   }
 
@@ -614,28 +613,6 @@
 (function () {
   'use strict';
 
-  // ── Pull the hero section flush to the top of the page ────────────────────
-  // The header section injects a spacer (.bl-hdr-spacer) whose height
-  // equals the fixed announcement bar + nav combined. This spacer pushes
-  // every subsequent section down. For the hero we *want* it to start
-  // at the very top (fixed header floating above it), so we apply a
-  // negative margin-top to the Shopify section wrapper equal to the
-  // spacer's height. We use setProperty with 'important' so it beats
-  // any !important rules in the theme's own stylesheets.
-  function applyHeroOffset() {
-    var spacer   = document.querySelector('.bl-hdr-spacer');
-    var heroWrap = document.querySelector('.burnlab-hero-section');
-    if (!heroWrap) return;
-    var h = (spacer && spacer.offsetHeight > 0) ? spacer.offsetHeight : 0;
-    heroWrap.style.setProperty('margin-top', '-' + h + 'px', 'important');
-  }
-  // Run immediately (styles already applied at this point in the script),
-  // after DOMContentLoaded, after window load, and on every resize.
-  applyHeroOffset();
-  document.addEventListener('DOMContentLoaded', applyHeroOffset);
-  window.addEventListener('load', applyHeroOffset);
-  window.addEventListener('resize', applyHeroOffset);
-
   var root = document.getElementById('{{ section_id }}');
   if (!root) return;
 
@@ -1059,8 +1036,8 @@
           "id": "video_content_padding_top_mobile",
           "label": "Top spacing / padding — Mobile",
           "min": 0,
-          "max": 300,
-          "step": 4,
+          "max": 200,
+          "step": 2,
           "unit": "px",
           "default": 36
         },
